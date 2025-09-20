@@ -1,4 +1,46 @@
 #! /usr/bin/env bash
 #
+#--HELP
+# default parameters
 
-echo "to be done"
+wget=wgetc                                         # ideally use caching wgetc if you have it
+url=https://github.com/GreenbankObservatory/dysh   # official repo
+restart=1                                          # re-install old anaconda3 and dysh?
+sleep=5                                            # enforced sleep to prevent accidents
+    
+#--HELP
+
+
+# some help?    
+ if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+    set +x
+    awk 'BEGIN{s=0} {if ($1=="#--HELP") s=1-s;  else if(s) print $0; }' $0
+    exit 0
+fi
+   
+# override parameters
+for arg in "$@"; do
+  export "$arg"
+done
+
+# sleep protection
+echo Sleeping $sleep
+sleep $sleep
+
+if [ $restart = 1 ]; then
+    rm -rf anaconda3
+    ./install_anaconda3 wget=$wget
+fi
+source anaconda3/python_start.sh
+
+
+if [ $restart = 1 ]; then
+    rm -rf dysh
+    git clone $url dysh
+fi
+pip install -e dysh
+
+
+# if we want the test - note test_notebooks.py always take long...
+
+(cd dysh; pytest)
