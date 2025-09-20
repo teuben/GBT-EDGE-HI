@@ -10,6 +10,21 @@ Install dysh in your choice of a (virtual) environment.
 
 There will be an example `install_dysh` script for this as well.
 
+If you want the dysh profile (see test1.py),
+
+```
+   ipython profile create dysh
+   cp 90-dysh.py ~/.ipython/profile_dysh/startup/
+```
+
+after which
+
+```
+   ipython --profile=dysh
+```
+
+will start the poor-man's version of dysh. See comments in `test1.py` 
+
 
 ## Example
 
