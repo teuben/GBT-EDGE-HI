@@ -2,7 +2,13 @@
 
 HI survey of EDGE galaxies.   Started with AGBT15B_287, where 100+ galaxies were
 observed in a modified PositionSwitch using ON-OFF-ON and a corresponding getsigref
-procedure
+procedure. The original GBTIDL procedure can be done with `edge.pro`.
+
+## Installation
+
+Install dysh in your choice of a (virtual) environment.
+
+There will be an example `install_dysh` script for this as well.
 
 
 ## Example
