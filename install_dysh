@@ -7,6 +7,8 @@ wget=wgetc                                         # ideally use caching wgetc i
 url=https://github.com/GreenbankObservatory/dysh   # official repo
 restart=1                                          # re-install old anaconda3 and dysh?
 sleep=5                                            # enforced sleep to prevent accidents
+uv=0                                               # base the install of dysh on 'uv'
+pytest=0                                           # run pytest
     
 #--HELP
 
@@ -38,9 +40,23 @@ if [ $restart = 1 ]; then
     rm -rf dysh
     git clone $url dysh
 fi
-pip install -e dysh
+
+cd dysh
+
+if [ $uv = 1 ]; then
+    pip install uv
+    uv synv
+    echo "Running via:"
+    echo "    uv run dysh"
+    echo "or"
+    echo "    uv run dysh-lab"
+else
+    pip install -e .[all]
+fi
 
 
 # if we want the test - note test_notebooks.py always take long...
 
-(cd dysh; pytest)
+if [ $pytest = 1 ]; then
+    pytest
+fi
