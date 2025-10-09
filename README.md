@@ -28,7 +28,7 @@ will start the poor-man's version of dysh. See comments in `test1.py`
 
 ## Example
 
-Make sure your data is in the `$SDFITS_DATA` directory.
+Make sure your data is in the `$SDFITS_DATA` directory (or use /home/sdfits).
 If you use $DYSH_DATA, they
 can also be located in the `$DYSH_DATA/sdfits` directory
 
