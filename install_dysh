@@ -1,4 +1,5 @@
 #! /usr/bin/env bash
+#     example dysh install
 #
 #--HELP
 # default parameters
@@ -7,20 +8,21 @@ wget=wgetc                                         # ideally use caching wgetc i
 url=https://github.com/GreenbankObservatory/dysh   # official repo
 restart=1                                          # re-install old anaconda3 and dysh?
 sleep=5                                            # enforced sleep to prevent accidents
-uv=0                                               # base the install of dysh on 'uv'
-pytest=0                                           # run pytest
+uv=0                                               # base the install of dysh on 'uv'?
+pytest=0                                           # run pytest?
+docs=0                                             # build documentation?
     
 #--HELP
 
 
-# some help?    
+# some CLI help?
  if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     set +x
     awk 'BEGIN{s=0} {if ($1=="#--HELP") s=1-s;  else if(s) print $0; }' $0
     exit 0
 fi
    
-# override parameters
+# override parameters from CLI
 for arg in "$@"; do
   export "$arg"
 done
@@ -51,12 +53,18 @@ if [ $uv = 1 ]; then
     echo "or"
     echo "    uv run dysh-lab"
 else
-    pip install -e .[all]
+    pip install --group dev -e .
 fi
 
 
 # if we want the test - note test_notebooks.py always take long...
-
 if [ $pytest = 1 ]; then
     pytest
+fi
+
+# building docs - see results in docs/source/_build/html/index.html
+# again, the notebooks take a long time (they need to be executed)
+if [ $docs = 1 ]; then
+    (cd docs/source; make html)
+    echo Documentation in $pwd/docs/source/_build/html/index.html
 fi
