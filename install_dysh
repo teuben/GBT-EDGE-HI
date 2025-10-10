@@ -1,5 +1,10 @@
 #! /usr/bin/env bash
 #     example dysh install
+#     1)   just install anaconda + dysh        ~ 1-2 min
+#     2)   pytest                              ~ 5 min
+#     3)   docs/source                         ~ 4 min
+#
+# tested with:   3.11.7
 #
 #--HELP
 # default parameters
@@ -11,6 +16,7 @@ sleep=5                                            # enforced sleep to prevent a
 uv=0                                               # base the install of dysh on 'uv'?
 pytest=0                                           # run pytest?
 docs=0                                             # build documentation?
+pr=0                                               # merge in a PR?
     
 #--HELP
 
@@ -33,7 +39,7 @@ sleep $sleep
 
 if [ $restart = 1 ]; then
     rm -rf anaconda3
-    ./install_anaconda3 wget=$wget
+    ./install_anaconda3 wget=$wget # version=2023.03-1
 fi
 source anaconda3/python_start.sh
 
@@ -47,13 +53,17 @@ cd dysh
 
 if [ $uv = 1 ]; then
     pip install uv
-    uv synv
+    uv sync # --active
     echo "Running via:"
     echo "    uv run dysh"
     echo "or"
     echo "    uv run dysh-lab"
 else
     pip install --group dev -e .
+fi
+
+if [ $pr != 0 ]; then
+    git merge origin/$pr
 fi
 
 
