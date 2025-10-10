@@ -4,7 +4,14 @@
 #     2)   pytest                              ~ 5 min
 #     3)   docs/source                         ~ 4 min
 #
-# tested with:   3.11.7
+#  Issues:
+#     uv=1 doesn't seem to work for me yet
+#
+#  Examples:
+#     uvx dysh --no-banner
+#     uvx --from dysh[all] dysh-lab
+#     uv tool install dysh[all]
+#
 #
 #--HELP
 # default parameters
@@ -17,6 +24,7 @@ uv=0                                               # base the install of dysh on
 pytest=0                                           # run pytest?
 docs=0                                             # build documentation?
 pr=0                                               # merge in a PR?
+version=0                                          # specific anaconda3 version
     
 #--HELP
 
@@ -39,7 +47,13 @@ sleep $sleep
 
 if [ $restart = 1 ]; then
     rm -rf anaconda3
-    ./install_anaconda3 wget=$wget # version=2023.03-1
+    if [ $version = 0 ]; then
+	version=""
+    else
+	version="version=$version"
+    fi
+    echo ./install_anaconda3 wget=$wget $version
+    ./install_anaconda3 wget=$wget $version    # e.g. version=2023.03-1
 fi
 source anaconda3/python_start.sh
 
