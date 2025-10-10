@@ -6,9 +6,9 @@ procedure. The original GBTIDL procedure can be done with `edge.pro`.
 
 ## Installation
 
-Install dysh in your choice of a (virtual) environment.
+Install [dysh](https://github.com/GreenBankObservatory/dysh) in your choice of a (virtual) environment.
 
-There will be an example `install_dysh` script for this as well.
+There is an example `install_dysh` script for this as well.
 
 If you want the dysh profile (see test1.py),
 
@@ -23,7 +23,15 @@ after which
    ipython --profile=dysh
 ```
 
-will start the poor-man's version of dysh. See comments in `test1.py` 
+will start the poor-man's version of dysh. See comments in `test1.py`
+
+Normally the command
+
+```
+   dysh
+```
+
+will get you in interactive session.
 
 
 ## Example
