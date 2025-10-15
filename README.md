@@ -4,6 +4,8 @@ HI survey of EDGE galaxies.   Started with AGBT15B_287, where 100+ galaxies were
 observed in a modified PositionSwitch using ON-OFF-ON and a corresponding getsigref
 procedure. The original GBTIDL procedure can be done with `edge.pro`.
 
+The followup is AGBT25A_474
+
 ## Installation
 
 Install [dysh](https://github.com/GreenBankObservatory/dysh) in your choice of a (virtual) environment.
@@ -31,7 +33,7 @@ Normally the command
    dysh
 ```
 
-will get you in interactive session.
+will get you an interactive session.
 
 
 ## Example
