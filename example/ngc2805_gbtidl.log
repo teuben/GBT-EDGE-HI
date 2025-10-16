@@ -1,0 +1,52 @@
+GBTIDL -> filein,'AGBT15B_287/AGBT15B_287_19.raw.vegas'
+GBTIDL -> edge,56,64
+% Compiled module: EDGE.
+NOTICE: (default) will average both polarizations
+NOTICE: (default) IFNUM=1
+On: 56  Off: 57  Pol: YY
+
+% Loaded DLM: LAPACK.
+Blanked spectra: ignored 1 integrations
+SigScan:    56  RefScan:    57 (IF:1 FD:0 PL:0)   units: Ta (K)  Tsys:  15.67
+On: 56  Off: 57  Pol: XX
+Blanked spectra: ignored 1 integrations
+SigScan:    56  RefScan:    57 (IF:1 FD:0 PL:1)   units: Ta (K)  Tsys:  16.50
+On: 58  Off: 57  Pol: YY
+Blanked spectra: ignored 1 integrations
+SigScan:    58  RefScan:    57 (IF:1 FD:0 PL:0)   units: Ta (K)  Tsys:  15.67
+On: 58  Off: 57  Pol: XX
+Blanked spectra: ignored 1 integrations
+SigScan:    58  RefScan:    57 (IF:1 FD:0 PL:1)   units: Ta (K)  Tsys:  16.50
+On: 59  Off: 60  Pol: YY
+Blanked spectra: ignored 1 integrations
+SigScan:    59  RefScan:    60 (IF:1 FD:0 PL:0)   units: Ta (K)  Tsys:  15.71
+On: 59  Off: 60  Pol: XX
+Blanked spectra: ignored 1 integrations
+SigScan:    59  RefScan:    60 (IF:1 FD:0 PL:1)   units: Ta (K)  Tsys:  16.49
+On: 61  Off: 60  Pol: YY
+Blanked spectra: ignored 1 integrations
+SigScan:    61  RefScan:    60 (IF:1 FD:0 PL:0)   units: Ta (K)  Tsys:  15.71
+On: 61  Off: 60  Pol: XX
+Blanked spectra: ignored 1 integrations
+SigScan:    61  RefScan:    60 (IF:1 FD:0 PL:1)   units: Ta (K)  Tsys:  16.49
+On: 62  Off: 63  Pol: YY
+Blanked spectra: ignored 1 integrations
+SigScan:    62  RefScan:    63 (IF:1 FD:0 PL:0)   units: Ta (K)  Tsys:  15.76
+On: 62  Off: 63  Pol: XX
+Blanked spectra: ignored 1 integrations
+SigScan:    62  RefScan:    63 (IF:1 FD:0 PL:1)   units: Ta (K)  Tsys:  16.53
+On: 64  Off: 63  Pol: YY
+Blanked spectra: ignored 1 integrations
+SigScan:    64  RefScan:    63 (IF:1 FD:0 PL:0)   units: Ta (K)  Tsys:  15.76
+On: 64  Off: 63  Pol: XX
+Blanked spectra: ignored 1 integrations
+SigScan:    64  RefScan:    63 (IF:1 FD:0 PL:1)   units: Ta (K)  Tsys:  16.53
+% ACCUMAVE: Average of :          12 spectra
+On-source time (not total time): 2503.4517 sec = 41.724194 min
+% Program caused arithmetic error: Floating illegal operand
+GBTIDL -> stats,20000,30000,chan=1
+    Chans    bchan    echan        Xmin        Xmax        Ymin        Ymax
+    10000    20000    30000      1.3449      1.3754    -0.23847     0.19676
+
+                       Mean      Median         RMS    Variance        Area
+                   0.022270    0.022334   0.0092264  8.5127E-05  0.00067959
