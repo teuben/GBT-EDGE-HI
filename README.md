@@ -75,7 +75,7 @@ dysh
 
 ## GBT links
 
-DSS project page: https://dss.gb.nrao.edu/project/GBT25B-386
+DSS project page: https://dss.gb.nrao.edu/project/GBT25A-474
 
 Explanation of Grades: https://greenbankobservatory.org/portal/gbt/proposing/#panel-scores-and-groups
 
