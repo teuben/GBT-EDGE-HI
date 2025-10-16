@@ -72,3 +72,21 @@ dysh
   f1=dysh_data('AGBT15B_287_19', dysh_data='/home/teuben/GBT/dysh_data/')
 
 ```
+
+## GBT links
+
+DSS project page: https://dss.gb.nrao.edu/project/GBT25B-386
+
+Explanation of Grades: https://greenbankobservatory.org/portal/gbt/proposing/#panel-scores-and-groups
+
+Schools and Workshops: https://greenbankobservatory.org/science/gatherings/
+
+Steps for observation preperation: https://greenbankobservatory.org/portal/gbt/proposing/#next-steps-for-accepted-proposals
+
+GBT Infrastructure Work: https://greenbankobservatory.org/portal/gbt/proposing/#gbt-infrastructure-work
+
+Receiver schedule: https://dss.gb.nrao.edu/receivers
+
+TAC report (including LST pressure plots): https://science.nrao.edu/observing/proposal-types/tac-reports/26a-tac-report
+
+Science program: https://science.nrao.edu/science/science-program/2026a
