@@ -87,6 +87,6 @@ GBT Infrastructure Work: https://greenbankobservatory.org/portal/gbt/proposing/#
 
 Receiver schedule: https://dss.gb.nrao.edu/receivers
 
-TAC report (including LST pressure plots): https://science.nrao.edu/observing/proposal-types/tac-reports/26a-tac-report
+TAC report (including LST pressure plots): https://science.nrao.edu/observing/proposal-types/tac-reports/25a-tac-report
 
-Science program: https://science.nrao.edu/science/science-program/2026a
+Science program: https://science.nrao.edu/science/science-program/2025a
