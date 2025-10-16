@@ -1,0 +1,2198 @@
+ 
+ 
+#######################################################
+ SCRIPT NUMBER 1, project:AGBT15B_287_33 
+ 178521 128 OPERATOR 4 Greg Monk 2015-12-24 09:10:18 obs_aborted 
+#######################################################
+# test script to update catalog as you go...
+
+########## CHANGE THESE ONLY #############
+OnOffOnTime = 10 #minutes (change this to 12 to be in line with DSS scheduling)
+obs_per_source = 3 #total observing time per source = OnOffOnTime * obs_per_source
+h = Horizon(10.0) #minimum of 10 degrees elevation
+myOff = Offset("J2000",1.0,0.0,cosv=True)  # Off position relative to source
+doFirstPointing = True #Setting to False will skip the first pointing
+doFirstCal = True  #Setting to False will skip the first 3C calibrator OnOff scan
+peak_every = 12 #peak/cal every 12 OnOffOn (every 2.5 hours)
+peak_near_source = False #Do another peak when changing to new source
+#####################################
+
+######### NOTES ###############
+# This script runs in blocks of On-Off-On position switching with
+# the two outer 'on' scans sharing one 'off'
+# Total on-source time = 20 minutes
+# Length of one 'On' or 'Off' = 3 minutes 20 seconds
+# Length of one On-Off-On = 10 minutes
+# 3 On-Off-On blocks are needed per source (30 minutes total per source)
+
+###### Timing
+# It takes 34m to completely observe 1 source+overhead (9 track scans)
+
+execfile("/home/astro-util/projects/15B287_operator/15B287_config.py")
+execfile("/home/astro-util/projects/15B287_operator/15B287_utils.py")
+Catalog(fluxcal)
+Catalog(lband_pointing)
+
+scanTime = OnOffOnTime * 20.0 #seconds
+tdelta = DateTime.TimeDelta(minutes=OnOffOnTime)
+obs_count = 0
+doCal = doFirstCal
+doPointing = doFirstPointing
+project_obs = 0
+old_catalog_name = 'dummy'
+fullcat = '/home/astro-util/projects/15B287_operator/15B287_operator.cat'
+
+Configure(config_1)
+
+while project_obs < 100:
+    mycat,altcal = select_my_catalog()
+    if mycat == old_catalog_name:
+        print 'SAME CATALOG HAS BEEN SELECTED: Using FULL catalog'
+        mycat = fullcat
+        altcal = '3C309_1'
+    old_catalog_name = mycat
+    c = Catalog(mycat)
+    sources = c.keys()
+    for source in sources:
+        doBalance = True
+        newPeak = True
+        calibrator = c[source]["calibrator"]
+        n_obs = int(float(c[source]["n_obs"]))
+        obs_left = obs_per_source-n_obs
+        obs_ok = obs_left > 0
+        t_now = Now()
+        if t_now != None and obs_ok:
+            source_rise = h.GetRise(source)
+            source_set  = h.GetSet(source)
+            if source_rise != None:
+                if source_set != None:
+                    t_ok = ((t_now + tdelta) < source_set)
+                    t_ok = t_ok and (t_now >= source_rise)
+                else:
+                    t_ok = True
+            else:
+                t_ok = False
+        else:
+            t_ok = False
+
+        source_ok = t_ok and obs_ok
+
+        if source_ok:
+            if doPointing == True:
+                #check the calibrator is above the horizon
+                if h.GetRise(calibrator)>t_now:
+                    myCal = altcal #circumpolar alternative
+                    print 'Calibrator %s is too low: Using %s' %(calibrator,altcal)
+                else:
+                    myCal = calibrator
+                if obs_count == 0:
+                    AutoPeakFocus(myCal)
+                    #Break("Check Peak and Focus")
+                else:
+                    AutoPeak(myCal)
+                Configure(config_1)
+                doBalance = True
+                doPointing = False
+
+            if doCal:
+                Slew(myCal)
+                Balance()
+                print 'Calibration scans (OnOff) :%s ' %(myCal)
+                OnOff(myCal,myOff,120.0)
+                doCal = False
+                doBalance = True
+
+            for i in range(obs_left):
+                t_now = Now()   #check time ok again
+                t_ok = False
+                if t_now != None:
+                    if source_rise != None:
+                        if source_set != None:
+                            t_ok = ((t_now + tdelta) < source_set)
+                            t_ok = t_ok and (t_now >= source_rise)
+                        else:
+                            t_ok = True
+                    else:
+                        t_ok = False
+                else:
+                    t_ok = False
+
+                if t_ok:
+                    if peak_near_source and newPeak:
+                        Slew(source)
+                        AutoPeak()
+                        Configure(config_1)
+                        newPeak = False
+                        doBalance = True
+                    if doBalance:
+                        Slew(source)
+                        Balance()
+                        doBalance = False
+
+                    Comment("Starting on-source scan")
+                    Track(source,None,scanTime)
+                    Comment("Starting off-source scan")
+                    Track(source,None,scanTime,fixedOffset=myOff)
+                    Comment("Starting on-source scan")
+                    Track(source,None,scanTime)
+                    obs_count = obs_count + 1
+                    obs_tot = obs_per_source+1-obs_left+i
+                    print '%s: OBS COMPLETE = %s/%s' %(source,obs_tot,obs_per_source)
+                    update_my_catalogs(source,obs_tot)
+
+                    if obs_count % peak_every == 0:  #Cal/pointing interval
+                        doCal = True
+                        doPointing = True
+        if source_ok and mycat == fullcat:
+            break
+    project_obs = project_obs+1
+
+#######################################################
+ LOG SESSION NUMBER 1 
+[09:10:18] ******** Begin Scheduling Block
+[09:10:18] ******** observer = OPERATOR, SB name = 15B287_operator, project ID = AGBT15B_287, date = 24 Dec 2015
+
+[09:10:19] Configuring telescope.
+[09:10:19]     Setting State: Activating
+[09:10:34]     Setting State: Ready
+[09:10:36]     Setting State: Activating
+[09:10:37]     Setting State: Ready
+[09:10:37] Default values are
+[09:10:37] if3freq  =  [0, 0, 0]
+[09:10:37] notchfilter  =  In
+[09:10:37] polswitch  =  thru
+[09:10:37] The bad devices are: 
+[09:10:37] OpticalDriver5
+[09:10:37] The bad devices are: 
+[09:10:37] OpticalDriver5
+[09:10:37] Waiting for the ConverterRack to finish activating
+[09:10:37] . . Waiting for the ScanCoordinator to finish activating
+[09:10:37] . . . . . . . . . . . . . .
+[09:10:37] Checking telescope
+[09:10:37] Configuration Complete
+[09:10:37] INFO: Selecting Catalog
+[09:10:37] INFO: Using Catalog for LST 9-13
+[09:10:37] INFO: Selecting Catalog
+[09:10:37] INFO: Using Catalog for LST 9-13
+[09:10:37] SAME CATALOG HAS BEEN SELECTED: Using FULL catalog
+[09:10:38] Configuring telescope.
+[09:10:39]     Setting State: Activating
+[09:10:40]     Setting State: Ready
+[09:10:40]     Setting State: Activating
+[09:10:41]     Setting State: Ready
+[09:10:41] Default values are
+[09:10:41] if3freq  =  [0]
+[09:10:41] notchfilter  =  In
+[09:10:41] polswitch  =  thru
+[09:10:41] The bad devices are: 
+[09:10:41] OpticalDriver5
+
+[09:10:41] Checking telescope
+[09:10:41] Configuration Complete
+[09:10:41] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:10:41] Slewing to source.
+[09:10:42] In state Ready, waiting for state Activating
+[09:10:42]     Setting State: Activating
+[09:10:42] Detected state Activating
+[09:10:42] In state Activating, waiting for state Ready
+[09:16:22]     Setting State: Ready
+[09:16:22] Detected state Ready
+[09:16:22] Balancing IF system.
+[09:16:22] Balancing IFRack
+[09:16:22]     Setting State: Activating
+[09:16:22]     Setting State: Ready
+[09:16:24] the sampler values are:
+[09:16:24] RF_power 1 : 0.9033203
+[09:16:24] RF_power 2 : 0.004882812
+[09:16:24] RF_power 3 : 0.9814453
+[09:16:24] RF_power 4 : 0.009765625
+[09:16:24] RF_power 5 : 0.02441406
+[09:16:24] RF_power 6 : 2.485352
+[09:16:24] RF_power 7 : 4.580078
+[09:16:24] RF_power 8 : 0.0390625
+[09:16:24] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:16:24] Peak: Subscan 1 of 4
+[09:16:25] In state Ready, waiting for state Running
+[09:16:25]     Setting State: Activating
+[09:16:47]     Setting State: Committed
+[09:16:49]     Setting State: Running
+[09:16:49] Detected state Running
+[09:16:49] *** Notice: This subscan will be numbered as scan #1 in your data reduction package.
+[09:16:49] In state Running, waiting for state Ready
+[09:17:19]     Setting State: Stopping
+[09:17:25]     Setting State: Ready
+[09:17:25] Detected state Ready
+[09:17:25] Ygor Telescope: WaitForStopping
+[09:17:25] Peak: Subscan 2 of 4
+[09:17:26] In state Ready, waiting for state Running
+[09:17:26]     Setting State: Activating
+[09:17:34]     Setting State: Committed
+[09:17:36]     Setting State: Running
+[09:17:36] Detected state Running
+[09:17:36] *** Notice: This subscan will be numbered as scan #2 in your data reduction package.
+[09:17:36] In state Running, waiting for state Ready
+[09:18:06]     Setting State: Stopping
+[09:18:12]     Setting State: Ready
+[09:18:12] Detected state Ready
+[09:18:12] Ygor Telescope: WaitForStopping
+[09:18:13] . . . . . . . . . . . . . . . . . 
+[09:18:29] 
+[09:18:29] User queried: "No corrections detected! Wait longer?" waiting for reply...
+[09:19:59] User replied: "No".
+[09:19:59] 
+[09:19:59] User queried: "No corrections! Terminate block?" waiting for reply...
+[09:20:01] User replied: "No".
+[09:20:01] Peak: Subscan 3 of 4
+[09:20:03] In state Ready, waiting for state Running
+[09:20:03]     Setting State: Activating
+[09:20:22]     Setting State: Committed
+[09:20:24]     Setting State: Running
+[09:20:24] Detected state Running
+[09:20:24] *** Notice: This subscan will be numbered as scan #3 in your data reduction package.
+[09:20:24] In state Running, waiting for state Ready
+[09:20:54]     Setting State: Stopping
+[09:20:59]     Setting State: Ready
+[09:20:59] Detected state Ready
+[09:20:59] Ygor Telescope: WaitForStopping
+[09:20:59] Peak: Subscan 4 of 4
+[09:20:59] In state Ready, waiting for state Running
+[09:20:59]     Setting State: Activating
+[09:21:06]     Setting State: Committed
+[09:21:08]     Setting State: Running
+[09:21:08] Detected state Running
+[09:21:08] *** Notice: This subscan will be numbered as scan #4 in your data reduction package.
+[09:21:08] In state Running, waiting for state Ready
+[09:21:38]     Setting State: Stopping
+[09:21:43]     Setting State: Ready
+[09:21:43] Detected state Ready
+[09:21:43] Ygor Telescope: WaitForStopping
+[09:21:44] . . . . . . . . . . . . . . . . . 
+[09:22:00] 
+[09:22:00] User queried: "No corrections detected! Wait longer?" waiting for reply...
+[09:23:07] User replied: "No".
+[09:23:07] 
+[09:23:07] User queried: "No corrections! Terminate block?" waiting for reply...
+[09:23:09] User replied: "No".
+[09:23:09] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:23:09] Focus: Subscan 1 of 1
+[09:23:10] In state Ready, waiting for state Running
+[09:23:10]     Setting State: Activating
+[09:23:36]     Setting State: Committed
+[09:23:38]     Setting State: Running
+[09:23:38] Detected state Running
+[09:23:38] *** Notice: This subscan will be numbered as scan #5 in your data reduction package.
+[09:23:38] In state Running, waiting for state Ready
+[09:24:38]     Setting State: Stopping
+[09:24:40]     Setting State: Ready
+[09:24:40] Detected state Ready
+[09:24:40] Ygor Telescope: WaitForStopping
+[09:24:41] . . . . . . . . . . . . . . . . . 
+[09:24:57] 
+[09:24:57] User queried: "No corrections detected! Wait longer?" waiting for reply...
+[09:25:08] User replied: "No".
+[09:25:08] 
+[09:25:08] User queried: "No corrections! Terminate block?" waiting for reply...
+[09:25:09] User replied: "No".
+[09:25:10] Configuring telescope.
+[09:25:10]     Setting State: Activating
+[09:25:11]     Setting State: Ready
+[09:25:11]     Setting State: Activating
+[09:25:12]     Setting State: Ready
+[09:25:13]     Setting State: Activating
+[09:25:14]     Setting State: Ready
+[09:25:14] Default values are
+[09:25:14] if3freq  =  [0, 0, 0]
+[09:25:14] notchfilter  =  In
+[09:25:14] polswitch  =  thru
+[09:25:14] The bad devices are: 
+[09:25:14] OpticalDriver5
+[09:25:14] The bad devices are: 
+[09:25:14] OpticalDriver5
+[09:25:14] Waiting for the ConverterRack to finish activating
+[09:25:14] . .
+[09:25:14] Checking telescope
+[09:25:14] Configuration Complete
+[09:25:15] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:25:15] Slewing to source.
+[09:25:15] In state Ready, waiting for state Activating     Setting State: Activating
+
+[09:25:15] Detected state Activating
+[09:25:15] In state Activating, waiting for state Ready
+[09:25:45]     Setting State: Ready
+[09:25:45] Detected state Ready
+[09:25:45] Balancing IF system.
+[09:25:45] Balancing IFRack
+[09:25:46]     Setting State: Activating
+[09:25:46]     Setting State: Ready
+[09:25:47] the sampler values are:
+[09:25:47] RF_power 1 : 2.944336
+[09:25:47] RF_power 2 : 0.004882812
+[09:25:47] RF_power 3 : 3.076172
+[09:25:47] RF_power 4 : 0.01464844
+[09:25:47] RF_power 5 : 0.02441406
+[09:25:47] RF_power 6 : 2.768555
+[09:25:47] RF_power 7 : 3.354492
+[09:25:47] RF_power 8 : 0.0390625
+[09:25:47] Balancing VEGAS
+[09:25:47]     Setting State: Activating
+[09:25:47]     Setting State: Ready
+[09:25:47]     Setting State: Activating
+[09:25:48]     Setting State: Ready
+[09:25:50]     Setting State: Activating
+[09:25:50]     Setting State: Ready
+[09:25:52]     Setting State: Activating
+[09:25:52]     Setting State: Ready
+[09:25:54]     Setting State: Activating
+[09:25:54]     Setting State: Ready
+[09:25:56]     Setting State: Activating
+[09:25:56]     Setting State: Ready
+[09:25:56] Calibration scans (OnOff) :3C295 
+[09:25:56] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:25:56] OnOff: Subscan 1 of 2
+[09:25:57] In state Ready, waiting for state Running
+[09:25:57]     Setting State: Activating
+[09:26:02]     Setting State: Committed
+[09:26:04]     Setting State: Running
+[09:26:04] Detected state Running
+[09:26:04] *** Notice: This subscan will be numbered as scan #6 in your data reduction package.
+[09:26:04] In state Running, waiting for state Ready
+[09:26:09]     Setting State: Aborting
+[09:26:09] ygor.Telescope: WaitForRunning: Asking abort confirmation.
+[09:26:09] 
+[09:26:09] User queried: "Abort detected! Terminate block?" waiting for reply...
+[09:28:06]     Setting State: Ready
+[09:31:09] User replied: "Yes".
+[09:31:09] Exiting scheduling block.
+runSuccessful: False
+[09:31:09] ******** End Scheduling Block
+[09:31:09] ******** observer = OPERATOR, SB name = 15B287_operator, project ID = AGBT15B_287
+
+how much log? 9662 id: 178521self.history: <gbt.turtle.database.History.History instance at 0x62d4ab8>self.history.connection: <gbt.turtle.database.TurtleConnection.TurtleConnection instance at 0x62d4950>how much converted log? 9866 
+#######################################################
+ 
+ 
+#######################################################
+ SCRIPT NUMBER 2, project:AGBT15B_287_33 
+ 178522 128 OPERATOR 4 Greg Monk 2015-12-24 09:34:43 obs_aborted 
+#######################################################
+# test script to update catalog as you go...
+
+########## CHANGE THESE ONLY #############
+OnOffOnTime = 10 #minutes (change this to 12 to be in line with DSS scheduling)
+obs_per_source = 3 #total observing time per source = OnOffOnTime * obs_per_source
+h = Horizon(10.0) #minimum of 10 degrees elevation
+myOff = Offset("J2000",1.0,0.0,cosv=True)  # Off position relative to source
+doFirstPointing = True #Setting to False will skip the first pointing
+doFirstCal = True  #Setting to False will skip the first 3C calibrator OnOff scan
+peak_every = 12 #peak/cal every 12 OnOffOn (every 2.5 hours)
+peak_near_source = False #Do another peak when changing to new source
+#####################################
+
+######### NOTES ###############
+# This script runs in blocks of On-Off-On position switching with
+# the two outer 'on' scans sharing one 'off'
+# Total on-source time = 20 minutes
+# Length of one 'On' or 'Off' = 3 minutes 20 seconds
+# Length of one On-Off-On = 10 minutes
+# 3 On-Off-On blocks are needed per source (30 minutes total per source)
+
+###### Timing
+# It takes 34m to completely observe 1 source+overhead (9 track scans)
+
+execfile("/home/astro-util/projects/15B287_operator/15B287_config.py")
+execfile("/home/astro-util/projects/15B287_operator/15B287_utils.py")
+Catalog(fluxcal)
+Catalog(lband_pointing)
+
+scanTime = OnOffOnTime * 20.0 #seconds
+tdelta = DateTime.TimeDelta(minutes=OnOffOnTime)
+obs_count = 0
+doCal = doFirstCal
+doPointing = doFirstPointing
+project_obs = 0
+old_catalog_name = 'dummy'
+fullcat = '/home/astro-util/projects/15B287_operator/15B287_operator.cat'
+
+Configure(config_1)
+
+while project_obs < 100:
+    mycat,altcal = select_my_catalog()
+    if mycat == old_catalog_name:
+        print 'SAME CATALOG HAS BEEN SELECTED: Using FULL catalog'
+        mycat = fullcat
+        altcal = '3C309_1'
+    old_catalog_name = mycat
+    c = Catalog(mycat)
+    sources = c.keys()
+    for source in sources:
+        doBalance = True
+        newPeak = True
+        calibrator = c[source]["calibrator"]
+        n_obs = int(float(c[source]["n_obs"]))
+        obs_left = obs_per_source-n_obs
+        obs_ok = obs_left > 0
+        t_now = Now()
+        if t_now != None and obs_ok:
+            source_rise = h.GetRise(source)
+            source_set  = h.GetSet(source)
+            if source_rise != None:
+                if source_set != None:
+                    t_ok = ((t_now + tdelta) < source_set)
+                    t_ok = t_ok and (t_now >= source_rise)
+                else:
+                    t_ok = True
+            else:
+                t_ok = False
+        else:
+            t_ok = False
+
+        source_ok = t_ok and obs_ok
+
+        if source_ok:
+            if doPointing == True:
+                #check the calibrator is above the horizon
+                if h.GetRise(calibrator)>t_now:
+                    myCal = altcal #circumpolar alternative
+                    print 'Calibrator %s is too low: Using %s' %(calibrator,altcal)
+                else:
+                    myCal = calibrator
+                if obs_count == 0:
+                    AutoPeakFocus(myCal)
+                    #Break("Check Peak and Focus")
+                else:
+                    AutoPeak(myCal)
+                Configure(config_1)
+                doBalance = True
+                doPointing = False
+
+            if doCal:
+                Slew(myCal)
+                Balance()
+                print 'Calibration scans (OnOff) :%s ' %(myCal)
+                OnOff(myCal,myOff,120.0)
+                doCal = False
+                doBalance = True
+
+            for i in range(obs_left):
+                t_now = Now()   #check time ok again
+                t_ok = False
+                if t_now != None:
+                    if source_rise != None:
+                        if source_set != None:
+                            t_ok = ((t_now + tdelta) < source_set)
+                            t_ok = t_ok and (t_now >= source_rise)
+                        else:
+                            t_ok = True
+                    else:
+                        t_ok = False
+                else:
+                    t_ok = False
+
+                if t_ok:
+                    if peak_near_source and newPeak:
+                        Slew(source)
+                        AutoPeak()
+                        Configure(config_1)
+                        newPeak = False
+                        doBalance = True
+                    if doBalance:
+                        Slew(source)
+                        Balance()
+                        doBalance = False
+
+                    Comment("Starting on-source scan")
+                    Track(source,None,scanTime)
+                    Comment("Starting off-source scan")
+                    Track(source,None,scanTime,fixedOffset=myOff)
+                    Comment("Starting on-source scan")
+                    Track(source,None,scanTime)
+                    obs_count = obs_count + 1
+                    obs_tot = obs_per_source+1-obs_left+i
+                    print '%s: OBS COMPLETE = %s/%s' %(source,obs_tot,obs_per_source)
+                    update_my_catalogs(source,obs_tot)
+
+                    if obs_count % peak_every == 0:  #Cal/pointing interval
+                        doCal = True
+                        doPointing = True
+        if source_ok and mycat == fullcat:
+            break
+    project_obs = project_obs+1
+
+#######################################################
+ LOG SESSION NUMBER 2 
+[09:34:43] ******** Begin Scheduling Block
+[09:34:43] ******** observer = OPERATOR, SB name = 15B287_operator, project ID = AGBT15B_287, date = 24 Dec 2015
+
+[09:34:44] Configuring telescope.
+[09:34:44]     Setting State: Activating
+[09:34:45]     Setting State: Ready
+[09:34:47]     Setting State: Activating
+[09:34:48]     Setting State: Ready
+[09:34:48] Default values are
+[09:34:48] if3freq  =  [0, 0, 0]
+[09:34:48] notchfilter  =  In
+[09:34:48] polswitch  =  thru
+[09:34:48] The bad devices are: 
+[09:34:48] OpticalDriver5
+[09:34:48] The bad devices are: 
+[09:34:48] OpticalDriver5
+[09:34:48] Waiting for the ConverterRack to finish activating
+[09:34:48] . .
+[09:34:48] Checking telescope
+[09:34:48] Configuration Complete
+[09:34:48] INFO: Selecting Catalog
+[09:34:48] INFO: Using Catalog for LST 9-13
+[09:34:48] INFO: Selecting Catalog
+[09:34:48] INFO: Using Catalog for LST 9-13
+[09:34:48] SAME CATALOG HAS BEEN SELECTED: Using FULL catalog
+[09:34:49] Configuring telescope.
+[09:34:50]     Setting State: Activating
+[09:34:51]     Setting State: Ready
+[09:34:51]     Setting State: Activating
+[09:34:52]     Setting State: Ready
+[09:34:52] Default values are
+[09:34:52] if3freq  =  [0]
+[09:34:52] notchfilter  =  In
+[09:34:52] polswitch  =  thru
+[09:34:52] The bad devices are: 
+[09:34:52] OpticalDriver5
+
+[09:34:52] Checking telescope
+[09:34:52] Configuration Complete
+[09:34:52] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:34:52] Slewing to source.
+[09:34:53] In state Ready, waiting for state Activating
+[09:34:53]     Setting State: Activating
+[09:34:53] Detected state Activating
+[09:34:53] In state Activating, waiting for state Ready
+[09:34:55]     Setting State: Ready
+[09:34:55] Detected state Ready
+[09:34:55] Balancing IF system.
+[09:34:55] Balancing IFRack
+[09:34:55]     Setting State: Activating
+[09:34:55]     Setting State: Ready
+[09:34:57] the sampler values are:
+[09:34:57] RF_power 1 : 0.9277344
+[09:34:57] RF_power 2 : 0
+[09:34:57] RF_power 3 : 1.040039
+[09:34:57] RF_power 4 : 0.01464844
+[09:34:57] RF_power 5 : 0.02441406
+[09:34:57] RF_power 6 : 1.186523
+[09:34:57] RF_power 7 : 1.518555
+[09:34:57] RF_power 8 : 0.0390625
+[09:34:57] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:34:57] Peak: Subscan 1 of 4
+[09:34:58] In state Ready, waiting for state Running
+[09:34:58]     Setting State: Activating
+[09:35:22]     Setting State: Committed
+[09:35:24]     Setting State: Running
+[09:35:24] Detected state Running
+[09:35:24] *** Notice: This subscan will be numbered as scan #7 in your data reduction package.
+[09:35:24] In state Running, waiting for state Ready
+[09:35:54]     Setting State: Stopping
+[09:36:00]     Setting State: Ready
+[09:36:00] Detected state Ready
+[09:36:00] Ygor Telescope: WaitForStopping
+[09:36:00] Peak: Subscan 2 of 4
+[09:36:01] In state Ready, waiting for state Running
+[09:36:01]     Setting State: Activating
+[09:36:09]     Setting State: Committed
+[09:36:11]     Setting State: Running
+[09:36:11] Detected state Running
+[09:36:11] *** Notice: This subscan will be numbered as scan #8 in your data reduction package.
+[09:36:11] In state Running, waiting for state Ready
+[09:36:41]     Setting State: Stopping
+[09:36:47]     Setting State: Ready
+[09:36:47] Detected state Ready
+[09:36:47] Ygor Telescope: WaitForStopping
+[09:36:48] . . . . . . . . . . . . . . . . . 
+[09:37:04] 
+[09:37:04] User queried: "No corrections detected! Wait longer?" waiting for reply...
+[09:37:52] User replied: "No".
+[09:37:52] 
+[09:37:52] User queried: "No corrections! Terminate block?" waiting for reply...
+[09:37:52] User replied: "No".
+[09:37:52] Peak: Subscan 3 of 4
+[09:37:53] In state Ready, waiting for state Running
+[09:37:53]     Setting State: Activating
+[09:38:13]     Setting State: Committed
+[09:38:15]     Setting State: Running
+[09:38:15] Detected state Running
+[09:38:15] *** Notice: This subscan will be numbered as scan #9 in your data reduction package.
+[09:38:15] In state Running, waiting for state Ready
+[09:38:45]     Setting State: Stopping
+[09:38:50]     Setting State: Ready
+[09:38:50] Detected state Ready
+[09:38:50] Ygor Telescope: WaitForStopping
+[09:38:50] Peak: Subscan 4 of 4
+[09:38:50] In state Ready, waiting for state Running
+[09:38:50]     Setting State: Activating
+[09:38:57]     Setting State: Committed
+[09:38:59]     Setting State: Running
+[09:38:59] Detected state Running
+[09:38:59] *** Notice: This subscan will be numbered as scan #10 in your data reduction package.
+[09:38:59] In state Running, waiting for state Ready
+[09:39:29]     Setting State: Stopping
+[09:39:34]     Setting State: Ready
+[09:39:34] Detected state Ready
+[09:39:34] Ygor Telescope: WaitForStopping
+[09:39:35] . . . . . . . . . . . . . . . . . 
+[09:39:51] 
+[09:39:51] User queried: "No corrections detected! Wait longer?" waiting for reply...
+[09:41:45] User replied: "No".
+[09:41:45] 
+[09:41:45] User queried: "No corrections! Terminate block?" waiting for reply...
+[09:41:46] User replied: "No".
+[09:41:46] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:41:46] Focus: Subscan 1 of 1
+[09:41:47] In state Ready, waiting for state Running
+[09:41:47]     Setting State: Activating
+[09:42:12]     Setting State: Committed
+[09:42:14]     Setting State: Running
+[09:42:14] Detected state Running
+[09:42:14] *** Notice: This subscan will be numbered as scan #11 in your data reduction package.
+[09:42:14] In state Running, waiting for state Ready
+[09:43:14]     Setting State: Stopping
+[09:43:16]     Setting State: Ready
+[09:43:16] Detected state Ready
+[09:43:16] Ygor Telescope: WaitForStopping
+[09:43:17] . . . . . . . . . . . . . . . . . 
+[09:43:33] 
+[09:43:33] User queried: "No corrections detected! Wait longer?" waiting for reply...
+[09:43:34] User replied: "Yes".
+[09:43:35] . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+[09:44:29] 
+[09:44:29] User queried: "No corrections! Terminate block?" waiting for reply...
+[09:44:31] User replied: "No".
+[09:44:32] Configuring telescope.
+[09:44:32]     Setting State: Activating
+[09:44:34]     Setting State: Ready
+[09:44:36]     Setting State: Activating
+[09:44:37]     Setting State: Ready
+[09:44:37] Default values are
+[09:44:37] if3freq  =  [0, 0, 0]
+[09:44:37] notchfilter  =  In
+[09:44:37] polswitch  =  thru
+[09:44:37] The bad devices are: 
+[09:44:37] OpticalDriver5
+[09:44:37] The bad devices are: 
+[09:44:37] OpticalDriver5
+[09:44:37] Waiting for the ConverterRack to finish activating
+[09:44:37] . . .
+[09:44:37] Checking telescope
+[09:44:37] Configuration Complete
+[09:44:38] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:44:38] Slewing to source.
+[09:44:38] In state Ready, waiting for state Activating
+[09:44:38]     Setting State: Activating
+[09:44:38] Detected state Activating
+[09:44:38] In state Activating, waiting for state Ready
+[09:45:06]     Setting State: Ready
+[09:45:06] Detected state Ready
+[09:45:06] Balancing IF system.
+[09:45:06] Balancing IFRack
+[09:45:06]     Setting State: Activating
+[09:45:06]     Setting State: Ready
+[09:45:08] the sampler values are:
+[09:45:08] RF_power 1 : 2.895508
+[09:45:08] RF_power 2 : 0.004882812
+[09:45:08] RF_power 3 : 3.051758
+[09:45:08] RF_power 4 : 0.009765625
+[09:45:08] RF_power 5 : 0.02441406
+[09:45:08] RF_power 6 : 2.729492
+[09:45:08] RF_power 7 : 2.773438
+[09:45:08] RF_power 8 : 0.03417969
+[09:45:08] Balancing VEGAS
+[09:45:08]     Setting State: Activating
+[09:45:08]     Setting State: Ready
+[09:45:09]     Setting State: Activating
+[09:45:09]     Setting State: Ready
+[09:45:11]     Setting State: Activating
+[09:45:11]     Setting State: Ready
+[09:45:13]     Setting State: Activating
+[09:45:14]     Setting State: Ready
+[09:45:15]     Setting State: Activating
+[09:45:15]     Setting State: Ready
+[09:45:16] Calibration scans (OnOff) :3C295 
+[09:45:16] source : 3C295
+               F1 : 0.4
+               F2 : 32.0
+               S22235 : 0.95
+               S1400 : 22.53
+               angsize : 5.0
+               location : J2000 @ (14:11:20.65, 52:12:09.14)
+[09:45:16] OnOff: Subscan 1 of 2
+[09:45:17] In state Ready, waiting for state Running
+[09:45:17]     Setting State: Activating
+[09:45:22]     Setting State: Committed
+[09:45:24]     Setting State: Running
+[09:45:24] Detected state Running
+[09:45:24] *** Notice: This subscan will be numbered as scan #12 in your data reduction package.
+[09:45:24] In state Running, waiting for state Ready
+[09:47:24]     Setting State: Stopping
+[09:47:26]     Setting State: Ready
+[09:47:26] Detected state Ready
+[09:47:26] Ygor Telescope: WaitForStopping
+[09:47:26] OnOff: Subscan 2 of 2
+[09:47:26] In state Ready, waiting for state Running
+[09:47:26]     Setting State: Activating
+[09:47:40]     Setting State: Committed
+[09:47:42]     Setting State: Running
+[09:47:42] Detected state Running
+[09:47:42] *** Notice: This subscan will be numbered as scan #13 in your data reduction package.
+[09:47:42] In state Running, waiting for state Ready
+[09:49:42]     Setting State: Stopping
+[09:49:44]     Setting State: Ready
+[09:49:44] Detected state Ready
+[09:49:44] Ygor Telescope: WaitForStopping
+[09:49:44] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[09:49:44] Slewing to source.
+[09:49:44] In state Ready, waiting for state Activating
+[09:49:44]     Setting State: Activating
+[09:49:44] Detected state Activating
+[09:49:44] In state Activating, waiting for state Ready
+[09:51:16]     Setting State: Ready
+[09:51:16] Detected state Ready
+[09:51:16] Balancing IF system.
+[09:51:16] Balancing IFRack
+[09:51:16]     Setting State: Activating
+[09:51:16]     Setting State: Ready
+[09:51:18] the sampler values are:
+[09:51:18] RF_power 1 : 2.758789
+[09:51:18] RF_power 2 : 0
+[09:51:18] RF_power 3 : 3.217773
+[09:51:18] RF_power 4 : 0.01464844
+[09:51:18] RF_power 5 : 0.02441406
+[09:51:18] RF_power 6 : 2.807617
+[09:51:18] RF_power 7 : 2.77832
+[09:51:18] RF_power 8 : 0.0390625
+[09:51:18] Balancing VEGAS
+[09:51:18]     Setting State: Activating
+[09:51:18]     Setting State: Ready
+[09:51:19]     Setting State: Activating
+[09:51:19]     Setting State: Ready
+[09:51:20] Starting on-source scan
+[09:51:20] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[09:51:20] Track: Subscan 1 of 1
+[09:51:21] In state Ready, waiting for state Running
+[09:51:21]     Setting State: Activating
+[09:51:26]     Setting State: Committed
+[09:51:28]     Setting State: Running
+[09:51:28] Detected state Running
+[09:51:28] *** Notice: This subscan will be numbered as scan #14 in your data reduction package.
+[09:51:28] In state Running, waiting for state Ready
+[09:54:48]     Setting State: Stopping
+[09:54:50]     Setting State: Ready
+[09:54:50] Detected state Ready
+[09:54:50] Ygor Telescope: WaitForStopping
+[09:54:50] Starting off-source scan
+[09:54:50] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[09:54:50] Track: Subscan 1 of 1
+[09:54:51] In state Ready, waiting for state Running
+[09:54:51]     Setting State: Activating
+[09:55:04]     Setting State: Committed
+[09:55:06]     Setting State: Running
+[09:55:06] Detected state Running
+[09:55:06] *** Notice: This subscan will be numbered as scan #15 in your data reduction package.
+[09:55:06] In state Running, waiting for state Ready
+[09:58:26]     Setting State: Stopping
+[09:58:28]     Setting State: Ready
+[09:58:28] Detected state Ready
+[09:58:28] Ygor Telescope: WaitForStopping
+[09:58:28] Starting on-source scan
+[09:58:28] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[09:58:28] Track: Subscan 1 of 1
+[09:58:29] In state Ready, waiting for state Running
+[09:58:29]     Setting State: Activating
+[09:58:41]     Setting State: Committed
+[09:58:43]     Setting State: Running
+[09:58:43] Detected state Running
+[09:58:43] *** Notice: This subscan will be numbered as scan #16 in your data reduction package.
+[09:58:43] In state Running, waiting for state Ready
+[10:02:03]     Setting State: Stopping
+[10:02:06]     Setting State: Ready
+[10:02:06] Detected state Ready
+[10:02:06] Ygor Telescope: WaitForStopping
+[10:02:06] ARP220: OBS COMPLETE = 1/3
+[10:02:06] Updating Catalogs
+[10:02:06] Starting on-source scan
+[10:02:06] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[10:02:06] Track: Subscan 1 of 1
+[10:02:07] In state Ready, waiting for state Running
+[10:02:07]     Setting State: Activating
+[10:02:12]     Setting State: Committed
+[10:02:14]     Setting State: Running
+[10:02:14] Detected state Running
+[10:02:14] *** Notice: This subscan will be numbered as scan #17 in your data reduction package.
+[10:02:14] In state Running, waiting for state Ready
+[10:05:34]     Setting State: Stopping
+[10:05:36]     Setting State: Ready
+[10:05:36] Detected state Ready
+[10:05:36] Ygor Telescope: WaitForStopping
+[10:05:36] Starting off-source scan
+[10:05:36] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[10:05:36] Track: Subscan 1 of 1
+[10:05:37] In state Ready, waiting for state Running
+[10:05:37]     Setting State: Activating
+[10:05:50]     Setting State: Committed
+[10:05:52]     Setting State: Running
+[10:05:52] Detected state Running
+[10:05:52] *** Notice: This subscan will be numbered as scan #18 in your data reduction package.
+[10:05:52] In state Running, waiting for state Ready
+[10:09:12]     Setting State: Stopping
+[10:09:14]     Setting State: Ready
+[10:09:14] Detected state Ready
+[10:09:14] Ygor Telescope: WaitForStopping
+[10:09:14] Starting on-source scan
+[10:09:14] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[10:09:14] Track: Subscan 1 of 1
+[10:09:15] In state Ready, waiting for state Running
+[10:09:15]     Setting State: Activating
+[10:09:28]     Setting State: Committed
+[10:09:30]     Setting State: Running
+[10:09:30] Detected state Running
+[10:09:30] *** Notice: This subscan will be numbered as scan #19 in your data reduction package.
+[10:09:30] In state Running, waiting for state Ready
+[10:12:50]     Setting State: Stopping
+[10:12:52]     Setting State: Ready
+[10:12:52] Detected state Ready
+[10:12:52] Ygor Telescope: WaitForStopping
+[10:12:52] ARP220: OBS COMPLETE = 2/3
+[10:12:52] Updating Catalogs
+[10:12:52] Starting on-source scan
+[10:12:52] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[10:12:52] Track: Subscan 1 of 1
+[10:12:53] In state Ready, waiting for state Running
+[10:12:53]     Setting State: Activating
+[10:12:58]     Setting State: Committed
+[10:13:00]     Setting State: Running
+[10:13:00] Detected state Running
+[10:13:00] *** Notice: This subscan will be numbered as scan #20 in your data reduction package.
+[10:13:00] In state Running, waiting for state Ready
+[10:16:20]     Setting State: Stopping
+[10:16:22]     Setting State: Ready
+[10:16:22] Detected state Ready
+[10:16:22] Ygor Telescope: WaitForStopping
+[10:16:22] Starting off-source scan
+[10:16:22] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[10:16:22] Track: Subscan 1 of 1
+[10:16:23] In state Ready, waiting for state Running
+[10:16:23]     Setting State: Activating
+[10:16:36]     Setting State: Committed
+[10:16:38]     Setting State: Running
+[10:16:38] Detected state Running
+[10:16:38] *** Notice: This subscan will be numbered as scan #21 in your data reduction package.
+[10:16:38] In state Running, waiting for state Ready
+[10:19:58]     Setting State: Stopping
+[10:20:00]     Setting State: Ready
+[10:20:00] Detected state Ready
+[10:20:00] Ygor Telescope: WaitForStopping
+[10:20:00] Starting on-source scan
+[10:20:00] source : ARP220
+               N_OBS : 0.0
+               SESSION : 19.0
+               location : J2000 @ (15:34:57.20, 23:30:13.20)
+               CALIBRATOR : 3C295
+               VEL : 5340.9
+[10:20:00] Track: Subscan 1 of 1
+[10:20:01] In state Ready, waiting for state Running
+[10:20:01]     Setting State: Activating
+[10:20:14]     Setting State: Committed
+[10:20:16]     Setting State: Running
+[10:20:16] Detected state Running
+[10:20:16] *** Notice: This subscan will be numbered as scan #22 in your data reduction package.
+[10:20:16] In state Running, waiting for state Ready
+[10:23:36]     Setting State: Stopping
+[10:23:38]     Setting State: Ready
+[10:23:38] Detected state Ready
+[10:23:38] Ygor Telescope: WaitForStopping
+[10:23:38] ARP220: OBS COMPLETE = 3/3
+[10:23:38] Updating Catalogs
+[10:23:38] INFO: Selecting Catalog
+[10:23:38] INFO: Using Catalog for LST 9-13
+[10:23:38] INFO: Selecting Catalog
+[10:23:38] INFO: Using Catalog for LST 9-13
+[10:23:38] SAME CATALOG HAS BEEN SELECTED: Using FULL catalog
+[10:23:38] source : NGC6081
+               N_OBS : 2.0
+               SESSION : 29.0
+               location : J2000 @ (16:12:56.80, 09:52:01.60)
+               CALIBRATOR : 3C295
+               VEL : 5032.1
+[10:23:38] Slewing to source.
+[10:23:39] In state Ready, waiting for state Activating
+[10:23:39]     Setting State: Activating
+[10:23:39] Detected state Activating
+[10:23:39] In state Activating, waiting for state Ready
+[10:24:42]     Setting State: Ready
+[10:24:42] Detected state Ready
+[10:24:42] Balancing IF system.
+[10:24:42] Balancing IFRack
+[10:24:43]     Setting State: Activating
+[10:24:43]     Setting State: Ready
+[10:24:44] the sampler values are:
+[10:24:44] RF_power 1 : 3.022461
+[10:24:44] RF_power 2 : 0
+[10:24:44] RF_power 3 : 2.993164
+[10:24:44] RF_power 4 : 0.01464844
+[10:24:44] RF_power 5 : 0.02441406
+[10:24:44] RF_power 6 : 3.012695
+[10:24:44] RF_power 7 : 2.998047
+[10:24:44] RF_power 8 : 0.04394531
+[10:24:44] Balancing VEGAS
+[10:24:45]     Setting State: Activating
+[10:24:45]     Setting State: Ready
+[10:24:46]     Setting State: Activating
+[10:24:46]     Setting State: Ready
+[10:24:46] Starting on-source scan
+[10:24:46] source : NGC6081
+               N_OBS : 2.0
+               SESSION : 29.0
+               location : J2000 @ (16:12:56.80, 09:52:01.60)
+               CALIBRATOR : 3C295
+               VEL : 5032.1
+[10:24:46] Track: Subscan 1 of 1
+[10:24:47] In state Ready, waiting for state Running
+[10:24:47]     Setting State: Activating
+[10:24:52]     Setting State: Committed
+[10:24:54]     Setting State: Running
+[10:24:54] Detected state Running
+[10:24:54] *** Notice: This subscan will be numbered as scan #23 in your data reduction package.
+[10:24:54] In state Running, waiting for state Ready
+[10:28:14]     Setting State: Stopping
+[10:28:16]     Setting State: Ready
+[10:28:16] Detected state Ready
+[10:28:16] Ygor Telescope: WaitForStopping
+[10:28:16] Starting off-source scan
+[10:28:16] source : NGC6081
+               N_OBS : 2.0
+               SESSION : 29.0
+               location : J2000 @ (16:12:56.80, 09:52:01.60)
+               CALIBRATOR : 3C295
+               VEL : 5032.1
+[10:28:16] Track: Subscan 1 of 1
+[10:28:17] In state Ready, waiting for state Running
+[10:28:17]     Setting State: Activating
+[10:28:29]     Setting State: Committed
+[10:28:31]     Setting State: Running
+[10:28:31] Detected state Running
+[10:28:31] *** Notice: This subscan will be numbered as scan #24 in your data reduction package.
+[10:28:31] In state Running, waiting for state Ready
+[10:31:51]     Setting State: Stopping
+[10:31:53]     Setting State: Ready
+[10:31:53] Detected state Ready
+[10:31:53] Ygor Telescope: WaitForStopping
+[10:31:53] Starting on-source scan
+[10:31:53] source : NGC6081
+               N_OBS : 2.0
+               SESSION : 29.0
+               location : J2000 @ (16:12:56.80, 09:52:01.60)
+               CALIBRATOR : 3C295
+               VEL : 5032.1
+[10:31:53] Track: Subscan 1 of 1
+[10:31:54] In state Ready, waiting for state Running
+[10:31:54]     Setting State: Activating
+[10:32:06]     Setting State: Committed
+[10:32:08]     Setting State: Running
+[10:32:08] Detected state Running
+[10:32:08] *** Notice: This subscan will be numbered as scan #25 in your data reduction package.
+[10:32:08] In state Running, waiting for state Ready
+[10:35:28]     Setting State: Stopping
+[10:35:30]     Setting State: Ready
+[10:35:30] Detected state Ready
+[10:35:30] Ygor Telescope: WaitForStopping
+[10:35:30] NGC6081: OBS COMPLETE = 3/3
+[10:35:30] Updating Catalogs
+[10:35:30] INFO: Selecting Catalog
+[10:35:30] INFO: Using Catalog for LST 9-13
+[10:35:30] INFO: Selecting Catalog
+[10:35:30] INFO: Using Catalog for LST 9-13
+[10:35:30] SAME CATALOG HAS BEEN SELECTED: Using FULL catalog
+[10:35:30] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[10:35:30] Slewing to source.
+[10:35:31] In state Ready, waiting for state Activating
+[10:35:31]     Setting State: Activating
+[10:35:31] Detected state Activating
+[10:35:31] In state Activating, waiting for state Ready
+[10:36:19]     Setting State: Ready
+[10:36:19] Detected state Ready
+[10:36:19] Balancing IF system.
+[10:36:20] Balancing IFRack
+[10:36:20]     Setting State: Activating
+[10:36:20]     Setting State: Ready
+[10:36:22] the sampler values are:
+[10:36:22] RF_power 1 : 2.77832
+[10:36:22] RF_power 2 : 0
+[10:36:22] RF_power 3 : 2.543945
+[10:36:22] RF_power 4 : 0.01464844
+[10:36:22] RF_power 5 : 0.02929688
+[10:36:22] RF_power 6 : 2.817383
+[10:36:22] RF_power 7 : 2.753906
+[10:36:22] RF_power 8 : 0.0390625
+[10:36:22] Balancing VEGAS
+[10:36:22]     Setting State: Activating
+[10:36:22]     Setting State: Ready
+[10:36:23]     Setting State: Activating
+[10:36:23]     Setting State: Ready
+[10:36:24] Starting on-source scan
+[10:36:24] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[10:36:24] Track: Subscan 1 of 1
+[10:36:25] In state Ready, waiting for state Running
+[10:36:25]     Setting State: Activating
+[10:36:30]     Setting State: Committed
+[10:36:32]     Setting State: Running
+[10:36:32] Detected state Running
+[10:36:32] *** Notice: This subscan will be numbered as scan #26 in your data reduction package.
+[10:36:32] In state Running, waiting for state Ready
+[10:39:52]     Setting State: Stopping
+[10:39:54]     Setting State: Ready
+[10:39:54] Detected state Ready
+[10:39:54] Ygor Telescope: WaitForStopping
+[10:39:54] Starting off-source scan
+[10:39:54] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[10:39:54] Track: Subscan 1 of 1
+[10:39:55] In state Ready, waiting for state Running
+[10:39:55]     Setting State: Activating
+[10:40:07]     Setting State: Committed
+[10:40:09]     Setting State: Running
+[10:40:09] Detected state Running
+[10:40:09] *** Notice: This subscan will be numbered as scan #27 in your data reduction package.
+[10:40:09] In state Running, waiting for state Ready
+[10:43:29]     Setting State: Stopping
+[10:43:31]     Setting State: Ready
+[10:43:31] Detected state Ready
+[10:43:31] Ygor Telescope: WaitForStopping
+[10:43:31] Starting on-source scan
+[10:43:31] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[10:43:31] Track: Subscan 1 of 1
+[10:43:32] In state Ready, waiting for state Running
+[10:43:32]     Setting State: Activating
+[10:43:44]     Setting State: Committed
+[10:43:46]     Setting State: Running
+[10:43:46] Detected state Running
+[10:43:46] *** Notice: This subscan will be numbered as scan #28 in your data reduction package.
+[10:43:46] In state Running, waiting for state Ready
+[10:47:06]     Setting State: Stopping
+[10:47:08]     Setting State: Ready
+[10:47:08] Detected state Ready
+[10:47:08] Ygor Telescope: WaitForStopping
+[10:47:08] NGC5953: OBS COMPLETE = 1/3
+[10:47:08] Updating Catalogs
+[10:47:08] Starting on-source scan
+[10:47:08] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[10:47:08] Track: Subscan 1 of 1
+[10:47:09] In state Ready, waiting for state Running
+[10:47:09]     Setting State: Activating
+[10:47:14]     Setting State: Committed
+[10:47:16]     Setting State: Running
+[10:47:16] Detected state Running
+[10:47:16] *** Notice: This subscan will be numbered as scan #29 in your data reduction package.
+[10:47:16] In state Running, waiting for state Ready
+[10:50:36]     Setting State: Stopping
+[10:50:38]     Setting State: Ready
+[10:50:38] Detected state Ready
+[10:50:38] Ygor Telescope: WaitForStopping
+[10:50:38] Starting off-source scan
+[10:50:38] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[10:50:38] Track: Subscan 1 of 1
+[10:50:39] In state Ready, waiting for state Running
+[10:50:39]     Setting State: Activating
+[10:50:51]     Setting State: Committed
+[10:50:53]     Setting State: Running
+[10:50:53] Detected state Running
+[10:50:53] *** Notice: This subscan will be numbered as scan #30 in your data reduction package.
+[10:50:53] In state Running, waiting for state Ready
+[10:54:13]     Setting State: Stopping
+[10:54:15]     Setting State: Ready
+[10:54:15] Detected state Ready
+[10:54:15] Ygor Telescope: WaitForStopping
+[10:54:15] Starting on-source scan
+[10:54:15] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[10:54:15] Track: Subscan 1 of 1
+[10:54:16] In state Ready, waiting for state Running
+[10:54:16]     Setting State: Activating
+[10:54:28]     Setting State: Committed
+[10:54:30]     Setting State: Running
+[10:54:30] Detected state Running
+[10:54:30] *** Notice: This subscan will be numbered as scan #31 in your data reduction package.
+[10:54:30] In state Running, waiting for state Ready
+[10:57:50]     Setting State: Stopping
+[10:57:52]     Setting State: Ready
+[10:57:52] Detected state Ready
+[10:57:52] Ygor Telescope: WaitForStopping
+[10:57:52] NGC5953: OBS COMPLETE = 2/3
+[10:57:52] Updating Catalogs
+[10:57:52] Starting on-source scan
+[10:57:52] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[10:57:52] Track: Subscan 1 of 1
+[10:57:53] In state Ready, waiting for state Running
+[10:57:53]     Setting State: Activating
+[10:57:58]     Setting State: Committed
+[10:58:00]     Setting State: Running
+[10:58:00] Detected state Running
+[10:58:00] *** Notice: This subscan will be numbered as scan #32 in your data reduction package.
+[10:58:00] In state Running, waiting for state Ready
+[11:01:20]     Setting State: Stopping
+[11:01:22]     Setting State: Ready
+[11:01:22] Detected state Ready
+[11:01:22] Ygor Telescope: WaitForStopping
+[11:01:22] Starting off-source scan
+[11:01:22] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[11:01:22] Track: Subscan 1 of 1
+[11:01:23] In state Ready, waiting for state Running
+[11:01:23]     Setting State: Activating
+[11:01:35]     Setting State: Committed
+[11:01:37]     Setting State: Running
+[11:01:37] Detected state Running
+[11:01:37] *** Notice: This subscan will be numbered as scan #33 in your data reduction package.
+[11:01:37] In state Running, waiting for state Ready
+[11:04:57]     Setting State: Stopping
+[11:04:59]     Setting State: Ready
+[11:04:59] Detected state Ready
+[11:04:59] Ygor Telescope: WaitForStopping
+[11:04:59] Starting on-source scan
+[11:04:59] source : NGC5953
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:34:32.40, 15:11:37.60)
+               CALIBRATOR : 3C295
+               VEL : 1965.7
+[11:04:59] Track: Subscan 1 of 1
+[11:05:00] In state Ready, waiting for state Running
+[11:05:00]     Setting State: Activating
+[11:05:12]     Setting State: Committed
+[11:05:14]     Setting State: Running
+[11:05:14] Detected state Running
+[11:05:14] *** Notice: This subscan will be numbered as scan #34 in your data reduction package.
+[11:05:14] In state Running, waiting for state Ready
+[11:08:34]     Setting State: Stopping
+[11:08:36]     Setting State: Ready
+[11:08:36] Detected state Ready
+[11:08:36] Ygor Telescope: WaitForStopping
+[11:08:36] NGC5953: OBS COMPLETE = 3/3
+[11:08:36] Updating Catalogs
+[11:08:36] INFO: Selecting Catalog
+[11:08:36] INFO: Using Catalog for LST 9-13
+[11:08:36] INFO: Selecting Catalog
+[11:08:36] INFO: Using Catalog for LST 9-13
+[11:08:36] SAME CATALOG HAS BEEN SELECTED: Using FULL catalog
+[11:08:36] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:08:36] Slewing to source.
+[11:08:37] In state Ready, waiting for state Activating
+[11:08:37]     Setting State: Activating
+[11:08:37] Detected state Activating
+[11:08:37] In state Activating, waiting for state Ready
+[11:09:16]     Setting State: Ready
+[11:09:16] Detected state Ready
+[11:09:16] Balancing IF system.
+[11:09:16] Balancing IFRack
+[11:09:17]     Setting State: Activating
+[11:09:17]     Setting State: Ready
+[11:09:19] the sampler values are:
+[11:09:19] RF_power 1 : 2.96875
+[11:09:19] RF_power 2 : 0
+[11:09:19] RF_power 3 : 2.885742
+[11:09:19] RF_power 4 : 0.009765625
+[11:09:19] RF_power 5 : 0.02929688
+[11:09:19] RF_power 6 : 2.983398
+[11:09:19] RF_power 7 : 2.998047
+[11:09:19] RF_power 8 : 0.0390625
+[11:09:19] Balancing VEGAS
+[11:09:19]     Setting State: Activating
+[11:09:19]     Setting State: Ready
+[11:09:20]     Setting State: Activating
+[11:09:20]     Setting State: Ready
+[11:09:20] Starting on-source scan
+[11:09:20] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:09:21] Track: Subscan 1 of 1
+[11:09:22] In state Ready, waiting for state Running
+[11:09:22]     Setting State: Activating
+[11:09:27]     Setting State: Committed
+[11:09:29]     Setting State: Running
+[11:09:29] Detected state Running
+[11:09:29] *** Notice: This subscan will be numbered as scan #35 in your data reduction package.
+[11:09:29] In state Running, waiting for state Ready
+[11:12:49]     Setting State: Stopping
+[11:12:51]     Setting State: Ready
+[11:12:51] Detected state Ready
+[11:12:51] Ygor Telescope: WaitForStopping
+[11:12:51] Starting off-source scan
+[11:12:51] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:12:51] Track: Subscan 1 of 1
+[11:12:52] In state Ready, waiting for state Running
+[11:12:52]     Setting State: Activating
+[11:13:05]     Setting State: Committed
+[11:13:07]     Setting State: Running
+[11:13:07] Detected state Running
+[11:13:07] *** Notice: This subscan will be numbered as scan #36 in your data reduction package.
+[11:13:07] In state Running, waiting for state Ready
+[11:16:27]     Setting State: Stopping
+[11:16:29]     Setting State: Ready
+[11:16:29] Detected state Ready
+[11:16:29] Ygor Telescope: WaitForStopping
+[11:16:29] Starting on-source scan
+[11:16:29] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:16:29] Track: Subscan 1 of 1
+[11:16:30] In state Ready, waiting for state Running
+[11:16:30]     Setting State: Activating
+[11:16:43]     Setting State: Committed
+[11:16:45]     Setting State: Running
+[11:16:45] Detected state Running
+[11:16:45] *** Notice: This subscan will be numbered as scan #37 in your data reduction package.
+[11:16:45] In state Running, waiting for state Ready
+[11:20:05]     Setting State: Stopping
+[11:20:07]     Setting State: Ready
+[11:20:07] Detected state Ready
+[11:20:07] Ygor Telescope: WaitForStopping
+[11:20:07] UGC10043: OBS COMPLETE = 1/3
+[11:20:07] Updating Catalogs
+[11:20:07] Starting on-source scan
+[11:20:07] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:20:07] Track: Subscan 1 of 1
+[11:20:08] In state Ready, waiting for state Running
+[11:20:08]     Setting State: Activating
+[11:20:13]     Setting State: Committed
+[11:20:15]     Setting State: Running
+[11:20:15] Detected state Running
+[11:20:15] *** Notice: This subscan will be numbered as scan #38 in your data reduction package.
+[11:20:15] In state Running, waiting for state Ready
+[11:23:35]     Setting State: Stopping
+[11:23:37]     Setting State: Ready
+[11:23:37] Detected state Ready
+[11:23:37] Ygor Telescope: WaitForStopping
+[11:23:37] Starting off-source scan
+[11:23:37] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:23:37] Track: Subscan 1 of 1
+[11:23:38] In state Ready, waiting for state Running
+[11:23:38]     Setting State: Activating
+[11:23:51]     Setting State: Committed
+[11:23:53]     Setting State: Running
+[11:23:53] Detected state Running
+[11:23:53] *** Notice: This subscan will be numbered as scan #39 in your data reduction package.
+[11:23:53] In state Running, waiting for state Ready
+[11:27:13]     Setting State: Stopping
+[11:27:15]     Setting State: Ready
+[11:27:15] Detected state Ready
+[11:27:15] Ygor Telescope: WaitForStopping
+[11:27:15] Starting on-source scan
+[11:27:15] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:27:15] Track: Subscan 1 of 1
+[11:27:16] In state Ready, waiting for state Running
+[11:27:16]     Setting State: Activating
+[11:27:28]     Setting State: Committed
+[11:27:30]     Setting State: Running
+[11:27:30] Detected state Running
+[11:27:30] *** Notice: This subscan will be numbered as scan #40 in your data reduction package.
+[11:27:30] In state Running, waiting for state Ready
+[11:30:50]     Setting State: Stopping
+[11:30:52]     Setting State: Ready
+[11:30:52] Detected state Ready
+[11:30:52] Ygor Telescope: WaitForStopping
+[11:30:52] UGC10043: OBS COMPLETE = 2/3
+[11:30:52] Updating Catalogs
+[11:30:52] Starting on-source scan
+[11:30:52] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:30:52] Track: Subscan 1 of 1
+[11:30:53] In state Ready, waiting for state Running
+[11:30:53]     Setting State: Activating
+[11:30:58]     Setting State: Committed
+[11:31:00]     Setting State: Running
+[11:31:00] Detected state Running
+[11:31:00] *** Notice: This subscan will be numbered as scan #41 in your data reduction package.
+[11:31:00] In state Running, waiting for state Ready
+[11:34:20]     Setting State: Stopping
+[11:34:22]     Setting State: Ready
+[11:34:22] Detected state Ready
+[11:34:22] Ygor Telescope: WaitForStopping
+[11:34:22] Starting off-source scan
+[11:34:22] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:34:22] Track: Subscan 1 of 1
+[11:34:23] In state Ready, waiting for state Running
+[11:34:23]     Setting State: Activating
+[11:34:35]     Setting State: Committed
+[11:34:37]     Setting State: Running
+[11:34:37] Detected state Running
+[11:34:37] *** Notice: This subscan will be numbered as scan #42 in your data reduction package.
+[11:34:37] In state Running, waiting for state Ready
+[11:37:57]     Setting State: Stopping
+[11:37:59]     Setting State: Ready
+[11:37:59] Detected state Ready
+[11:37:59] Ygor Telescope: WaitForStopping
+[11:37:59] Starting on-source scan
+[11:37:59] source : UGC10043
+               N_OBS : 0.0
+               SESSION : 25.0
+               location : J2000 @ (15:48:41.40, 21:52:11.10)
+               CALIBRATOR : 3C295
+               VEL : 2153.2
+[11:37:59] Track: Subscan 1 of 1
+[11:38:00] In state Ready, waiting for state Running
+[11:38:00]     Setting State: Activating
+[11:38:12]     Setting State: Committed
+[11:38:14]     Setting State: Running
+[11:38:14] Detected state Running
+[11:38:14] *** Notice: This subscan will be numbered as scan #43 in your data reduction package.
+[11:38:14] In state Running, waiting for state Ready
+[11:41:34]     Setting State: Stopping
+[11:41:36]     Setting State: Ready
+[11:41:36] Detected state Ready
+[11:41:36] Ygor Telescope: WaitForStopping
+[11:41:36] UGC10043: OBS COMPLETE = 3/3
+[11:41:36] Updating Catalogs
+[11:41:36] INFO: Selecting Catalog
+[11:41:36] INFO: Using Catalog for LST 9-13
+[11:41:36] INFO: Selecting Catalog
+[11:41:36] INFO: Using Catalog for LST 9-13
+[11:41:36] SAME CATALOG HAS BEEN SELECTED: Using FULL catalog
+[11:41:36] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[11:41:36] Slewing to source.
+[11:41:37] In state Ready, waiting for state Activating
+[11:41:37]     Setting State: Activating
+[11:41:37] Detected state Activating
+[11:41:37] In state Activating, waiting for state Ready
+[11:42:00]     Setting State: Ready
+[11:42:00] Detected state Ready
+[11:42:00] Balancing IF system.
+[11:42:00] Balancing IFRack
+[11:42:01]     Setting State: Activating
+[11:42:01]     Setting State: Ready
+[11:42:02] the sampler values are:
+[11:42:02] RF_power 1 : 2.817383
+[11:42:02] RF_power 2 : 0.004882812
+[11:42:02] RF_power 3 : 2.802734
+[11:42:02] RF_power 4 : 0.009765625
+[11:42:02] RF_power 5 : 0.02441406
+[11:42:02] RF_power 6 : 2.504883
+[11:42:02] RF_power 7 : 2.900391
+[11:42:02] RF_power 8 : 0.0390625
+[11:42:02] Balancing VEGAS
+[11:42:02]     Setting State: Activating
+[11:42:02]     Setting State: Ready
+[11:42:03]     Setting State: Activating
+[11:42:03]     Setting State: Ready
+[11:42:04] Starting on-source scan
+[11:42:04] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[11:42:04] Track: Subscan 1 of 1
+[11:42:05] In state Ready, waiting for state Running
+[11:42:05]     Setting State: Activating
+[11:42:10]     Setting State: Committed
+[11:42:12]     Setting State: Running
+[11:42:12] Detected state Running
+[11:42:12] *** Notice: This subscan will be numbered as scan #44 in your data reduction package.
+[11:42:12] In state Running, waiting for state Ready
+[11:45:32]     Setting State: Stopping
+[11:45:34]     Setting State: Ready
+[11:45:34] Detected state Ready
+[11:45:34] Ygor Telescope: WaitForStopping
+[11:45:34] Starting off-source scan
+[11:45:34] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[11:45:34] Track: Subscan 1 of 1
+[11:45:35] In state Ready, waiting for state Running
+[11:45:35]     Setting State: Activating
+[11:45:47]     Setting State: Committed
+[11:45:49]     Setting State: Running
+[11:45:49] Detected state Running
+[11:45:49] *** Notice: This subscan will be numbered as scan #45 in your data reduction package.
+[11:45:49] In state Running, waiting for state Ready
+[11:49:09]     Setting State: Stopping
+[11:49:11]     Setting State: Ready
+[11:49:11] Detected state Ready
+[11:49:11] Ygor Telescope: WaitForStopping
+[11:49:11] Starting on-source scan
+[11:49:11] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[11:49:11] Track: Subscan 1 of 1
+[11:49:12] In state Ready, waiting for state Running
+[11:49:12]     Setting State: Activating
+[11:49:24]     Setting State: Committed
+[11:49:26]     Setting State: Running
+[11:49:26] Detected state Running
+[11:49:26] *** Notice: This subscan will be numbered as scan #46 in your data reduction package.
+[11:49:26] In state Running, waiting for state Ready
+[11:52:46]     Setting State: Stopping
+[11:52:48]     Setting State: Ready
+[11:52:48] Detected state Ready
+[11:52:48] Ygor Telescope: WaitForStopping
+[11:52:48] NGC6004: OBS COMPLETE = 1/3
+[11:52:48] Updating Catalogs
+[11:52:48] Starting on-source scan
+[11:52:48] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[11:52:48] Track: Subscan 1 of 1
+[11:52:49] In state Ready, waiting for state Running
+[11:52:49]     Setting State: Activating
+[11:52:54]     Setting State: Committed
+[11:52:56]     Setting State: Running
+[11:52:56] Detected state Running
+[11:52:56] *** Notice: This subscan will be numbered as scan #47 in your data reduction package.
+[11:52:56] In state Running, waiting for state Ready
+[11:56:16]     Setting State: Stopping
+[11:56:18]     Setting State: Ready
+[11:56:18] Detected state Ready
+[11:56:18] Ygor Telescope: WaitForStopping
+[11:56:18] Starting off-source scan
+[11:56:18] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[11:56:18] Track: Subscan 1 of 1
+[11:56:19] In state Ready, waiting for state Running
+[11:56:19]     Setting State: Activating
+[11:56:32]     Setting State: Committed
+[11:56:34]     Setting State: Running
+[11:56:34] Detected state Running
+[11:56:34] *** Notice: This subscan will be numbered as scan #48 in your data reduction package.
+[11:56:34] In state Running, waiting for state Ready
+[11:59:54]     Setting State: Stopping
+[11:59:56]     Setting State: Ready
+[11:59:56] Detected state Ready
+[11:59:56] Ygor Telescope: WaitForStopping
+[11:59:56] Starting on-source scan
+[11:59:56] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[11:59:56] Track: Subscan 1 of 1
+[11:59:57] In state Ready, waiting for state Running
+[11:59:57]     Setting State: Activating
+[12:00:10]     Setting State: Committed
+[12:00:12]     Setting State: Running
+[12:00:12] Detected state Running
+[12:00:12] *** Notice: This subscan will be numbered as scan #49 in your data reduction package.
+[12:00:12] In state Running, waiting for state Ready
+[12:03:32]     Setting State: Stopping
+[12:03:34]     Setting State: Ready
+[12:03:34] Detected state Ready
+[12:03:34] Ygor Telescope: WaitForStopping
+[12:03:34] NGC6004: OBS COMPLETE = 2/3
+[12:03:34] Updating Catalogs
+[12:03:34] Starting on-source scan
+[12:03:34] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[12:03:34] Track: Subscan 1 of 1
+[12:03:35] In state Ready, waiting for state Running
+[12:03:35]     Setting State: Activating
+[12:03:40]     Setting State: Committed
+[12:03:42]     Setting State: Running
+[12:03:42] Detected state Running
+[12:03:42] *** Notice: This subscan will be numbered as scan #50 in your data reduction package.
+[12:03:42] In state Running, waiting for state Ready
+[12:07:02]     Setting State: Stopping
+[12:07:04]     Setting State: Ready
+[12:07:04] Detected state Ready
+[12:07:04] Ygor Telescope: WaitForStopping
+[12:07:04] Starting off-source scan
+[12:07:04] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[12:07:04] Track: Subscan 1 of 1
+[12:07:05] In state Ready, waiting for state Running
+[12:07:05]     Setting State: Activating
+[12:07:18]     Setting State: Committed
+[12:07:20]     Setting State: Running
+[12:07:20] Detected state Running
+[12:07:20] *** Notice: This subscan will be numbered as scan #51 in your data reduction package.
+[12:07:20] In state Running, waiting for state Ready
+[12:10:40]     Setting State: Stopping
+[12:10:42]     Setting State: Ready
+[12:10:42] Detected state Ready
+[12:10:42] Ygor Telescope: WaitForStopping
+[12:10:42] Starting on-source scan
+[12:10:42] source : NGC6004
+               N_OBS : 0.0
+               SESSION : 23.0
+               location : J2000 @ (15:50:22.70, 18:56:21.40)
+               CALIBRATOR : 3C295
+               VEL : 3785.0
+[12:10:42] Track: Subscan 1 of 1
+[12:10:43] In state Ready, waiting for state Running
+[12:10:43]     Setting State: Activating
+[12:10:56]     Setting State: Committed
+[12:10:58]     Setting State: Running
+[12:10:58] Detected state Running
+[12:10:58] *** Notice: This subscan will be numbered as scan #52 in your data reduction package.
+[12:10:58] In state Running, waiting for state Ready
+[12:14:18]     Setting State: Stopping
+[12:14:20]     Setting State: Ready
+[12:14:20] Detected state Ready
+[12:14:20] Ygor Telescope: WaitForStopping
+[12:14:20] NGC6004: OBS COMPLETE = 3/3
+[12:14:20] Updating Catalogs
+[12:14:20] INFO: Selecting Catalog
+[12:14:20] INFO: Using Catalog for LST 13-17
+[12:14:21] Configuring telescope.
+[12:14:21]     Setting State: Activating
+[12:14:22]     Setting State: Ready
+[12:14:22]     Setting State: Activating
+[12:14:23]     Setting State: Ready
+[12:14:23] Default values are
+[12:14:23] if3freq  =  [0]
+[12:14:23] notchfilter  =  In
+[12:14:23] polswitch  =  thru
+[12:14:23] The bad devices are: 
+[12:14:23] OpticalDriver5
+
+[12:14:23] Checking telescope
+[12:14:23] Configuration Complete
+[12:14:23] source : 3C286
+               F1 : 0.4
+               F2 : 43.2
+               S22235 : 2.55
+               S1400 : 14.84
+               angsize : 1.5
+               location : J2000 @ (13:31:08.29, 30:30:32.96)
+[12:14:23] Slewing to source.
+[12:14:24] In state Ready, waiting for state Activating
+[12:14:24]     Setting State: Activating
+[12:14:24] Detected state Activating
+[12:14:24] In state Activating, waiting for state Ready
+[12:16:21]     Setting State: Ready
+[12:16:21] Detected state Ready
+[12:16:21] Balancing IF system.
+[12:16:21] Balancing IFRack
+[12:16:21]     Setting State: Activating
+[12:16:21]     Setting State: Ready
+[12:16:23] the sampler values are:
+[12:16:23] RF_power 1 : 0.8789062
+[12:16:23] RF_power 2 : 0
+[12:16:23] RF_power 3 : 0.9082031
+[12:16:23] RF_power 4 : 0.01464844
+[12:16:23] RF_power 5 : 0.02441406
+[12:16:23] RF_power 6 : 2.387695
+[12:16:23] RF_power 7 : 2.856445
+[12:16:23] RF_power 8 : 0.0390625
+[12:16:23] source : 3C286
+               F1 : 0.4
+               F2 : 43.2
+               S22235 : 2.55
+               S1400 : 14.84
+               angsize : 1.5
+               location : J2000 @ (13:31:08.29, 30:30:32.96)
+[12:16:23] Peak: Subscan 1 of 4
+[12:16:24] In state Ready, waiting for state Running
+[12:16:24]     Setting State: Activating
+[12:17:24]     Setting State: Committed
+[12:17:26]     Setting State: Running
+[12:17:26] Detected state Running
+[12:17:26] *** Notice: This subscan will be numbered as scan #53 in your data reduction package.
+[12:17:26] In state Running, waiting for state Ready
+[12:17:56]     Setting State: Stopping
+[12:18:20]     Setting State: Ready
+[12:18:20] Detected state Ready
+[12:18:20] Ygor Telescope: WaitForStopping
+[12:18:20] Peak: Subscan 2 of 4
+[12:18:21] In state Ready, waiting for state Running
+[12:18:21]     Setting State: Activating
+[12:18:44]     Setting State: Committed
+[12:18:46]     Setting State: Running
+[12:18:46] Detected state Running
+[12:18:46] *** Notice: This subscan will be numbered as scan #54 in your data reduction package.
+[12:18:46] In state Running, waiting for state Ready
+[12:19:16]     Setting State: Stopping
+[12:19:38]     Setting State: Ready
+[12:19:38] Detected state Ready
+[12:19:38] Ygor Telescope: WaitForStopping
+[12:19:39] . . . . . . . . . . . . . . . . . 
+[12:19:55] 
+[12:19:55] User queried: "No corrections detected! Wait longer?" waiting for reply...
+[12:19:56] User replied: "Yes".
+[12:19:57] . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+[12:20:51] 
+[12:20:51] User queried: "No corrections! Terminate block?" waiting for reply...
+[12:21:13] User replied: "No".
+[12:21:13] Peak: Subscan 3 of 4
+[12:21:13] In state Ready, waiting for state Running
+[12:21:13]     Setting State: Activating
+[12:22:00]     Setting State: Committed
+[12:22:02]     Setting State: Running
+[12:22:02] Detected state Running
+[12:22:02] *** Notice: This subscan will be numbered as scan #55 in your data reduction package.
+[12:22:02] In state Running, waiting for state Ready
+[12:22:32]     Setting State: Stopping
+[12:22:37]     Setting State: Ready
+[12:22:37] Detected state Ready
+[12:22:37] Ygor Telescope: WaitForStopping
+[12:22:37] Peak: Subscan 4 of 4
+[12:22:37] In state Ready, waiting for state Running
+[12:22:37]     Setting State: Activating
+[12:22:45]     Setting State: Committed
+[12:22:47]     Setting State: Running
+[12:22:47] Detected state Running
+[12:22:47] *** Notice: This subscan will be numbered as scan #56 in your data reduction package.
+[12:22:47] In state Running, waiting for state Ready
+[12:23:17]     Setting State: Stopping
+[12:23:21]     Setting State: Ready
+[12:23:21] Detected state Ready
+[12:23:21] Ygor Telescope: WaitForStopping
+[12:23:22] . . . . . . . . . . . . . . . . . 
+[12:23:38] 
+[12:23:38] User queried: "No corrections detected! Wait longer?" waiting for reply...
+[12:23:59] User replied: "No".
+[12:23:59] 
+[12:23:59] User queried: "No corrections! Terminate block?" waiting for reply...
+[12:24:05] User replied: "No".
+[12:24:05] Configuring telescope.
+[12:24:06]     Setting State: Activating
+[12:24:07]     Setting State: Ready
+[12:24:09]     Setting State: Activating
+[12:24:10]     Setting State: Ready
+[12:24:10] Default values are
+[12:24:10] if3freq  =  [0, 0, 0]
+[12:24:10] notchfilter  =  In
+[12:24:10] polswitch  =  thru
+[12:24:10] The bad devices are: 
+[12:24:10] OpticalDriver5
+[12:24:10] The bad devices are: 
+[12:24:10] OpticalDriver5
+[12:24:10] Waiting for the ConverterRack to finish activating
+[12:24:10] . .
+[12:24:10] Checking telescope
+[12:24:10] Configuration Complete
+[12:24:10] source : 3C286
+               F1 : 0.4
+               F2 : 43.2
+               S22235 : 2.55
+               S1400 : 14.84
+               angsize : 1.5
+               location : J2000 @ (13:31:08.29, 30:30:32.96)
+[12:24:10] Slewing to source.
+[12:24:11] In state Ready, waiting for state Activating
+[12:24:11]     Setting State: Activating
+[12:24:11] Detected state Activating
+[12:24:11] In state Activating, waiting for state Ready
+[12:24:27]     Setting State: Ready
+[12:24:27] Detected state Ready
+[12:24:27] Balancing IF system.
+[12:24:27] Balancing IFRack
+[12:24:28]     Setting State: Activating
+[12:24:28]     Setting State: Ready
+[12:24:29] the sampler values are:
+[12:24:29] RF_power 1 : 2.915039
+[12:24:29] RF_power 2 : 0.004882812
+[12:24:29] RF_power 3 : 3.007812
+[12:24:29] RF_power 4 : 0.009765625
+[12:24:29] RF_power 5 : 0.01953125
+[12:24:29] RF_power 6 : 2.973633
+[12:24:29] RF_power 7 : 3.447266
+[12:24:29] RF_power 8 : 0.0390625
+[12:24:29] Balancing VEGAS
+[12:24:29]     Setting State: Activating
+[12:24:29]     Setting State: Ready
+[12:24:31]     Setting State: Activating
+[12:24:31]     Setting State: Ready
+[12:24:31] Calibration scans (OnOff) :3C286 
+[12:24:31] source : 3C286
+               F1 : 0.4
+               F2 : 43.2
+               S22235 : 2.55
+               S1400 : 14.84
+               angsize : 1.5
+               location : J2000 @ (13:31:08.29, 30:30:32.96)
+[12:24:31] OnOff: Subscan 1 of 2
+[12:24:32] In state Ready, waiting for state Running
+[12:24:32]     Setting State: Activating
+[12:24:40]     Setting State: Committed
+[12:24:42]     Setting State: Running
+[12:24:42] Detected state Running
+[12:24:42] *** Notice: This subscan will be numbered as scan #57 in your data reduction package.
+[12:24:42] In state Running, waiting for state Ready
+[12:26:42]     Setting State: Stopping
+[12:26:44]     Setting State: Ready
+[12:26:44] Detected state Ready
+[12:26:44] Ygor Telescope: WaitForStopping
+[12:26:44] OnOff: Subscan 2 of 2
+[12:26:44] In state Ready, waiting for state Running
+[12:26:44]     Setting State: Activating
+[12:27:17]     Setting State: Committed
+[12:27:19]     Setting State: Running
+[12:27:19] Detected state Running
+[12:27:19] *** Notice: This subscan will be numbered as scan #58 in your data reduction package.
+[12:27:19] In state Running, waiting for state Ready
+[12:29:19]     Setting State: Stopping
+[12:29:21]     Setting State: Ready
+[12:29:21] Detected state Ready
+[12:29:21] Ygor Telescope: WaitForStopping
+[12:29:21] source : UGC08267
+               N_OBS : 2.0
+               SESSION : 14.0
+               location : J2000 @ (13:11:11.30, 43:43:34.80)
+               CALIBRATOR : 3C286
+               VEL : 7078.6
+[12:29:21] Slewing to source.
+[12:29:21] In state Ready, waiting for state Activating
+[12:29:21]     Setting State: Activating
+[12:29:21] Detected state Activating
+[12:29:21] In state Activating, waiting for state Ready
+[12:34:53]     Setting State: Ready
+[12:34:53] Detected state Ready
+[12:34:53] Balancing IF system.
+[12:34:53] Balancing IFRack
+[12:34:54]     Setting State: Activating
+[12:34:54]     Setting State: Ready
+[12:34:55] the sampler values are:
+[12:34:55] RF_power 1 : 2.973633
+[12:34:55] RF_power 2 : 0.004882812
+[12:34:55] RF_power 3 : 2.919922
+[12:34:55] RF_power 4 : 0.01464844
+[12:34:55] RF_power 5 : 0.02441406
+[12:34:55] RF_power 6 : 2.822266
+[12:34:56] RF_power 7 : 3.237305
+[12:34:56] RF_power 8 : 0.0390625
+[12:34:56] Balancing VEGAS
+[12:34:56]     Setting State: Activating
+[12:34:56]     Setting State: Ready
+[12:34:57]     Setting State: Activating
+[12:34:57]     Setting State: Ready
+[12:34:57] Starting on-source scan
+[12:34:57] source : UGC08267
+               N_OBS : 2.0
+               SESSION : 14.0
+               location : J2000 @ (13:11:11.30, 43:43:34.80)
+               CALIBRATOR : 3C286
+               VEL : 7078.6
+[12:34:58] Track: Subscan 1 of 1
+[12:34:59] In state Ready, waiting for state Running
+[12:34:59]     Setting State: Activating
+[12:35:04]     Setting State: Committed
+[12:35:06]     Setting State: Running
+[12:35:06] Detected state Running
+[12:35:06] *** Notice: This subscan will be numbered as scan #59 in your data reduction package.
+[12:35:06] In state Running, waiting for state Ready
+[12:38:26]     Setting State: Stopping
+[12:38:28]     Setting State: Ready
+[12:38:28] Detected state Ready
+[12:38:28] Ygor Telescope: WaitForStopping
+[12:38:28] Starting off-source scan
+[12:38:28] source : UGC08267
+               N_OBS : 2.0
+               SESSION : 14.0
+               location : J2000 @ (13:11:11.30, 43:43:34.80)
+               CALIBRATOR : 3C286
+               VEL : 7078.6
+[12:38:28] Track: Subscan 1 of 1
+[12:38:29] In state Ready, waiting for state Running
+[12:38:29]     Setting State: Activating
+[12:39:06]     Setting State: Committed
+[12:39:08]     Setting State: Running
+[12:39:08] Detected state Running
+[12:39:08] *** Notice: This subscan will be numbered as scan #60 in your data reduction package.
+[12:39:08] In state Running, waiting for state Ready
+[12:42:28]     Setting State: Stopping
+[12:42:30]     Setting State: Ready
+[12:42:30] Detected state Ready
+[12:42:30] Ygor Telescope: WaitForStopping
+[12:42:30] Starting on-source scan
+[12:42:30] source : UGC08267
+               N_OBS : 2.0
+               SESSION : 14.0
+               location : J2000 @ (13:11:11.30, 43:43:34.80)
+               CALIBRATOR : 3C286
+               VEL : 7078.6
+[12:42:30] Track: Subscan 1 of 1
+[12:42:31] In state Ready, waiting for state Running
+[12:42:31]     Setting State: Activating
+[12:43:06]     Setting State: Committed
+[12:43:08]     Setting State: Running
+[12:43:08] Detected state Running
+[12:43:08] *** Notice: This subscan will be numbered as scan #61 in your data reduction package.
+[12:43:08] In state Running, waiting for state Ready
+[12:46:28]     Setting State: Stopping
+[12:46:30]     Setting State: Ready
+[12:46:30] Detected state Ready
+[12:46:30] Ygor Telescope: WaitForStopping
+[12:46:30] UGC08267: OBS COMPLETE = 3/3
+[12:46:30] Updating Catalogs
+[12:46:30] source : UGC08107
+               N_OBS : 0.0
+               SESSION : 15.0
+               location : J2000 @ (12:59:39.80, 53:20:28.20)
+               CALIBRATOR : 3C295
+               VEL : 8076.9
+[12:46:30] Slewing to source.
+[12:46:31] In state Ready, waiting for state Activating
+[12:46:31]     Setting State: Activating
+[12:46:31] Detected state Activating
+[12:46:31] In state Activating, waiting for state Ready
+[12:47:31]     Setting State: Ready
+[12:47:31] Detected state Ready
+[12:47:31] Balancing IF system.
+[12:47:31] Balancing IFRack
+[12:47:31]     Setting State: Activating
+[12:47:31]     Setting State: Ready
+[12:47:33] the sampler values are:
+[12:47:33] RF_power 1 : 3.242188
+[12:47:33] RF_power 2 : 0
+[12:47:33] RF_power 3 : 3.071289
+[12:47:33] RF_power 4 : 0.01464844
+[12:47:33] RF_power 5 : 0.02441406
+[12:47:33] RF_power 6 : 2.490234
+[12:47:33] RF_power 7 : 2.856445
+[12:47:33] RF_power 8 : 0.0390625
+[12:47:33] Balancing VEGAS
+[12:47:33]     Setting State: Activating
+[12:47:33]     Setting State: Ready
+[12:47:34]     Setting State: Activating
+[12:47:34]     Setting State: Ready
+[12:47:35] Starting on-source scan
+[12:47:35] source : UGC08107
+               N_OBS : 0.0
+               SESSION : 15.0
+               location : J2000 @ (12:59:39.80, 53:20:28.20)
+               CALIBRATOR : 3C295
+               VEL : 8076.9
+[12:47:35] Track: Subscan 1 of 1
+[12:47:36] In state Ready, waiting for state Running
+[12:47:36]     Setting State: Activating
+[12:47:41]     Setting State: Committed
+[12:47:43]     Setting State: Running
+[12:47:43] Detected state Running
+[12:47:43] *** Notice: This subscan will be numbered as scan #62 in your data reduction package.
+[12:47:43] In state Running, waiting for state Ready
+[12:51:03]     Setting State: Stopping
+[12:51:05]     Setting State: Ready
+[12:51:05] Detected state Ready
+[12:51:05] Ygor Telescope: WaitForStopping
+[12:51:05] Starting off-source scan
+[12:51:05] source : UGC08107
+               N_OBS : 0.0
+               SESSION : 15.0
+               location : J2000 @ (12:59:39.80, 53:20:28.20)
+               CALIBRATOR : 3C295
+               VEL : 8076.9
+[12:51:05] Track: Subscan 1 of 1
+[12:51:06] In state Ready, waiting for state Running
+[12:51:06]     Setting State: Activating
+[12:51:29]     Setting State: Committed
+[12:51:31]     Setting State: Running
+[12:51:31] Detected state Running
+[12:51:31] *** Notice: This subscan will be numbered as scan #63 in your data reduction package.
+[12:51:31] In state Running, waiting for state Ready
+[12:54:51]     Setting State: Stopping
+[12:54:53]     Setting State: Ready
+[12:54:53] Detected state Ready
+[12:54:53] Ygor Telescope: WaitForStopping
+[12:54:53] Starting on-source scan
+[12:54:53] source : UGC08107
+               N_OBS : 0.0
+               SESSION : 15.0
+               location : J2000 @ (12:59:39.80, 53:20:28.20)
+               CALIBRATOR : 3C295
+               VEL : 8076.9
+[12:54:53] Track: Subscan 1 of 1
+[12:54:54] In state Ready, waiting for state Running
+[12:54:54]     Setting State: Activating
+[12:55:17]     Setting State: Committed
+[12:55:19]     Setting State: Running
+[12:55:19] Detected state Running
+[12:55:19] *** Notice: This subscan will be numbered as scan #64 in your data reduction package.
+[12:55:19] In state Running, waiting for state Ready
+[12:58:39]     Setting State: Stopping
+[12:58:41]     Setting State: Ready
+[12:58:41] Detected state Ready
+[12:58:41] Ygor Telescope: WaitForStopping
+[12:58:41] UGC08107: OBS COMPLETE = 1/3
+[12:58:41] Updating Catalogs
+[12:58:41] Starting on-source scan
+[12:58:41] source : UGC08107
+               N_OBS : 0.0
+               SESSION : 15.0
+               location : J2000 @ (12:59:39.80, 53:20:28.20)
+               CALIBRATOR : 3C295
+               VEL : 8076.9
+[12:58:41] Track: Subscan 1 of 1
+[12:58:42] In state Ready, waiting for state Running
+[12:58:42]     Setting State: Activating
+[12:58:47]     Setting State: Committed
+[12:58:49]     Setting State: Running
+[12:58:49] Detected state Running
+[12:58:49] *** Notice: This subscan will be numbered as scan #65 in your data reduction package.
+[12:58:49] In state Running, waiting for state Ready
+[13:02:09]     Setting State: Stopping
+[13:02:11]     Setting State: Ready
+[13:02:11] Detected state Ready
+[13:02:11] Ygor Telescope: WaitForStopping
+[13:02:11] Starting off-source scan
+[13:02:11] source : UGC08107
+               N_OBS : 0.0
+               SESSION : 15.0
+               location : J2000 @ (12:59:39.80, 53:20:28.20)
+               CALIBRATOR : 3C295
+               VEL : 8076.9
+[13:02:11] Track: Subscan 1 of 1
+[13:02:12] In state Ready, waiting for state Running
+[13:02:12]     Setting State: Activating
+[13:02:34]     Setting State: Committed
+[13:02:36]     Setting State: Running
+[13:02:36] Detected state Running
+[13:02:36] *** Notice: This subscan will be numbered as scan #66 in your data reduction package.
+[13:02:36] In state Running, waiting for state Ready
+[13:05:56]     Setting State: Stopping
+[13:05:58]     Setting State: Ready
+[13:05:58] Detected state Ready
+[13:05:58] Ygor Telescope: WaitForStopping
+[13:05:58] Starting on-source scan
+[13:05:58] source : UGC08107
+               N_OBS : 0.0
+               SESSION : 15.0
+               location : J2000 @ (12:59:39.80, 53:20:28.20)
+               CALIBRATOR : 3C295
+               VEL : 8076.9
+[13:05:58] Track: Subscan 1 of 1
+[13:05:59] In state Ready, waiting for state Running
+[13:05:59]     Setting State: Activating
+[13:06:20]     Setting State: Committed
+[13:06:22]     Setting State: Running
+[13:06:22] Detected state Running
+[13:06:22] *** Notice: This subscan will be numbered as scan #67 in your data reduction package.
+[13:06:22] In state Running, waiting for state Ready
+[13:09:42]     Setting State: Stopping
+[13:09:44]     Setting State: Ready
+[13:09:44] Detected state Ready
+[13:09:44] Ygor Telescope: WaitForStopping
+[13:09:44] UGC08107: OBS COMPLETE = 2/3
+[13:09:44] Updating Catalogs
+[13:09:44] Starting on-source scan
+[13:09:44] source : UGC08107
+               N_OBS : 0.0
+               SESSION : 15.0
+               location : J2000 @ (12:59:39.80, 53:20:28.20)
+               CALIBRATOR : 3C295
+               VEL : 8076.9
+[13:09:44] Track: Subscan 1 of 1
+[13:09:45] In state Ready, waiting for state Running
+[13:09:45]     Setting State: Activating
+[13:09:50]     Setting State: Committed
+[13:09:52]     Setting State: Running
+[13:09:52] Detected state Running
+[13:09:52] *** Notice: This subscan will be numbered as scan #68 in your data reduction package.
+[13:09:52] In state Running, waiting for state Ready
+[13:13:12]     Setting State: Stopping
+[13:13:14]     Setting State: Ready
+[13:13:14] Detected state Ready
+
+[13:13:14] *** Notice: Scheduling block paused.
+[13:13:50] *** Notice: Scheduling blo
+#######################################################

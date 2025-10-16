@@ -1,0 +1,101 @@
+Instructions for project GBT15B-287 - OPERATOR RUN MODE
+
+- QUICK REFERENCE
+
+1. Submit 15B287_operator in Astrid
+2. Check the first AutoPeakFocus looks ok
+3. Check VEGAS gets selected and balances 3 banks reasonably.
+4. At the end of the time hit 'Stop' (or 'Abort', but only if you must).
+5. Export the log to /home/astro-util/projects/GBT15B_operator/logs/
+
+*** If the scheduling block ends by itself (check on it every now and then),
+    follow the instructions in the last section of the detailed instructions
+    below.
+
+
+---------------------- DETAILED INSTRUCTIONS --------------------------
+
+- Starting the Observation
+
+1. Select the 'Run' tab in astrid
+2. Choose AGBT15B_287 under 'Project'. (-> AGBT -> AGBT15B - AGBT15B_287)
+3. Allow astrid to automatically increase the session number.
+4. Enter appropriate values for the 'Observer' and 'Operator'.
+5. Select the observing script '15B287_operator' from the list of available
+   scheduling blocks.
+6. Click 'Submit'.
+
+
+- Monitor 1st Peak/Focus
+
+1. The script will perform an AutoPeakFocus at the start of the experiment.
+2. Select the 'DataDisplay' tab in Astrid.
+3. Select the 'Pointing' sub-tab directly under 'DataDisplay'.
+3. 4 peak scans should appear sequentially in the window.  All four should
+   show a peak centered around zero.
+   Example: /home/astro-util/projects/15B287_operator/pointing.jpeg
+4. 1 focus scan will then be performed.
+   Example: /home/astro-util/projects/15B287_operator/focus.jpeg
+
+  - PLEASE NOTE: the script may decide to perform an additional AutoPeak
+    after the above AutoPeakFocus.  Just let it run, you should not need to
+    check anything if the first peaks were ok.
+
+
+- VEGAS Observations
+
+2. The system will reconfigure to use VEGAS.
+3. In cleo select the VEGAS screen.
+4. 3 banks of VEGAS should be selected (highlighted green box under
+   'SubSysSelect' column).
+5. VEGAS will balance.  Check values of selected banks are around -20 in the
+   'Power' column.
+6. Start an internet browser and go to https://vegasdisplay-beta.gb.nrao.edu/
+7. Once the first scans start, the default screen should show 3 plots.  See
+   the example /home/astro-util/projects/15B287_operator/vegas_data_display.jpeg
+
+  - PLEASE NOTE: The data display appears to be very buggy.  It has only
+    worked for me a few times.  If the screen is blank, but scans are
+    running with VEGAS selected, just let the observing script continue.
+
+
+- At the end of the session.
+
+1. Hit 'Stop' in Astrid (or 'Abort' if 'Stop' is greyed out)
+2. Go to the 'ObservationManagement' tab of Astrid and then click 'Export Log'
+   at the bottom of the screen.
+3. Save the log as
+   /home/astro-util/projects/GBT15B_operator/logs/DDMonYYYY_hhmm.txt
+   Please change DDMonYYYY_hhmm to real date-times values.  Naming
+   examples can be found in that directory.  If unsure, just name it
+   whatever and someone will change it later.  You don't need to be
+   exact with the hours and minutes.
+
+
+- EXCEPTIONS AND ERRORS:
+
+The script should not fail, but it is conceivable that it could end without
+performing any scans.  This is because it selects sources based on LST 
+ranges and the start time of the submitted script.  If nothing is observered,
+then there are no sources left to observe in that LST range. If this happens:
+
+ - Resubmit the script
+
+       OR (if that fails)
+
+ - Run the alternate script: 15B287_operator_backup
+
+The backup script will search through all available sources for the project
+and attempt to find one that is observable.  If the script continues to
+start/immediately stop (without an error message) then there is nothing else
+you can do since the project has been scheduled at a bad time.  The best you
+could do is resubmit the script in 10-15 minutes intervals in the
+hope that an observable source will have risen above the horizon.
+
+In the case of an error leading to abort: Call Dan Perera or the on-call
+support scientist if I'm unavailable.
+
+Dan Perera:
+Home (304) 456-5184
+Office (304) 456-2395
+Cell (304) 646-2658

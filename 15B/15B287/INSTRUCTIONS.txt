@@ -1,0 +1,19 @@
+
+Dear Observers,
+
+Since this is a filler project, I create 4 observing scripts. When the time has came for filler project, please execute these scripts (already in Astrid), depend on the LST of the observation:
+
+- 15B287_LST_5_9   : To be executed between LST 5 and 9 hours.
+
+- 15B287_LST_9_13  : To be executed between LST 9 and 13 hours.
+
+- 15B287_LST_13_17 : To be executed between LST 13 and 17 hours.
+
+- 15B287_LST_17_21 : To be executed between LST 17 and 21 hours.
+
+For your information, the catalog and configuration files are in the same folder: 15B287.cat and 15B287_config.py. All observing scripts use the same catalog and configuration files.
+
+Thank you,
+Dyas Utomo
+510-365-0503
+dyas.utomo@gmail.com
