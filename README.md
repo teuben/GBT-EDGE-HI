@@ -11,6 +11,8 @@ Observing scripts at GBO:
   * /home/astro-util/projects/15B287_operator
   * /home/astro-util/projects/15B287
 
+these have been recorded in our `15B` directory.
+
 ## Installation
 
 Install [dysh](https://github.com/GreenBankObservatory/dysh) in your choice of a (virtual) environment.
