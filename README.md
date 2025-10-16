@@ -1,17 +1,18 @@
 # GBT-EDGE-HI
 
-HI survey of EDGE galaxies.   Started with AGBT15B_287, where 100+ galaxies were
+HI survey of EDGE galaxies.   Started with **AGBT15B_287**, where 100+ galaxies were
 observed in a modified PositionSwitch using ON-OFF-ON and a corresponding getsigref
 procedure. The original GBTIDL procedure can be done with `edge.pro`.
 
-The followup project code is AGBT25A_474.
+The followup project code is **AGBT25A_474**.
 
-Observing scripts at GBO:
+Old observing scripts at GBO:
 
   * /home/astro-util/projects/15B287_operator
   * /home/astro-util/projects/15B287
 
-these have been recorded in our `15B` directory.
+these have been recorded in our `15B` directory.  An example to reduce these for NGC 2805
+are in the `examples/` directory
 
 ## Installation
 
