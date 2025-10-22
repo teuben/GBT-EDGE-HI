@@ -72,7 +72,8 @@ cd dysh
 
 if [ $uv = 1 ]; then
     pip install uv
-    uv sync # --active
+    #uv sync # --active
+    uv sync --all-extras
     echo "Running via:"
     echo "    uv run dysh"
     echo "or"
@@ -82,6 +83,7 @@ else
 fi
 
 if [ $pr != 0 ]; then
+    echo "NOTE: Merging in origin/$pr"
     git merge origin/$pr
 fi
 
