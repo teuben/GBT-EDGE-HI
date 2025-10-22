@@ -1,15 +1,18 @@
 # GBT-EDGE-HI
 
-HI survey of EDGE galaxies.   Started with AGBT15B_287, where 100+ galaxies were
+HI survey of EDGE galaxies.   Started with **AGBT15B_287**, where 100+ galaxies were
 observed in a modified PositionSwitch using ON-OFF-ON and a corresponding getsigref
 procedure. The original GBTIDL procedure can be done with `edge.pro`.
 
-The followup project code is AGBT25A_474.
+The followup project code is **AGBT25A_474**.
 
-Observing scripts at GBO:
+Old observing scripts at GBO:
 
   * /home/astro-util/projects/15B287_operator
   * /home/astro-util/projects/15B287
+
+these have been recorded in our `15B` directory.  An example to reduce these for NGC 2805
+are in the `examples/` directory
 
 ## Installation
 
@@ -69,3 +72,21 @@ dysh
   f1=dysh_data('AGBT15B_287_19', dysh_data='/home/teuben/GBT/dysh_data/')
 
 ```
+
+## GBT links
+
+DSS project page: https://dss.gb.nrao.edu/project/GBT25A-474
+
+Explanation of Grades: https://greenbankobservatory.org/portal/gbt/proposing/#panel-scores-and-groups
+
+Schools and Workshops: https://greenbankobservatory.org/science/gatherings/
+
+Steps for observation preperation: https://greenbankobservatory.org/portal/gbt/proposing/#next-steps-for-accepted-proposals
+
+GBT Infrastructure Work: https://greenbankobservatory.org/portal/gbt/proposing/#gbt-infrastructure-work
+
+Receiver schedule: https://dss.gb.nrao.edu/receivers
+
+TAC report (including LST pressure plots): https://science.nrao.edu/observing/proposal-types/tac-reports/25a-tac-report
+
+Science program: https://science.nrao.edu/science/science-program/2025a
