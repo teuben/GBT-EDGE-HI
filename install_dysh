@@ -5,8 +5,9 @@
 #     3)   docs/source                         ~ 4 min
 #
 #  Install examples:
-#     ./install_dysh docs=1 version=-1 venv=1
-#     ./install_dysh docs=1 uv=1
+#     ./install_dysh docs=1 version=-1 venv=1      # system python
+#     ./install_dysh docs=1 version=-1 uv=1 venv=1 
+#     ./install_dysh docs=1 uv=1                   # anaconda3
 #     ./install_dysh docs=1
 #
 #  Examples:
