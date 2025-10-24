@@ -5,15 +5,10 @@
 #     3)   docs/source                         ~ 4 min
 #
 #  Install examples:
-#     ./install_dysh docs=1 version=-1 venv=1      # system python
-#     ./install_dysh docs=1 version=-1 uv=1 venv=1 
-#     ./install_dysh docs=1 uv=1                   # anaconda3
+#     ./install_dysh docs=1 version=-1 venv=1       # system python
+#     ./install_dysh docs=1 version=-1 venv=1 uv=1
+#     ./install_dysh docs=1 uv=1                    # anaconda3
 #     ./install_dysh docs=1
-#
-#  Examples:
-#     uvx dysh --no-banner
-#     uvx --from dysh[all] dysh-lab
-#     uv tool install dysh[all]
 #
 #  Tested:
 #                        3.10.14   fails pytest
@@ -21,10 +16,15 @@
 #     version=2024.10-1  3.12.7    ok
 #     version=2025.06-1  3.13.5    (in numpy_2)
 #
+#  Examples:
+#     uvx dysh --no-banner
+#     uvx --from dysh[all] dysh-lab
+#     uv tool install dysh[all]
+#
 #--HELP
 # default parameters
 
-wget=wgetc                                         # ideally use caching wgetc if you have it
+wget=wgetc                                         # use wget=wget if you don't have caching wgetc
 url=https://github.com/GreenbankObservatory/dysh   # official repo
 restart=1                                          # re-install old anaconda3 and dysh?
 sleep=5                                            # enforced sleep to prevent accidents
