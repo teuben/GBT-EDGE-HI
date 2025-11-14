@@ -33,7 +33,7 @@ pol = "Linear"
 
 Configure(config_string)
 
-execfile("/users/yteng/EDGE-HI/25A474_functions.py")
+execfile("/home/astro-util/projects/25A474/25A474_functions.py")
 Catalog(fluxcal)
 Catalog(lband_pointing)
 
@@ -43,7 +43,7 @@ doCal = doFirstCal
 doPointing = doFirstPointing
 project_obs = 0
 old_catalog_name = 'dummy'
-fullcat = '/users/yteng/EDGE-HI/targets.cat'
+fullcat = '/home/astro-util/projects/25A474/targets.cat'
 
 
 while project_obs < 100:
