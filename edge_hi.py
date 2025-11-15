@@ -1,14 +1,5 @@
 #
-#   export SDFITS_DATA=/home/teuben/GBT/dysh
-
-
-gals = [
-    #   name     session   scans            vlsr   dv    dw
-    ["UGC10972",   "01",  [8,10,12,14,16],  4650,  250,  500],
-    ["NGC6154",    "01",  [18,20,22],       5980,  100,  200],
-    ["NGC5480",    "01",  [25,27,29,31,33], 1870,  200,  400],
-    ["NGC5633",    "01",  [35],             2000, 1000, 1000],
-]
+# typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)
 
 gals = {
     #   name     session   scans            vlsr   dv    dw
