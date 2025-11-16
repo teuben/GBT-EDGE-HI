@@ -1,3 +1,4 @@
+#! /usr/bin/env dysh
 #
 # typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)
 
@@ -37,7 +38,6 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
     sp0 = sdf.getps(scan=scans, fdnum=0, ifnum=0, plnum=0).timeaverage()
     sp1 = sdf.getps(scan=scans, fdnum=0, ifnum=0, plnum=1).timeaverage()
     sp = sp0.average(sp1)
-    #sp.plot(xaxis_unit="km/s")
     
     vmin = vlsr-dv-dw
     vmax = vlsr+dv+dw
@@ -50,28 +50,34 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
     spn.baseline(2,exclude=(gmin*kms,gmax*kms))
     spn.baseline(2,exclude=(gmin*kms,gmax*kms),remove=True)
 
-    sps = spn.smooth("box",3)
-    #sps.plot(xaxis_unit="km/s")
+    if False:
+        sps = spn.smooth("box",0)
+    else:
+        sps = spn
 
     #   flux a simple sum between gmin and gmax
-    spg = spn[gmin*kms:gmax*kms]
+    spg = sps[gmin*kms:gmax*kms]
+    ngal = len(spg.flux)
     sumflux = np.nansum(spg.flux)
     deltav = abs(spg.velocity[0]-spg.velocity[1])
     flux = sumflux * deltav
-    print(f"Flux: {flux}")
 
-    spb0 = spn[vmin*kms:gmin*kms]
-    spb1 = spn[gmax*kms:vmax*kms]
+    spb0 = sps[vmin*kms:gmin*kms]
+    spb1 = sps[gmax*kms:vmax*kms]
 
-    rms0_0 = spb0.stats()['rms']*1000
-    rms1_0 = spb1.stats()['rms']*1000
+    rms0_0 = (spb0.stats()['rms']).to("mK")
+    rms1_0 = (spb1.stats()['rms']).to("mK")
                     
-    rms0_1 = spb0.stats(roll=1)['rms']/np.sqrt(2)*1000
-    rms1_1 = spb1.stats(roll=1)['rms']/np.sqrt(2)*1000
+    rms0_1 = (spb0.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
+    rms1_1 = (spb1.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
 
-    print(f'rms0: {rms0_0.value:.1f} {rms0_1.value:.1f}')
-    print(f'rms1: {rms1_0.value:.1f} {rms1_1.value:.1f}')
+    print(f'rms0: {rms0_0:.1f} {rms0_1:.1f}')
+    print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
+
+    rms = max(rms0_1,rms1_1)
                     
+    dflux = rms.to("K")*deltav*np.sqrt(ngal)
+    print(f"{gal:.10s} Flux: {flux:.2f} +/- {dflux:.2f}   rms {rms:.2f}    nchan {ngal}")
 
 
     print('sps.plot(xaxis_unit="km/s")')
@@ -81,16 +87,6 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
 
 sdf = GBTOffline('AGBT25A_474_01')
 sdf.summary()
-
-
-gal, session, scans, vlsr, dv, dw = gals[0]
-
-gal = "NGC5633"
-session, scans, vlsr, dv, dw = gals[gal]
-
-sp,sps=edge1(sdf, gal, session, scans, vlsr, dv, dw)
-
-
 
 for gal in gals.keys():
     print(gal)
