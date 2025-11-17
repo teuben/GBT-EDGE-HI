@@ -8,6 +8,10 @@ echo '<pre>'
 grep Flux edge_hi.log | sort 
 echo '</pre>'
 
+echo "The Q parameter is 1 for perfect baselines, and starts getting bigger when the RMS"
+echo "on both sides differ and/or the RMS in a rolled spectrum is not the RMS of the spectrum"
+echo "itself, indicative of residuals"
+echo "<br>"
 echo "See also <A HREF=gals.pars>gals.pars</A> parameter file for the current settings and comments"
 
 echo '<hr>'
