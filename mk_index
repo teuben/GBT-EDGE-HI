@@ -13,6 +13,8 @@ echo "on both sides differ and/or the RMS in a rolled spectrum is not the RMS of
 echo "itself, indicative of residuals"
 echo "<br>"
 echo "See also <A HREF=gals.pars>gals.pars</A> parameter file for the current settings and comments"
+echo "<br>"
+echo "Supporting dysh code is in <A HREF=https://github.com/teuben/GBT-EDGE-HI>https://github.com/teuben/GBT-EDGE-HI</>"
 
 echo '<hr>'
 
