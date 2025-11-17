@@ -3,6 +3,7 @@
 
 echo '<HTML>'
 
+echo "Updated on $(date)"
 echo '<pre>'
 grep Flux edge_hi.log | sort 
 echo '</pre>'
