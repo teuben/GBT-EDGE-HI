@@ -1,16 +1,69 @@
 #! /usr/bin/env dysh
 #
 # typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)
+# spectral res = 2.5 km/s
 
-gals = {
-    #   name     session   scans            vlsr   dv    dw
-    "UGC10972" :  ( "01",  [8,10,12,14,16],  4650,  250, 1000),
-    "NGC6154"  :  ( "01",  [18,20,22],       5980,  100,  400),
-    "NGC5480"  :  ( "01",  [25,27,29,31,33], 1870,  200,  800),
-    "NGC5633"  :  ( "01",  [35,37,39,41,43], 2300,  200,  800),    
-    "UGC09476" :  ( "01",  [45,47,51,53],    3230,  150,  600),    # 49 bad
-    "UGC08733" :  ( "01",  [55,57,59],       2315,  150,  600),    # 61 last "ON", has no "OFF"
-}
+def get_gals(filename = "gals.pars"):
+    """ reads galaxy parameters. Currently:
+    gal
+    session   1,2
+    scans     comma separated list of the ON's
+    vlsr      km/s
+    dv        half the width (km/s)
+    dw        width of each baseline section (km/s)
+    """
+    fp = open(filename)
+    gals = {}
+    for line in fp.readlines():
+        w = line.split()
+        if len(w) < 6:  continue
+        if w[0] == '#': continue
+        gal = w[0]
+        session = int(w[1])
+        scans = [int(x) for x in w[2].split(',')]
+        vlsr = float(w[3])
+        dv = float(w[4])
+        dw = float(w[5])
+        gals[gal] = (session,scans,vlsr,dv,dw)
+        print(gal,gals[gal])
+    fp.close()
+    return gals
+
+def get_pars(sdf, session):
+    """ get the pars from an sdf summary, do some sanity checks
+    'SCAN',      accumulate the PROCSEQ=1 in scans
+    'OBJECT',    gal
+    'VELOCITY',  vlsr
+    'PROC',      "OnOff"
+    'PROCSEQN',  1 or 2
+    'RESTFREQ',  -
+    'DOPFREQ',   -
+    '# IF',      1
+    '# POL',     2
+    '# INT',     37
+    '# FEED',    1
+    'AZIMUTH',   -
+    'ELEVATION'  show min/max
+    """
+    calibrators = ['3C84', '3C48', '3C273', '3C196']
+    df = sdf.get_summary()
+    for gal in df['OBJECT'].unique():
+        if gal in calibrators: continue
+        df1 = df[df['OBJECT'] == gal]
+        vlsr = df1['VELOCITY'].unique()
+        scans2 = df1['SCAN'].unique()
+        scans=[]
+        for s in scans2:
+            ps = int(df[df['SCAN'] == s]['PROCSEQN'].values[0])
+            if ps == 1:
+                scans.append(int(s))
+        dv = 200
+        dw = 800
+        print(gal,session,scans,vlsr,dv,dw)
+    print("Be sure to sanitize this list")
+
+# get_pars(sdf,3)                 
+
 
 
 # at GBO:     sdf = GBTOnline()
@@ -50,8 +103,8 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
     spn.baseline(2,exclude=(gmin*kms,gmax*kms))
     spn.baseline(2,exclude=(gmin*kms,gmax*kms),remove=True)
 
-    if False:
-        sps = spn.smooth("box",0)
+    if True:
+        sps = spn.smooth("box",3)
     else:
         sps = spn
 
@@ -75,9 +128,10 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
     print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
 
     rms = max(rms0_1,rms1_1)
+    Q = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
                     
     dflux = rms.to("K")*deltav*np.sqrt(ngal)
-    print(f"{gal:.10s} Flux: {flux:.2f} +/- {dflux:.2f}   rms {rms:.2f}    nchan {ngal}")
+    print(f"{gal:.10s} Flux: {flux:.2f} +/- {dflux:.2f}   rms {rms:.2f} Q {Q:.2f} nchan {ngal}")
 
 
     print('sps.plot(xaxis_unit="km/s")')
@@ -85,13 +139,19 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
     return sp, sps
 
 
-sdf = GBTOffline('AGBT25A_474_01')
-sdf.summary()
+gals = get_gals()
 
+
+old_session = -1
 for gal in gals.keys():
     print(gal)
     session, scans, vlsr, dv, dw = gals[gal]
+    if session != old_session:
+        old_session = session
+        sdf =  GBTOffline(f'AGBT25A_474_{session:02}')
+        sdf.summary()
     sp,sps = edge1(sdf, gal, session, scans, vlsr, dv, dw)
     sss = sps.plot(xaxis_unit="km/s")
     sss.savefig(f'{gal}.png')
+    sps.write
     print("-----------------------------------")
