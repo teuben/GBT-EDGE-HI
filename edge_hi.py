@@ -3,6 +3,12 @@
 # typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)
 # spectral res = 2.5 km/s
 
+import sys
+import astropy.units as u
+
+kms = u.km/u.s
+
+
 def get_gals(filename = "gals.pars"):
     """ reads galaxy parameters. Currently:
     gal
@@ -62,7 +68,7 @@ def get_pars(sdf, session):
         print(gal,session,scans,vlsr,dv,dw)
     print("Be sure to sanitize this list")
 
-# get_pars(sdf,3)                 
+# get_pars(sdf,session)                 
 
 
 
@@ -75,9 +81,6 @@ def get_pars(sdf, session):
 #  export SDFITS_DATA=/home/teuben/EDGE/GBT-EDGE-HI
 #  rsync -av lma:/lma1/teuben/GBT/AGBT25A_474_01 .
 #  
-
-import astropy.units as u
-kms = u.km/u.s
 
 def edge1(sdf, gal, session, scans, vlsr, dv, dw):
     """  reduce
@@ -141,9 +144,12 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
 
 gals = get_gals()
 
+my_gals = gals.keys()
+if len(sys.argv) > 1:
+    my_gals = [sys.argv[1]]
 
 old_session = -1
-for gal in gals.keys():
+for gal in my_gals:
     print(gal)
     session, scans, vlsr, dv, dw = gals[gal]
     if session != old_session:
