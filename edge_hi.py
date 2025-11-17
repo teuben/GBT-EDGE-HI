@@ -2,6 +2,8 @@
 #
 # typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)
 # spectral res = 2.5 km/s
+#
+# timing:   2'33" for 4 sessions
 
 import sys
 import astropy.units as u
