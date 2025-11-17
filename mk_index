@@ -1,0 +1,17 @@
+#! /usr/bin/env bash
+#
+
+echo '<HTML>'
+
+echo '<pre>'
+grep Flux edge_hi.log | sort 
+echo '</pre>'
+
+echo '<hr>'
+
+for p in *.png; do
+    echo "<A HREF=$p> <img src=$p> </A>"
+done
+
+echo '</HTML>'
+	 
