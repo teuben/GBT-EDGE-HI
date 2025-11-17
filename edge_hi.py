@@ -10,6 +10,8 @@ import astropy.units as u
 
 kms = u.km/u.s
 
+project = 'AGBT25A_474'
+
 
 def get_gals(filename = "gals.pars"):
     """ reads galaxy parameters. Currently:
@@ -23,9 +25,9 @@ def get_gals(filename = "gals.pars"):
     fp = open(filename)
     gals = {}
     for line in fp.readlines():
+        if line[0] == '#': continue
         w = line.split()
         if len(w) < 6:  continue
-        if w[0] == '#': continue
         gal = w[0]
         session = int(w[1])
         scans = [int(x) for x in w[2].split(',')]
@@ -90,7 +92,8 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
     print(f"Working on {gal} {vlsr} {dv} {dw}")
     
     if sdf == None:
-        sdf = GBTOffline(f'AGBT25A_474_{session}')
+        filename = f'{project}_{session:02}'
+        sdf = GBTOffline(filename)
         sdf.summary()
 
     sp0 = sdf.getps(scan=scans, fdnum=0, ifnum=0, plnum=0).timeaverage()
@@ -156,7 +159,8 @@ for gal in my_gals:
     session, scans, vlsr, dv, dw = gals[gal]
     if session != old_session:
         old_session = session
-        sdf =  GBTOffline(f'AGBT25A_474_{session:02}')
+        filename  = f'{project}_{session:02}'
+        sdf =  GBTOffline(filename)
         sdf.summary()
     sp,sps = edge1(sdf, gal, session, scans, vlsr, dv, dw)
     sss = sps.plot(xaxis_unit="km/s")
