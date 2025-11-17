@@ -8,6 +8,8 @@ echo '<pre>'
 grep Flux edge_hi.log | sort 
 echo '</pre>'
 
+echo "See also <A HREF=gals.pars>gals.pars</A> parameter file for the current settings and comments"
+
 echo '<hr>'
 
 for p in *.png; do
