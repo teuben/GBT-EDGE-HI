@@ -1,7 +1,7 @@
 
 # session 1:
 
-#! galaxy  session    scans           vlsr  dv   dw    # comments
+# galaxy  session    scans           vlsr  dv   dw    # comments
 
 UGC10972      1    8,10,12,14,16      4652  250 1000
 NGC6154       1   18,20,22            5966  100  400
@@ -20,7 +20,7 @@ NGC7025       2  48,50,52,54,56       4968 200 800     # weak
 NGC7550       2  58,60,62,64,66       5078 200 800     # bad baseline?
 MCG-01-01-012 2  68,70,72,74,76       5765 200 800
 UGC12274      2  82,86                7656 400 1600    # 78,80,84 bad  - no signal?
-NGC7194       2  88,90,92,94,96       8146 200 800     # wrong vel/bad baseline
+NGC7194       2  88,90,92,94,96       8146 300 1200    # wrong vel/bad baseline
 NGC0681       2  98,100,102,104,106   1748 200 800
 NGC0991       2  108,110,112,114,116  1532 200 800
 NGC0787       2  130,132,134,136      4747 200 800     # one missing
