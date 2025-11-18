@@ -44,8 +44,16 @@ NGC2691       4  38,40,42,44,46       4013 200 800  # ok
 NGC2918       4  48,50,52,54          6756 200 800  # weak? 56 has big sidelobes
 UGC09542      4  58,60,62             5458 200 800  # sym double horn
 
-# test 2nd occurance
-UGC10972      1    8,10,12,14,16      4652  250 1000
+# session 5:
+NGC5934       5  8,10,12,14,16        5563 400 1600  # bad baseline
+NGC6154       5  18,20                5966 200 800   # 2nd shot, signal was strong enough
+UGC08781      5  28,30                7571 200 800   # 22,24,26 - weak
+IC4215        5  32,34,36,38,40       3884 200 800   # no signal?
+UGC10905      5  42,44,46,48,50       7843 300 1200  # bad baselines
+UGC09711      5  52,54,56,58,60       8342 300 1200  # bad baselines
+NGC09629      5  62,64,66,68,70       7823 200 800   # nothing?
+UGC08234      5  76,78,80             8109 300 1200   # 72,74 bad
+NGC6427       5  82                   3231 300 1200
 
 
 # ??
