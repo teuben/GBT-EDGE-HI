@@ -63,7 +63,7 @@ def get_pars(sdf, session):
     'AZIMUTH',   -
     'ELEVATION'  show min/max
     """
-    calibrators = ['3C84', '3C48', '3C273', '3C196']
+    calibrators = ['3C84', '3C48', '3C273', '3C196', '3C295']
     df = sdf.get_summary()
     for gal in df['OBJECT'].unique():
         if gal in calibrators: continue
@@ -80,6 +80,8 @@ def get_pars(sdf, session):
         print(gal,session,scans,vlsr,dv,dw)
     print("Be sure to sanitize this list")
 
+# session=5
+# sdf = GBTOffline(f'{project}_{session:02}')
 # get_pars(sdf,session)                 
 
 
@@ -220,7 +222,7 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     return sp, sps, rms
 
 def spectrum_plot(sp, sps, vlsr, dv, dw, rms):
-    """
+    """   a more focused plotter
     """
     print("plotting TBD")
 
@@ -233,7 +235,7 @@ if len(sys.argv) > 1:
 
 #  read all data (4 took 6 sec)    
 sdf = {}
-for i in range(4):
+for i in range(5):
     session = i+1
     filename  = f'{project}_{session:02}'
     print(f"# === {filename}")
