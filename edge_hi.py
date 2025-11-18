@@ -4,19 +4,23 @@
 # spectral res = 2.5 km/s
 #
 # timing:   2'33" for 4 sessions
+# 134.69user 6.54system 2:19.69elapsed 101%CPU (0avgtext+0avgdata 6472744maxresident)k
+# 132.94user 5.34system 2:16.51elapsed 101%CPU (0avgtext+0avgdata 9641020maxresident)k
+# 130.04user 4.62system 2:12.81elapsed 101%CPU (0avgtext+0avgdata 9818976maxresident)k
 
 import sys
 import astropy.units as u
+import matplotlib
+matplotlib.use('agg')     # batch mode
 
-kms = u.km/u.s
-
+kms     = u.km/u.s
 project = 'AGBT25A_474'
 
 
 def get_gals(filename = "gals.pars"):
     """ reads galaxy parameters. Currently:
-    gal
-    session   1,2
+    gal       name
+    session   1,2,...
     scans     comma separated list of the ON's
     vlsr      km/s
     dv        half the width (km/s)
@@ -34,7 +38,11 @@ def get_gals(filename = "gals.pars"):
         vlsr = float(w[3])
         dv = float(w[4])
         dw = float(w[5])
-        gals[gal] = (session,scans,vlsr,dv,dw)
+        if gal not in gals:
+            gals[gal] = ([session],[scans],vlsr,dv,dw)
+        else:
+            gals[gal][0].append(session)
+            gals[gal][1].append(scans)
         print(gal,gals[gal])
     fp.close()
     return gals
@@ -87,7 +95,7 @@ def get_pars(sdf, session):
 #  
 
 def edge1(sdf, gal, session, scans, vlsr, dv, dw):
-    """  reduce
+    """  reduce single
     """
     print(f"Working on {gal} {vlsr} {dv} {dw}")
     
@@ -146,24 +154,101 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
 
     return sp, sps
 
+def edge2(sdf, gal, session, scans, vlsr, dv, dw):
+    """  reduce multiple, here session and scans are both arrays
+    """
+    print(f"Working on {gal} {vlsr} {dv} {dw}")
 
+    ns1 = len(session)
+    ns2 = len(scans)
+    if ns1 != ns2:
+        return None
+
+    sp = []
+    for i in range(ns1):
+        sp0 = sdf[session[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
+        sp1 = sdf[session[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
+        sp.append(sp0)
+        sp.append(sp1)
+
+    sp = sp[0].average(sp[1:])
+    
+    vmin = vlsr-dv-dw
+    vmax = vlsr+dv+dw
+    gmin = vlsr-dv
+    gmax = vlsr+dv
+
+    print(f"Looking at {vlsr} from {vmin} to {vmax}")
+    spn = sp[vmin*kms:vmax*kms]
+
+    spn.baseline(2,exclude=(gmin*kms,gmax*kms))
+    spn.baseline(2,exclude=(gmin*kms,gmax*kms),remove=True)
+
+    if True:
+        sps = spn.smooth("box",3)
+    else:
+        sps = spn
+
+    #   flux a simple sum between gmin and gmax
+    spg = sps[gmin*kms:gmax*kms]
+    ngal = len(spg.flux)
+    sumflux = np.nansum(spg.flux)
+    deltav = abs(spg.velocity[0]-spg.velocity[1])
+    flux = sumflux * deltav
+
+    spb0 = sps[vmin*kms:gmin*kms]
+    spb1 = sps[gmax*kms:vmax*kms]
+
+    rms0_0 = (spb0.stats()['rms']).to("mK")
+    rms1_0 = (spb1.stats()['rms']).to("mK")
+                    
+    rms0_1 = (spb0.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
+    rms1_1 = (spb1.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
+
+    print(f'rms0: {rms0_0:.1f} {rms0_1:.1f}')
+    print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
+
+    rms = max(rms0_1,rms1_1)
+    Q = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
+                    
+    dflux = rms.to("K")*deltav*np.sqrt(ngal)
+    print(f"{gal:.10s} Flux: {flux:.2f} +/- {dflux:.2f}   rms {rms:.2f} Q {Q:.2f} nchan {ngal}")
+
+
+    print('sps.plot(xaxis_unit="km/s")')
+
+    return sp, sps, rms
+
+def spectrum_plot(sp, sps, vlsr, dv, dw, rms):
+    """
+    """
+    print("plotting TBD")
+
+#   get galaxy parameters
 gals = get_gals()
 
 my_gals = gals.keys()
 if len(sys.argv) > 1:
     my_gals = [sys.argv[1]]
 
-old_session = -1
+#  read all data (4 took 6 sec)    
+sdf = {}
+for i in range(4):
+    session = i+1
+    filename  = f'{project}_{session:02}'
+    print(f"# === {filename}")
+    sdf[session] =  GBTOffline(filename, skipflags=True)
+    sdf[session].summary()
+
+    
+
 for gal in my_gals:
     print(gal)
     session, scans, vlsr, dv, dw = gals[gal]
-    if session != old_session:
-        old_session = session
-        filename  = f'{project}_{session:02}'
-        sdf =  GBTOffline(filename)
-        sdf.summary()
-    sp,sps = edge1(sdf, gal, session, scans, vlsr, dv, dw)
+    #sp,sps = edge1(sdf[session], gal, session, scans, vlsr, dv, dw)
+    sp,sps,rms = edge2(sdf, gal, session, scans, vlsr, dv, dw)    
     sss = sps.plot(xaxis_unit="km/s")
     sss.savefig(f'{gal}.png')
-    sps.write
+    spectrum_plot(sp, sps, vlsr, dv, dw, rms)
+    sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
     print("-----------------------------------")
