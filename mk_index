@@ -5,7 +5,7 @@ echo '<HTML>'
 
 echo "Updated on $(date)"
 echo '<pre>'
-grep Flux edge_hi.log | sort 
+grep Flux edge_hi.log | sort | pr -T -n
 echo '</pre>'
 
 echo "The Q parameter is 1 for perfect baselines, and starts getting bigger when the RMS"
@@ -14,11 +14,14 @@ echo "itself, indicative of residuals"
 echo "<br>"
 echo "See also <A HREF=gals.pars>gals.pars</A> parameter file for the current settings and comments"
 echo "<br>"
-echo "Supporting dysh code is in <A HREF=https://github.com/teuben/GBT-EDGE-HI>https://github.com/teuben/GBT-EDGE-HI</>"
+echo "Supporting dysh code is in <A HREF=https://github.com/teuben/GBT-EDGE-HI>https://github.com/teuben/GBT-EDGE-HI</A>"
 
 echo '<hr>'
 
+n=0
 for p in *.png; do
+    ((n++))
+    echo "<br> ${n}. $(basename -s .png $p) <br>"
     echo "<A HREF=$p> <img src=$p> </A>"
 done
 
