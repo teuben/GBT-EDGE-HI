@@ -238,7 +238,8 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
     fig=plt.figure()
     fig.clf()
     fig,ax1 = plt.subplots()
-    plt.plot(vel,flux)
+    Q = pars["Q"]
+    plt.plot(vel,flux,label=f'Q={Q:.2f}')
     print("PARS:",pars)
     rms = pars["rms"].to("mK").value
     flux = pars["flux"]
@@ -254,11 +255,15 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
         xb[2] = boxes[i0+2]; yb[2] = boxes[i0+3]
         xb[3] = boxes[i0+0]; yb[3] = boxes[i0+3]
         xb[4] = boxes[i0+0]; yb[4] = boxes[i0+1]
-        ax1.plot(xb,yb, color='black')
-        print('BOX',i,xb,yb)
+        if i==0:
+            ax1.plot(xb,yb, color='black', label=f'rms={rms:.1f} mK')
+        else:
+            ax1.plot(xb,yb, color='black')
+    plt.text
     plt.xlabel("Velocity (km/s)")
     plt.ylabel("Intensity (mK)")
-    plt.title(f'{gal}  rms={rms:.1f} mK   Flux: {flux.value:.2f} +/- {dflux:.2f}')
+    plt.title(f'{gal}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
+    plt.legend()
     plt.savefig(f"{gal}_smooth.png")
 
 
