@@ -216,15 +216,52 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     dflux = rms.to("K")*deltav*np.sqrt(ngal)
     print(f"{gal:.10s} Flux: {flux:.2f} +/- {dflux:.2f}   rms {rms:.2f} Q {Q:.2f} nchan {ngal}")
 
+    pars = {}
+    pars['Q'] = Q
+    pars['flux'] = flux
+    pars['dflux'] = dflux
+    pars['rms'] = rms
+
 
     print('sps.plot(xaxis_unit="km/s")')
 
-    return sp, sps, rms
+    return sp, sps, pars
 
-def spectrum_plot(sp, sps, vlsr, dv, dw, rms):
-    """   a more focused plotter
+def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
+    """   a more focused plotter, fuck the units
     """
     print("plotting TBD")
+    import matplotlib.pyplot as plt
+
+    vel = sp.axis_velocity().value
+    flux = sp.flux.to("mK").value
+    fig=plt.figure()
+    fig.clf()
+    fig,ax1 = plt.subplots()
+    plt.plot(vel,flux)
+    print("PARS:",pars)
+    rms = pars["rms"].to("mK").value
+    flux = pars["flux"]
+    dflux = pars["dflux"]
+    boxes = [vlsr-dv-dw,-rms,vlsr-dv,+rms,  vlsr+dv,-rms,vlsr+dv+dw,+rms]
+    #
+    xb=np.zeros(5)
+    yb=np.zeros(5)
+    for i in range(len(boxes)//4):
+        i0=i*4
+        xb[0] = boxes[i0+0]; yb[0] = boxes[i0+1]
+        xb[1] = boxes[i0+2]; yb[1] = boxes[i0+1]
+        xb[2] = boxes[i0+2]; yb[2] = boxes[i0+3]
+        xb[3] = boxes[i0+0]; yb[3] = boxes[i0+3]
+        xb[4] = boxes[i0+0]; yb[4] = boxes[i0+1]
+        ax1.plot(xb,yb, color='black')
+        print('BOX',i,xb,yb)
+    plt.xlabel("Velocity (km/s)")
+    plt.ylabel("Intensity (mK)")
+    plt.title(f'{gal}  rms={rms:.1f} mK   Flux: {flux.value:.2f} +/- {dflux:.2f}')
+    plt.savefig(f"{gal}_smooth.png")
+
+
 
 #   get galaxy parameters
 gals = get_gals()
@@ -248,9 +285,9 @@ for gal in my_gals:
     print(gal)
     session, scans, vlsr, dv, dw = gals[gal]
     #sp,sps = edge1(sdf[session], gal, session, scans, vlsr, dv, dw)
-    sp,sps,rms = edge2(sdf, gal, session, scans, vlsr, dv, dw)    
+    sp,sps,pars = edge2(sdf, gal, session, scans, vlsr, dv, dw)    
     sss = sps.plot(xaxis_unit="km/s")
     sss.savefig(f'{gal}.png')
-    spectrum_plot(sp, sps, vlsr, dv, dw, rms)
+    spectrum_plot(sps, gal, vlsr, dv, dw, pars)
     sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
     print("-----------------------------------")
