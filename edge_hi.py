@@ -80,7 +80,7 @@ def get_pars(sdf, session):
         print(gal,session,scans,vlsr,dv,dw)
     print("Be sure to sanitize this list")
 
-# session=5
+# session=6
 # sdf = GBTOffline(f'{project}_{session:02}')
 # get_pars(sdf,session)                 
 
