@@ -235,7 +235,7 @@ if len(sys.argv) > 1:
 
 #  read all data (4 took 6 sec)    
 sdf = {}
-for i in range(5):
+for i in range(6):
     session = i+1
     filename  = f'{project}_{session:02}'
     print(f"# === {filename}")

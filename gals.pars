@@ -1,7 +1,7 @@
 
-# session 1:
+# session 1:  nov 15, 2025
 
-# galaxy  session    scans           vlsr  dv   dw    # comments
+# galaxy  session    scans           vlsr  dv   dw      # comments
 
 UGC10972      1    8,10,12,14,16      4652  250 1000
 NGC6154       1   18,20,22            5966  100  400
@@ -55,8 +55,18 @@ NGC09629      5  62,64,66,68,70       7823 200 800   # nothing?
 UGC08234      5  76,78,80             8109 300 1200  # 72,74 bad   - nothing
 NGC6427       5  82                   3231 300 1200
 
+# session 6
 
-# ??
+UGC11717      6   8,10,12             6303 200 800
+NGC7550       6  14,16,18             5078 200 800
+MCG-01-52-012 6  20,22,24,26,28       3859 200 800
+UGC01368      6  30,32,34             7973 200 800    # 36 bad 
+UGC02229      6  38,40,42,44,46       7304 200 800
+UGC00335NED02 6  48,50,52,54,56       5491 200 800
+UGC02222      6  58,60,62,64          4921 200 800    
+
+# thu: more scans for IC4215, UGC08234, UGC08781, and UGC09629.
+
 
 # Nov 15 20:45 | Nov 16 01:45 | 00:05 | 5.00 | Bolatto | L    | VEGAS | GBT25A-474 - 01
 # Nov 16 04:45 | Nov 16 09:45 | 08:06 | 4.00 | Bolatto | L    | VEGAS | GBT25A-474 - 02
