@@ -78,7 +78,7 @@ def get_pars(sdf, session):
         dv = 200
         dw = 800
         print(gal,session,scans,vlsr,dv,dw)
-    print("Be sure to sanitize this list")
+    print("Be sure to sanitize this list in gals.pars")
 
 # session=6
 # sdf = GBTOffline(f'{project}_{session:02}')
@@ -88,12 +88,12 @@ def get_pars(sdf, session):
 
 # at GBO:     sdf = GBTOnline()
 #             sdf = GBTOffline('AGBT25A_474_01')
-#  rsync -av  /home/sdfits/AGBT25A_474_01   teuben@lma.astro.umd.edu:/lma1/teuben/GBT
+#  rsync -av  /home/sdfits/AGBT25A_474_??   teuben@lma.astro.umd.edu:/lma1/teuben/GBT
 #
 # d76:
 #  rc dysh5
 #  export SDFITS_DATA=/home/teuben/EDGE/GBT-EDGE-HI
-#  rsync -av lma:/lma1/teuben/GBT/AGBT25A_474_01 .
+#  rsync -av lma:/lma1/teuben/GBT/AGBT25A_474_?? .
 #  
 
 def edge1(sdf, gal, session, scans, vlsr, dv, dw):
@@ -160,6 +160,7 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     """  reduce multiple, here session and scans are both arrays
     """
     print(f"Working on {gal} {vlsr} {dv} {dw}")
+    blorder = 5
 
     ns1 = len(session)
     ns2 = len(scans)
@@ -183,8 +184,8 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     print(f"Looking at {vlsr} from {vmin} to {vmax}")
     spn = sp[vmin*kms:vmax*kms]
 
-    spn.baseline(2,exclude=(gmin*kms,gmax*kms))
-    spn.baseline(2,exclude=(gmin*kms,gmax*kms),remove=True)
+    spn.baseline(blorder,exclude=(gmin*kms,gmax*kms))
+    spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
 
     if True:
         sps = spn.smooth("box",3)
@@ -274,6 +275,7 @@ my_gals = gals.keys()
 if len(sys.argv) > 1:
     my_gals = [sys.argv[1]]
 
+    
 #  read all data (4 took 6 sec)    
 sdf = {}
 for i in range(6):
@@ -291,7 +293,7 @@ for gal in my_gals:
     #sp,sps = edge1(sdf[session], gal, session, scans, vlsr, dv, dw)
     sp,sps,pars = edge2(sdf, gal, session, scans, vlsr, dv, dw)    
     sss = sps.plot(xaxis_unit="km/s")
+    sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
     sss.savefig(f'{gal}.png')
     spectrum_plot(sps, gal, vlsr, dv, dw, pars)
-    sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
     print("-----------------------------------")
