@@ -235,8 +235,7 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
 
     vel = sp.axis_velocity().value
     flux = sp.flux.to("mK").value
-    fig=plt.figure()
-    fig.clf()
+    fig=plt.figure(figsize=(8,4))
     fig,ax1 = plt.subplots()
     Q = pars["Q"]
     plt.plot(vel,flux,label=f'Q={Q:.2f}')
