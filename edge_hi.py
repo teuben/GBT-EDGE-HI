@@ -63,7 +63,7 @@ def get_pars(sdf, session):
     'AZIMUTH',   -
     'ELEVATION'  show min/max
     """
-    calibrators = ['3C84', '3C48', '3C273', '3C196', '3C295']
+    calibrators = ['3C84', '3C48', '3C273', '3C196', '3C295', '3C286']
     df = sdf.get_summary()
     for gal in df['OBJECT'].unique():
         if gal in calibrators: continue
@@ -278,7 +278,7 @@ if len(sys.argv) > 1:
     
 #  read all data (4 took 6 sec)    
 sdf = {}
-for i in range(6):
+for i in range(7):
     session = i+1
     filename  = f'{project}_{session:02}'
     print(f"# === {filename}")
