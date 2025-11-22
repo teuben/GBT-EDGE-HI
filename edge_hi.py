@@ -8,10 +8,18 @@
 # 132.94user 5.34system 2:16.51elapsed 101%CPU (0avgtext+0avgdata 9641020maxresident)k
 # 130.04user 4.62system 2:12.81elapsed 101%CPU (0avgtext+0avgdata 9818976maxresident)k
 
+import os
 import sys
 import astropy.units as u
-import matplotlib
-matplotlib.use('agg')     # batch mode
+
+if False:
+    import matplotlib
+    matplotlib.use('agg')     # batch mode
+
+from dysh.util.files import dysh_data
+from dysh.fits.gbtfitsload import GBTFITSLoad
+from dysh.fits.gbtfitsload import GBTOnline
+from dysh.fits.gbtfitsload import GBTOffline
 
 kms     = u.km/u.s
 project = 'AGBT25A_474'
@@ -198,6 +206,7 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     sumflux = np.nansum(spg.flux)
     deltav = abs(spg.velocity[0]-spg.velocity[1])
     flux = sumflux * deltav
+    vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux
 
     spb0 = sps[vmin*kms:gmin*kms]
     spb1 = sps[gmax*kms:vmax*kms]
@@ -222,7 +231,9 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     pars['flux'] = flux
     pars['dflux'] = dflux
     pars['rms'] = rms
-
+    pars['vlsr2'] = vlsr2
+    
+    print("VLSR2:",vlsr2)
 
     print('sps.plot(xaxis_unit="km/s")')
 
@@ -266,34 +277,38 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
     plt.legend()
     plt.savefig(f"{gal}_smooth.png")
 
+#%%
 
+if __name__ == "__main__":
+    
+    os.environ["SDFITS_DATA"] = "/home/teuben/EDGE/GBT-EDGE-HI"
 
-#   get galaxy parameters
-gals = get_gals()
+    #      get galaxy parameters
+    gals = get_gals()
 
-my_gals = gals.keys()
-if len(sys.argv) > 1:
-    my_gals = [sys.argv[1]]
+    my_gals = gals.keys()
+    if len(sys.argv) > 1:
+        my_gals = sys.argv[1:]
 
     
-#  read all data (4 took 6 sec)    
-sdf = {}
-for i in range(7):
-    session = i+1
-    filename  = f'{project}_{session:02}'
-    print(f"# === {filename}")
-    sdf[session] =  GBTOffline(filename, skipflags=True)
-    sdf[session].summary()
+    #  read all data (4 took 6 sec)    
+    sdf = {}
+    for i in range(7):
+        session = i+1
+        filename  = f'{project}_{session:02}'
+        print(f"# === {filename}")
+        sdf[session] =  GBTOffline(filename, skipflags=True)
+        sdf[session].summary()
 
-    
 
-for gal in my_gals:
-    print(gal)
-    session, scans, vlsr, dv, dw = gals[gal]
-    #sp,sps = edge1(sdf[session], gal, session, scans, vlsr, dv, dw)
-    sp,sps,pars = edge2(sdf, gal, session, scans, vlsr, dv, dw)    
-    sss = sps.plot(xaxis_unit="km/s")
-    sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
-    sss.savefig(f'{gal}.png')
-    spectrum_plot(sps, gal, vlsr, dv, dw, pars)
-    print("-----------------------------------")
+
+    for gal in my_gals:
+        print(gal)
+        sessions, scans, vlsr, dv, dw = gals[gal]
+        #sp,sps = edge1(sdf[session], gal, sessions, scans, vlsr, dv, dw)
+        sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw)    
+        sss = sps.plot(xaxis_unit="km/s")
+        sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
+        sss.savefig(f'{gal}.png')
+        spectrum_plot(sps, gal, vlsr, dv, dw, pars)
+        print("-----------------------------------")
