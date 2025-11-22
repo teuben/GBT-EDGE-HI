@@ -21,8 +21,9 @@ from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
-kms     = u.km/u.s
-project = 'AGBT25A_474'
+kms         = u.km/u.s
+project     = 'AGBT25A_474'
+sdfits_data = "/home/teuben/EDGE/GBT-EDGE-HI"    # default if not given
 
 
 def get_gals(filename = "gals.pars"):
@@ -280,8 +281,10 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
 #%%
 
 if __name__ == "__main__":
-    
-    os.environ["SDFITS_DATA"] = "/home/teuben/EDGE/GBT-EDGE-HI"
+
+    if "SDFITS_DATA" not in os.environ:
+        print(f"Setting SDFITS_DATA to {sdfits_data}")
+        os.environ["SDFITS_DATA"] = sdfits_data
 
     #      get galaxy parameters
     gals = get_gals()
