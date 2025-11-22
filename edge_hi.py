@@ -12,10 +12,6 @@ import os
 import sys
 import astropy.units as u
 
-if False:
-    import matplotlib
-    matplotlib.use('agg')     # batch mode
-
 from dysh.util.files import dysh_data
 from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
@@ -24,7 +20,11 @@ from dysh.fits.gbtfitsload import GBTOffline
 kms         = u.km/u.s
 project     = 'AGBT25A_474'
 sdfits_data = "/home/teuben/EDGE/GBT-EDGE-HI"    # default if not given
+batch       = True
 
+if batch:
+    import matplotlib
+    matplotlib.use('agg')     # batch mode
 
 def get_gals(filename = "gals.pars"):
     """ reads galaxy parameters. Currently:
