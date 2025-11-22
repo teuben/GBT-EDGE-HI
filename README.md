@@ -73,6 +73,14 @@ dysh
 
 ```
 
+### Interference
+
+Some fraction of data has RFI: the signal comes from a GPS L3
+signal, which transmits to a GPS tracking station in
+Maryland. Unfortunately, the GBT falls within the GPS signal's
+footprint, so it may be a frequent occurrence in our data. The GPS L3 intermsignal
+has a center frequency of 1381.05 MHz.
+
 ## GBT links
 
 DSS project page: https://dss.gb.nrao.edu/project/GBT25A-474
