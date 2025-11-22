@@ -7,7 +7,7 @@
 help : Makefile
 	@sed -n 's/^##//p' $<
 
-## new:       return pipeline and make new index 
+## new:       run pipeline and make new index 
 new:
 	./edge_hi.py > edge_hi.log
 	./mk_index > index.html
