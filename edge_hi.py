@@ -165,6 +165,16 @@ def edge1(sdf, gal, session, scans, vlsr, dv, dw):
 
     return sp, sps
 
+def patch_nan(sp):
+    idx_nan = np.where(np.isnan(sp.flux))[0]
+    nidx = len(idx_nan)
+    for idx in idx_nan:
+        print('IDX',idx)
+        if idx==0: continue
+        print(f"PJT: patching a NaN at {idx}")
+        sp.data[idx] = 0.5*(sp.data[idx-1] + sp.data[idx+1])
+        sp.mask[idx] = False
+            
 def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     """  reduce multiple, here session and scans are both arrays
     """
@@ -184,6 +194,8 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
         sp.append(sp1)
 
     sp = sp[0].average(sp[1:])
+    patch_nan(sp)
+    
     
     vmin = vlsr-dv-dw
     vmax = vlsr+dv+dw
@@ -236,6 +248,12 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     
     print("VLSR2:",vlsr2)
 
+    try:
+        cog = sps.cog(vc = vlsr * kms)
+        print('COG:',cog)
+    except:
+        print('COG:  failed')
+
     print('sps.plot(xaxis_unit="km/s")')
 
     return sp, sps, pars
@@ -277,15 +295,86 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
     plt.title(f'{gal}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
     plt.legend()
     plt.savefig(f"{gal}_smooth.png")
+    
+#%%   https://github.com/SJVeronese/nicci-package/
 
+def p_anderson(sp):
+    """  The Anderon-Darling test
+    """
+    anderson_test=anderson(sp.data)
+    print("ANDERSON:", anderson_test.statistic)
+    if anderson_test.statistic>=.6:
+        p=np.exp(1.2937-5.709*anderson_test.statistic+.0186*anderson_test.statistic**2)
+    elif anderson_test.statistic>=.34:
+        p=np.exp(0.9177-4.279*anderson_test.statistic-1.38*anderson_test.statistic**2)
+    elif anderson_test.statistic>=.2:
+        p=1-np.exp(-8.318+42.796*anderson_test.statistic-59.938*anderson_test.statistic**2)
+    else:
+        p=1-np.exp(-13.436+101.14*anderson_test.statistic-223.73*anderson_test.statistic**2) 
+        #store the p-value of the test. The p-value gives the probability that the spectrum is gaussian. 
+        # If p>0.05, the spectrum can be considered gaussian   
+    return p
+
+def g_test(sp, size=10):
+    """kanekar test
+    Based on mock gaussian spectra, 95% of the gaussian spectra have 1.16 >= g_test >= 0.79. 
+    So, a threshold of 0.79 and 1.16 could be a good value for rejecting non gaussian spectra 
+    (i.e., a spectrum is non gaussian if 0.79 < g_test < 1.16).
+    """
+    ratio = sp.smooth("box", size).stats()["rms"] * np.sqrt(size) / sp.stats()["rms"]
+    return ratio
+
+def _rms(sp, mode='std'):
+    """
+    """
+    if mode=='std':
+        rms=np.sqrt(np.nanmean(dummy**2)) #the rms is the same of the standard deviation, if and only if, the mean of the data is 0, i.e., the data are following a Gaussian distribution
+    elif mode=='mad':
+        rms=np.nanmedian(np.abs(dummy-np.nanmedian(dummy)))*1.48
+    return rms
+    
 #%%
+
+if False:
+    sdf1 = GBTOffline('AGBT15B_287_19') 
+    sdf1.get_summary()
+
+    sp = []
+    #for s in [56, 59, 62]:         # three triplets
+    #for s in [8,11,14]:
+    #for s in [17,20,23]:
+    s0 = 8
+    #s0 = 17
+    #s0 = 32
+    #s0 = 41
+    #s0 = 56
+    #s0 = 65
+    #s0 = 80
+    for s in [s0, s0+3, s0+6]:
+    #for s in [s0, s0+3]:    
+       print("Working on ",s)
+       for pl in [0,1]:            # two polarizations
+           sp1 = sdf1.gettp(scan=s+0,ifnum=1,fdnum=0,plnum=pl).timeaverage()
+           sp2 = sdf1.gettp(scan=s+1,ifnum=1,fdnum=0,plnum=pl).timeaverage()
+           sp3 = sdf1.gettp(scan=s+2,ifnum=1,fdnum=0,plnum=pl).timeaverage()
+           sp.append((sp1-sp2)/sp2 * sp1.meta["TSYS"])
+           sp.append((sp3-sp2)/sp2 * sp3.meta["TSYS"])
+
+    final_sp = sp[0].average(sp[1:])
+
+    ta_plt = final_sp.plot(xaxis_unit="km/s", xmin=-4000, xmax=-3500, ymin=-0.1, ymax=1.6)
+
+    sb = sdf.gettp(scan=[56,57,58,59,60,61,62,63,64],ifnum=1,fdnum=0,plnum=0)
+
+
+#%% 
 
 if __name__ == "__main__":
 
     if "SDFITS_DATA" not in os.environ:
         print(f"Setting SDFITS_DATA to {sdfits_data}")
         os.environ["SDFITS_DATA"] = sdfits_data
-
+        
     #      get galaxy parameters
     gals = get_gals()
 
