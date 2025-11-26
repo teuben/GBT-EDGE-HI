@@ -8,7 +8,7 @@ echo '<pre>'
 grep Flux edge_hi.log | sort | pr -T -n
 echo '</pre>'
 
-echo "Some info on parametes"
+echo "Some info on parameters"
 echo "<OL>"
 echo "<LI> Flux: and error, our own method in the 2*dv line segment"
 echo "<LI> Flux2: CoG method, based on their bchan and echan"
@@ -23,7 +23,8 @@ echo "If the Curve-of-Growth method fails, 0 values are shown. Usually other thi
 echo "<br>"
 echo "See also <A HREF=gals.pars>gals.pars</A> parameter file for the current settings and various comments"
 echo "<br>"
-echo "Supporting dysh code is in <A HREF=https://github.com/teuben/GBT-EDGE-HI>https://github.com/teuben/GBT-EDGE-HI</A>"
+echo "Supporting dysh code is in <A HREF=https://github.com/teuben/GBT-EDGE-HI>https://github.com/teuben/GBT-EDGE-HI</A>,"
+echo "see also information on <A HREF=https://dysh.readthedocs.io/en/latest/explanations/cog/index.html>Curve of Growth</A>."
 echo "<br>"
 echo "Pipeline <A HREF=edge_hi.log>edge_hi.log</A>"
 
