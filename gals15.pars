@@ -1,7 +1,48 @@
 # table of galaxy parameters of AGBT15B_287
+# observations are an ON-OFF-ON triplets , usually 3 triplets per galaxy
 
 # NOTE: this does not include masking of sub-integrations inside the bad scans
 
+# typically #IF=3  #POL=2  #INT=85    #FEED=1
+# DOPFREQ=1.42  RESTFREQ=1.395
+
+# session  1:
+
+NGC3815       1     10,13,16     3667.7
+NGC3994       1     19,22,25     3057.6
+
+
+# session  3:
+
+NGC4210       3     8,11,14      2693.2
+NGC4149       3     17,20        3048.1    # 23,24 only a pair
+
+# session  4:
+
+NGC5876    8
+UGC10123   17
+NGC6155    32   
+
+# session  5:
+
+NGC5520
+NGC5000
+NGC5406
+
+
+# session  6:
+
+# session  8:
+# session  9:
+# session 10:
+# session 11:
+# session 12:
+# session 13:
+# session 14:
+# session 15:
+# session 16:
+# session 17:
+# session 18:
 
 # session 19:  
 
@@ -12,6 +53,30 @@ NGC2604      19    41,44,47      2067.0    # -3347  strong 0.2
 NGC2805      19    56,59,62      1809.2    # -3720  strong 1.4
 NGC4211N     19    65,68,71      6542.7    #  1091  weak 0.02
 NGC3057      19    80,83         1516.4    #  -3920 strong 0.2
+
+# session 20:
+# session 21:
+# session 22:
+# session 23:
+# session 24:
+# session 25:
+# session 26:
+# session 27:
+# session 28:
+# session 29:
+# session 30:
+# session 31:
+# session 31:
+# session 32:
+# session 33:
+# session 34:
+# session 35:
+# session 36:
+# session 37:
+# session 38:
+# session 39:
+# session 40:
+# session 41:
 
 
 # disk space usage:
