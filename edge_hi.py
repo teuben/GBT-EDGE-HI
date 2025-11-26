@@ -7,10 +7,13 @@
 # 134.69user 6.54system 2:19.69elapsed 101%CPU (0avgtext+0avgdata 6472744maxresident)k
 # 132.94user 5.34system 2:16.51elapsed 101%CPU (0avgtext+0avgdata 9641020maxresident)k
 # 130.04user 4.62system 2:12.81elapsed 101%CPU (0avgtext+0avgdata 9818976maxresident)k
+# 221.80user 122.68system 7:34.69elapsed 75%CPU (0avgtext+0avgdata 10741240maxresident)k
+# 201.52user 54.34system 4:55.45elapsed 86%CPU (0avgtext+0avgdata 12967412maxresident)k
 
 import os
 import sys
 import astropy.units as u
+from scipy.stats import anderson
 
 from dysh.util.files import dysh_data
 from dysh.fits.gbtfitsload import GBTFITSLoad
@@ -18,9 +21,9 @@ from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
 kms         = u.km/u.s
-project     = 'AGBT25A_474'
-sdfits_data = "/home/teuben/EDGE/GBT-EDGE-HI"    # default if not given
-batch       = True
+project     = 'AGBT25A_474'                      # or 'AGBT15B_287_19'
+sdfits_data = "/home/teuben/EDGE/GBT-EDGE-HI"    # default if not given via $SDFITS_DATA
+batch       = True                               # controls matplotlib.use()
 
 if batch:
     import matplotlib
@@ -220,6 +223,8 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     deltav = abs(spg.velocity[0]-spg.velocity[1])
     flux = sumflux * deltav
     vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux
+    vlsr3 = np.nansum(sps.flux * sps.velocity) / np.nansum(sps.flux)
+    print("PJT:",vlsr,vlsr2,vlsr3)
 
     spb0 = sps[vmin*kms:gmin*kms]
     spb1 = sps[gmax*kms:vmax*kms]
@@ -230,17 +235,22 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     rms0_1 = (spb0.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
     rms1_1 = (spb1.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
 
+    ad0 = p_anderson(spb0)
+    ad1 = p_anderson(spb1)
+
     print(f'rms0: {rms0_0:.1f} {rms0_1:.1f}')
     print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
 
     rms = max(rms0_1,rms1_1)
-    Q = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
+    Qb = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
+
+    print(f'Anderson-Darling test: {ad0:.2f}  {ad1:.2f}    Qb {Qb:.2f}')
+    
                     
     dflux = rms.to("K")*deltav*np.sqrt(ngal)
-    print(f"{gal:.10s} Flux: {flux:.2f} +/- {dflux:.2f}   rms {rms:.2f} Q {Q:.2f} nchan {ngal}")
 
     pars = {}
-    pars['Q'] = Q
+    pars['Qb'] = Qb
     pars['flux'] = flux
     pars['dflux'] = dflux
     pars['rms'] = rms
@@ -248,11 +258,24 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     
     print("VLSR2:",vlsr2)
 
+    # https://dysh.readthedocs.io/en/latest/explanations/cog/index.html
     try:
         cog = sps.cog(vc = vlsr * kms)
         print('COG:',cog)
+        flux2 = cog['flux']
+        w95 = cog['width'][0.95]
+        Qa = (cog['flux_r']-cog['flux_b'])/(cog['flux_r']+cog['flux_b'])
     except:
+        cog = {}
+        flux2 = 0.0
+        w95 = 0.0
+        Qa = 0.0
         print('COG:  failed')
+    pars['Qa'] = Qa
+    pars['w95'] = w95
+
+    print(f"{gal:.15s} Flux: {flux.value:.2f} +/- {dflux:.2f}  {flux2:.2f}  w95 {w95:.1f} rms {rms:.2f} Qb {Qb:.2f} Qa {Qa:.2f} nchan {ngal}")
+
 
     print('sps.plot(xaxis_unit="km/s")')
 
@@ -268,8 +291,10 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
     flux = sp.flux.to("mK").value
     fig=plt.figure(figsize=(8,4))
     fig,ax1 = plt.subplots()
-    Q = pars["Q"]
-    plt.plot(vel,flux,label=f'Q={Q:.2f}')
+    Qb = pars["Qb"]
+    Qa = pars["Qa"]
+    w95 = pars["w95"]
+    plt.plot(vel,flux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
     print("PARS:",pars)
     rms = pars["rms"].to("mK").value
     flux = pars["flux"]
@@ -286,7 +311,7 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
         xb[3] = boxes[i0+0]; yb[3] = boxes[i0+3]
         xb[4] = boxes[i0+0]; yb[4] = boxes[i0+1]
         if i==0:
-            ax1.plot(xb,yb, color='black', label=f'rms={rms:.1f} mK')
+            ax1.plot(xb,yb, color='black', label=f'rms={rms:.1f} mK  Qb={Qb:.2f}')
         else:
             ax1.plot(xb,yb, color='black')
     plt.text
