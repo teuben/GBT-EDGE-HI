@@ -1,0 +1,21 @@
+# table of galaxy parameters of AGBT15B_287
+
+# NOTE: this does not include masking of sub-integrations inside the bad scans
+
+
+# session 19:  
+
+NGC0528      19     8,11,14      4745.5    # no signal at -750
+UGC04054     19    17,20,23      2130.8    # -3360  strong 0.1K
+NGC2481      19    32,35,38      2172.0    # -3210  weak 0.02
+NGC2604      19    41,44,47      2067.0    # -3347  strong 0.2  
+NGC2805      19    56,59,62      1809.2    # -3720  strong 1.4
+NGC4211N     19    65,68,71      6542.7    #  1091  weak 0.02
+NGC3057      19    80,83         1516.4    #  -3920 strong 0.2
+
+
+# disk space usage:
+
+# 8523340 AGBT15B_287_19
+
+#   delta-V = 5529   or 5270 ?
