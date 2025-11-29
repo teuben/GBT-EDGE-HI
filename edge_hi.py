@@ -23,9 +23,15 @@ from dysh.fits.gbtfitsload import GBTOffline
 kms         = u.km/u.s
 project     = 'AGBT25A_474'                      # or 'AGBT15B_287_19'
 sdfits_data = "/home/teuben/EDGE/GBT-EDGE-HI"    # default if not given via $SDFITS_DATA
-batch       = True                               # controls matplotlib.use()
+Qbatch      = True                               # controls matplotlib.use()
+Qbusy       = False                              # add the busyfit (needs an extra install)
+smooth      = 3                                  # boxcar smooth size (use 0 to skip and use raw)
 
-if batch:
+# hack
+Qbusy       = True
+smooth      = 11
+
+if Qbatch:
     import matplotlib
     matplotlib.use('agg')     # batch mode
 
@@ -108,66 +114,6 @@ def get_pars(sdf, session):
 #  rsync -av lma:/lma1/teuben/GBT/AGBT25A_474_?? .
 #  
 
-def edge1(sdf, gal, session, scans, vlsr, dv, dw):
-    """  reduce single
-    """
-    print(f"Working on {gal} {vlsr} {dv} {dw}")
-    
-    if sdf == None:
-        filename = f'{project}_{session:02}'
-        sdf = GBTOffline(filename)
-        sdf.summary()
-
-    sp0 = sdf.getps(scan=scans, fdnum=0, ifnum=0, plnum=0).timeaverage()
-    sp1 = sdf.getps(scan=scans, fdnum=0, ifnum=0, plnum=1).timeaverage()
-    sp = sp0.average(sp1)
-    
-    vmin = vlsr-dv-dw
-    vmax = vlsr+dv+dw
-    gmin = vlsr-dv
-    gmax = vlsr+dv
-
-    print(f"Looking at {vlsr} from {vmin} to {vmax}")
-    spn = sp[vmin*kms:vmax*kms]
-
-    spn.baseline(2,exclude=(gmin*kms,gmax*kms))
-    spn.baseline(2,exclude=(gmin*kms,gmax*kms),remove=True)
-
-    if True:
-        sps = spn.smooth("box",3)
-    else:
-        sps = spn
-
-    #   flux a simple sum between gmin and gmax
-    spg = sps[gmin*kms:gmax*kms]
-    ngal = len(spg.flux)
-    sumflux = np.nansum(spg.flux)
-    deltav = abs(spg.velocity[0]-spg.velocity[1])
-    flux = sumflux * deltav
-
-    spb0 = sps[vmin*kms:gmin*kms]
-    spb1 = sps[gmax*kms:vmax*kms]
-
-    rms0_0 = (spb0.stats()['rms']).to("mK")
-    rms1_0 = (spb1.stats()['rms']).to("mK")
-                    
-    rms0_1 = (spb0.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
-    rms1_1 = (spb1.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
-
-    print(f'rms0: {rms0_0:.1f} {rms0_1:.1f}')
-    print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
-
-    rms = max(rms0_1,rms1_1)
-    Q = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
-                    
-    dflux = rms.to("K")*deltav*np.sqrt(ngal)
-    print(f"{gal:.10s} Flux: {flux:.2f} +/- {dflux:.2f}   rms {rms:.2f} Q {Q:.2f} nchan {ngal}")
-
-
-    print('sps.plot(xaxis_unit="km/s")')
-
-    return sp, sps
-
 def patch_nan(sp):
     idx_nan = np.where(np.isnan(sp.flux))[0]
     nidx = len(idx_nan)
@@ -177,7 +123,17 @@ def patch_nan(sp):
         print(f"PJT: patching a NaN at {idx}")
         sp.data[idx] = 0.5*(sp.data[idx-1] + sp.data[idx+1])
         sp.mask[idx] = False
-            
+
+def busyfit(sp, gal, rms):
+    """
+    the busyfit
+    """
+    cmd = f"busyfit -c 1 2 {gal}.txt -n {rms}"    #   -noplot"     # need to add -n {rms}
+    print("BUSYFIT:  ",cmd)
+    os.system(cmd)
+    cmd = f"cp busyfit_output_spectrum.txt {gal}_output_spectrum.txt"
+    os.system(cmd)
+      
 def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     """  reduce multiple, here session and scans are both arrays
     """
@@ -211,8 +167,8 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     spn.baseline(blorder,exclude=(gmin*kms,gmax*kms))
     spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
 
-    if True:
-        sps = spn.smooth("box",3)
+    if smooth > 0:
+        sps = spn.smooth("box",smooth)
     else:
         sps = spn
 
@@ -274,6 +230,10 @@ def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     pars['Qa'] = Qa
     pars['w95'] = w95
 
+    # busyfit
+    if Qbusy:
+        busyfit(sps, gal, rms.to("K").value)
+
     print(f"{gal:.15s} Flux: {flux.value:.2f} +/- {dflux:.2f}  {flux2:.2f}  w95 {w95:.1f} rms {rms:.2f} Qb {Qb:.2f} Qa {Qa:.2f} nchan {ngal}")
 
 
@@ -288,13 +248,13 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
     import matplotlib.pyplot as plt
 
     vel = sp.axis_velocity().value
-    flux = sp.flux.to("mK").value
+    sflux = sp.flux.to("mK").value
     fig=plt.figure(figsize=(8,4))
     fig,ax1 = plt.subplots()
     Qb = pars["Qb"]
     Qa = pars["Qa"]
     w95 = pars["w95"]
-    plt.plot(vel,flux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
+    plt.plot(vel,sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
     print("PARS:",pars)
     rms = pars["rms"].to("mK").value
     flux = pars["flux"]
@@ -314,6 +274,15 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
             ax1.plot(xb,yb, color='black', label=f'rms={rms:.1f} mK  Qb={Qb:.2f}')
         else:
             ax1.plot(xb,yb, color='black')
+    if Qbusy:
+        try:
+            busyfit_file = f"{gal}_output_spectrum.txt"
+            # check if file exists
+            (ch,col2,col3) = np.loadtxt(busyfit_file).T
+            busyfit = sflux - col3*1000    # flux in mK, col3 was in K
+            plt.plot(vel,busyfit,label="busyfit", color="red")
+        except:
+            print("Some failure in busyfit plotting")
     plt.text
     plt.xlabel("Velocity (km/s)")
     plt.ylabel("Intensity (mK)")
@@ -422,7 +391,6 @@ if __name__ == "__main__":
     for gal in my_gals:
         print(gal)
         sessions, scans, vlsr, dv, dw = gals[gal]
-        #sp,sps = edge1(sdf[session], gal, sessions, scans, vlsr, dv, dw)
         sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw)    
         sss = sps.plot(xaxis_unit="km/s")
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
