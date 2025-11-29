@@ -1,18 +1,16 @@
 #! /usr/bin/env dysh
 #
-# typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)
-# spectral res = 2.5 km/s
+# 2015 data:  
+# 2025 data:  typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)  spectral res = 2.5 km/s
 #
 # timing:   2'33" for 4 sessions
-# 134.69user 6.54system 2:19.69elapsed 101%CPU (0avgtext+0avgdata 6472744maxresident)k
-# 132.94user 5.34system 2:16.51elapsed 101%CPU (0avgtext+0avgdata 9641020maxresident)k
-# 130.04user 4.62system 2:12.81elapsed 101%CPU (0avgtext+0avgdata 9818976maxresident)k
-# 221.80user 122.68system 7:34.69elapsed 75%CPU (0avgtext+0avgdata 10741240maxresident)k
 # 201.52user 54.34system 4:55.45elapsed 86%CPU (0avgtext+0avgdata 12967412maxresident)k
 
 import os
 import sys
+import numpy as np
 import astropy.units as u
+kms = u.km/u.s
 from scipy.stats import anderson
 
 from dysh.util.files import dysh_data
@@ -20,20 +18,23 @@ from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
-kms         = u.km/u.s
 project     = 'AGBT25A_474'                      # or 'AGBT15B_287_19'
 sdfits_data = "/home/teuben/EDGE/GBT-EDGE-HI"    # default if not given via $SDFITS_DATA
 Qbatch      = True                               # controls matplotlib.use()
 Qbusy       = False                              # add the busyfit (needs an extra install)
 smooth      = 3                                  # boxcar smooth size (use 0 to skip and use raw)
 
-# hack
-Qbusy       = True
-smooth      = 11
+# hack for interactive work
+#Qbatch      = False
+#Qbusy       = False
+#smooth      = 15
 
 if Qbatch:
+    print("MATPLOTLIB agg batch mode")
     import matplotlib
     matplotlib.use('agg')     # batch mode
+else:
+    print("MATPLOTLIB default mode")
 
 def get_gals(filename = "gals.pars"):
     """ reads galaxy parameters. Currently:
@@ -133,6 +134,22 @@ def busyfit(sp, gal, rms):
     os.system(cmd)
     cmd = f"cp busyfit_output_spectrum.txt {gal}_output_spectrum.txt"
     os.system(cmd)
+    
+def waterfall(gals, sdf, gal):
+    """ plot waterfall(s) for a given galaxy
+        gals: input
+        sdf:  input
+        gal:  input
+    """
+    if gal in gals:
+        sessions, scans, vlsr, dv, dw = gals[gal]
+        print(sessions,scans)
+        for i in range(len(sessions)):
+            smin = scans[i][0]
+            smax = scans[i][-1]+1
+            print("Session",sessions[i], "scans",smin,smax)
+            sb = sdf[sessions[i]].gettp(scan=list(range(smin,smax+1)),ifnum=0, fdnum=0, plnum=0)
+            sb.plot()
       
 def edge2(sdf, gal, session, scans, vlsr, dv, dw):
     """  reduce multiple, here session and scans are both arrays
