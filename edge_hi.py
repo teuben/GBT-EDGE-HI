@@ -26,8 +26,8 @@ Qbusy       = False                              # add the busyfit (needs an ext
 smooth      = 3                                  # boxcar smooth size (use 0 to skip and use raw)
 
 # hack for interactive work
-Qbatch      = False
-#Qbusy       = False
+Qbatch      = True
+Qbusy       = True
 #smooth      = 15
 
 if Qbatch:
@@ -130,10 +130,8 @@ def busyfit(sp, gal, rms):
     """
     the busyfit
     """
-    cmd = f"busyfit -c 1 2 {gal}.txt -n {rms}"    #   -noplot"     # need to add -n {rms}
+    cmd = f"busyfit -c 1 2 {gal}.txt -n {rms} -o {gal} -noplot" 
     print("BUSYFIT:  ",cmd)
-    os.system(cmd)
-    cmd = f"cp busyfit_output_spectrum.txt {gal}_output_spectrum.txt"
     os.system(cmd)
     
 def waterfall(gals, sdf, gal):
@@ -377,48 +375,49 @@ def _rms(sp, mode='std'):
 
 #%% issue 558 / 682
 
-sdf1 = GBTOffline('AGBT15B_287_19') 
+if False:
+    sdf1 = GBTOffline('AGBT15B_287_19') 
 
-sp1 = sdf1.gettp(scan=56,ifnum=1,fdnum=0,plnum=0).timeaverage()   
-sp2 = sdf1.gettp(scan=57,ifnum=1,fdnum=0,plnum=0).timeaverage()
-sp = (sp1-sp2)/sp2 * sp1.meta["TSYS"]
-sp.plot(xaxis_unit="km/s")
+    sp1 = sdf1.gettp(scan=56,ifnum=1,fdnum=0,plnum=0).timeaverage()   
+    sp2 = sdf1.gettp(scan=57,ifnum=1,fdnum=0,plnum=0).timeaverage()
+    sp = (sp1-sp2)/sp2 * sp1.meta["TSYS"]
+    sp.plot(xaxis_unit="km/s")
 
-# sp.set_radial_velocity_to(-3000*kms)
-# Cannot specify radial velocity or redshift if both target and observer are specified
-
-
-sp_s = sp.with_spectral_axis_unit(u.Hz, rest_value = 1.42041e9 * u.Hz, velocity_convention ='radio')
-
-# why does this not work ???
-sdf1._index['RESTFREQ'] = 1.42041e9
-
-sp1 = sdf1.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
-
-sdf1.write("test56.fits", overwrite=True, scan=[56,57],ifnum=1,fdnum=0,plnum=0)
+    # sp.set_radial_velocity_to(-3000*kms)
+    # Cannot specify radial velocity or redshift if both target and observer are specified
 
 
+    sp_s = sp.with_spectral_axis_unit(u.Hz, rest_value = 1.42041e9 * u.Hz, velocity_convention ='radio')
 
-sdf2 = GBTFITSLoad("test56a.fits")
-sdf2._index['RESTFREQ'] = 1.42041e9
-sp2 = sdf2.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
-sp2.plot(xaxis_unit="km/s")
+    # why does this not work ???
+    sdf1._index['RESTFREQ'] = 1.42041e9
 
-sdf2.write("test56a.fits", overwrite=True)    #  this also doesn't write 1.42
+    sp1 = sdf1.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
+
+    sdf1.write("test56.fits", overwrite=True, scan=[56,57],ifnum=1,fdnum=0,plnum=0)
 
 
-sdf2 = SDFITSLoad("test56.fits")
-sdf2._bintable[0].data["RESTFREQ"] = 1.42041e9
-sdf2.write("test56a.fits", overwrite=True) 
 
-sdf3 = SDFITSLoad("/home/teuben/GBT/dysh_data/sdfits/AGBT15B_287_19/AGBT15B_287_19.raw.vegas/AGBT15B_287_19.raw.vegas.B.fits")
-sdf3._bintable[0].data["RESTFREQ"] = 1.42041e9
-sdf3.write("EDGE_19.fits", overwrite=True)  # 2.7 GB
+    sdf2 = GBTFITSLoad("test56a.fits")
+    sdf2._index['RESTFREQ'] = 1.42041e9
+    sp2 = sdf2.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
+    sp2.plot(xaxis_unit="km/s")
 
-# these do not work
-sdf4 = GBTFITSLoad("AGBT15B_287_19/AGBT15B_287_19.raw.vegas/AGBT15B_287_19.raw.vegas.B.fits")
-sdf4 = GBTFITSLoad("AGBT15B_287_19")
-sdf4 = GBTFITSLoad("AGBT15B_287_19/AGBT15B_287_19.raw.vegas")
+    sdf2.write("test56a.fits", overwrite=True)    #  this also doesn't write 1.42
+
+
+    sdf2 = SDFITSLoad("test56.fits")
+    sdf2._bintable[0].data["RESTFREQ"] = 1.42041e9
+    sdf2.write("test56a.fits", overwrite=True) 
+
+    sdf3 = SDFITSLoad("/home/teuben/GBT/dysh_data/sdfits/AGBT15B_287_19/AGBT15B_287_19.raw.vegas/AGBT15B_287_19.raw.vegas.B.fits")
+    sdf3._bintable[0].data["RESTFREQ"] = 1.42041e9
+    sdf3.write("EDGE_19.fits", overwrite=True)  # 2.7 GB
+
+    # these do not work
+    sdf4 = GBTFITSLoad("AGBT15B_287_19/AGBT15B_287_19.raw.vegas/AGBT15B_287_19.raw.vegas.B.fits")
+    sdf4 = GBTFITSLoad("AGBT15B_287_19")
+    sdf4 = GBTFITSLoad("AGBT15B_287_19/AGBT15B_287_19.raw.vegas")
 
 
 #%%
@@ -468,18 +467,6 @@ if False:
     final_sp = sp[0].average(sp[1:])
     final_sp.plot(xaxis_unit="km/s")
     
-#%%   issue 558
-#    confusion between doppler_rest and rest_value
-
-from dysh.spectra import Spectrum
-s = Spectrum.fake_spectrum()
-print(s.rest_value.value)    # -> 1420405751.7
-
-
-s.plot()
-
-s.doppler_rest *= 1.2
-.    
 
 #%% 
 
@@ -517,3 +504,4 @@ if __name__ == "__main__":
         sss.savefig(f'{gal}.png')
         spectrum_plot(sps, gal, vlsr, dv, dw, pars)
         print("-----------------------------------")
+
