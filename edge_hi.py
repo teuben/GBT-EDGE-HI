@@ -1,7 +1,7 @@
 #! /usr/bin/env dysh
 #
 # 2015 data:  
-# 2025 data:  typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)  spectral res = 2.5 km/s
+# 2025 data:  typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)  spectral res = 1.2 km/s
 #
 # timing:   2'33" for 4 sessions
 # 201.52user 54.34system 4:55.45elapsed 86%CPU (0avgtext+0avgdata 12967412maxresident)k
@@ -14,6 +14,7 @@ kms = u.km/u.s
 from scipy.stats import anderson
 
 from dysh.util.files import dysh_data
+from dysh.fits.sdfitsload import SDFITSLoad
 from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
@@ -25,7 +26,7 @@ Qbusy       = False                              # add the busyfit (needs an ext
 smooth      = 3                                  # boxcar smooth size (use 0 to skip and use raw)
 
 # hack for interactive work
-#Qbatch      = False
+Qbatch      = False
 #Qbusy       = False
 #smooth      = 15
 
@@ -151,23 +152,49 @@ def waterfall(gals, sdf, gal):
             sb = sdf[sessions[i]].gettp(scan=list(range(smin,smax+1)),ifnum=0, fdnum=0, plnum=0)
             sb.plot()
       
-def edge2(sdf, gal, session, scans, vlsr, dv, dw):
+def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     """  reduce multiple, here session and scans are both arrays
+    
+    mode=1    2025 ON-OFF getps style
+    mode=2    2015 ON-OFF-ON getsigref style
     """
     print(f"Working on {gal} {vlsr} {dv} {dw}")
     blorder = 5
 
-    ns1 = len(session)
+    ns1 = len(sessions)
     ns2 = len(scans)
     if ns1 != ns2:
+        print("number of sessions and scans not the same")
         return None
 
     sp = []
-    for i in range(ns1):
-        sp0 = sdf[session[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
-        sp1 = sdf[session[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
-        sp.append(sp0)
-        sp.append(sp1)
+    if mode == 1:    # 2025 data
+        for i in range(ns1):
+            sdf1 = sdf[sessions[i]]
+            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
+            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
+            sp.append(sp0)
+            sp.append(sp1)
+    elif mode == 2:    # 2015 data
+        for i in range(ns1):
+            sdf1 = sdf[sessions[i]]  # check
+            for pl in [0,1]:
+                #  we will try/except since sessions are not a multiple of 3 scans
+                try:
+                    sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
+                    sp.append(sp1)
+                except:
+                    print(f"Skipping missing scan {s+2} pol {pl}")
+                try:
+                    sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
+                    sp.append(sp2)
+                except:
+                    print(f"Skipping missing scan {s+2} pol {pl}")
+                
+    if len(sp) == 0:
+        print("Did not find any scans")
+        return None
+        
 
     sp = sp[0].average(sp[1:])
     patch_nan(sp)
@@ -300,6 +327,9 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
             plt.plot(vel,busyfit,label="busyfit", color="red")
         except:
             print("Some failure in busyfit plotting")
+    # draw a vlsr line in green
+    ax1.plot([vlsr,vlsr],[-rms,+rms],color='green',label=f'vlsr={vlsr} km/s')
+    #
     plt.text
     plt.xlabel("Velocity (km/s)")
     plt.ylabel("Intensity (mK)")
@@ -311,19 +341,20 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
 
 def p_anderson(sp):
     """  The Anderon-Darling test
+         p-value taken from nicci-package
+         The p-value gives the probability that the spectrum is gaussian.
+         If p>0.05, the spectrum can be considered gaussian   
     """
     anderson_test=anderson(sp.data)
     print("ANDERSON:", anderson_test.statistic)
-    if anderson_test.statistic>=.6:
-        p=np.exp(1.2937-5.709*anderson_test.statistic+.0186*anderson_test.statistic**2)
-    elif anderson_test.statistic>=.34:
-        p=np.exp(0.9177-4.279*anderson_test.statistic-1.38*anderson_test.statistic**2)
-    elif anderson_test.statistic>=.2:
-        p=1-np.exp(-8.318+42.796*anderson_test.statistic-59.938*anderson_test.statistic**2)
+    if anderson_test.statistic >= .6:
+        p = np.exp(1.2937 - 5.709*anderson_test.statistic + .0186*anderson_test.statistic**2)
+    elif anderson_test.statistic >= .34:
+        p = np.exp(0.9177 - 4.279*anderson_test.statistic - 1.38*anderson_test.statistic**2)
+    elif anderson_test.statistic >= .2:
+        p = 1-np.exp(-8.318 + 42.796*anderson_test.statistic - 59.938*anderson_test.statistic**2)
     else:
-        p=1-np.exp(-13.436+101.14*anderson_test.statistic-223.73*anderson_test.statistic**2) 
-        #store the p-value of the test. The p-value gives the probability that the spectrum is gaussian. 
-        # If p>0.05, the spectrum can be considered gaussian   
+        p = 1-np.exp(-13.436 + 101.14*anderson_test.statistic - 223.73*anderson_test.statistic**2) 
     return p
 
 def g_test(sp, size=10):
@@ -343,40 +374,112 @@ def _rms(sp, mode='std'):
     elif mode=='mad':
         rms=np.nanmedian(np.abs(dummy-np.nanmedian(dummy)))*1.48
     return rms
-    
+
+#%% issue 558 / 682
+
+sdf1 = GBTOffline('AGBT15B_287_19') 
+
+sp1 = sdf1.gettp(scan=56,ifnum=1,fdnum=0,plnum=0).timeaverage()   
+sp2 = sdf1.gettp(scan=57,ifnum=1,fdnum=0,plnum=0).timeaverage()
+sp = (sp1-sp2)/sp2 * sp1.meta["TSYS"]
+sp.plot(xaxis_unit="km/s")
+
+# sp.set_radial_velocity_to(-3000*kms)
+# Cannot specify radial velocity or redshift if both target and observer are specified
+
+
+sp_s = sp.with_spectral_axis_unit(u.Hz, rest_value = 1.42041e9 * u.Hz, velocity_convention ='radio')
+
+# why does this not work ???
+sdf1._index['RESTFREQ'] = 1.42041e9
+
+sp1 = sdf1.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
+
+sdf1.write("test56.fits", overwrite=True, scan=[56,57],ifnum=1,fdnum=0,plnum=0)
+
+
+
+sdf2 = GBTFITSLoad("test56a.fits")
+sdf2._index['RESTFREQ'] = 1.42041e9
+sp2 = sdf2.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
+sp2.plot(xaxis_unit="km/s")
+
+sdf2.write("test56a.fits", overwrite=True)    #  this also doesn't write 1.42
+
+
+sdf2 = SDFITSLoad("test56.fits")
+sdf2._bintable[0].data["RESTFREQ"] = 1.42041e9
+sdf2.write("test56a.fits", overwrite=True) 
+
+sdf3 = SDFITSLoad("/home/teuben/GBT/dysh_data/sdfits/AGBT15B_287_19/AGBT15B_287_19.raw.vegas/AGBT15B_287_19.raw.vegas.B.fits")
+sdf3._bintable[0].data["RESTFREQ"] = 1.42041e9
+sdf3.write("EDGE_19.fits", overwrite=True)  # 2.7 GB
+
+# these do not work
+sdf4 = GBTFITSLoad("AGBT15B_287_19/AGBT15B_287_19.raw.vegas/AGBT15B_287_19.raw.vegas.B.fits")
+sdf4 = GBTFITSLoad("AGBT15B_287_19")
+sdf4 = GBTFITSLoad("AGBT15B_287_19/AGBT15B_287_19.raw.vegas")
+
+
 #%%
 
+#    sb = sdf1.gettp(scan=[56,57,58,59,60,61,62,63,64],ifnum=1,fdnum=0,plnum=0)
+
+#%%
+Qraw = True
+Qraw = False
+
 if False:
-    sdf1 = GBTOffline('AGBT15B_287_19') 
+    #sdf1 = GBTOffline('AGBT15B_287_19') 
+    #sdf1 = GBTFITSLoad("EDGE_19.fits")
+    sdf1 = GBTFITSLoad('AGBT15B_287_19.B.fits')
     sdf1.get_summary()
 
     sp = []
-    #for s in [56, 59, 62]:         # three triplets
-    #for s in [8,11,14]:
-    #for s in [17,20,23]:
-    s0 = 8
-    #s0 = 17
-    #s0 = 32
-    #s0 = 41
-    #s0 = 56
-    #s0 = 65
-    #s0 = 80
+    s0 = 8        # NGC0528   nothing
+    s0 = 17      # UGC04054   ~2085
+    s0 = 32      # NGC2481    ~2210
+    s0 = 41      # NGC2604     2049
+    s0 = 56      # NGC2805      1714
+    #s0 = 65      # NGC4211N      6414
+    s0 = 80      # NGC3057      1509
     for s in [s0, s0+3, s0+6]:
     #for s in [s0, s0+3]:    
-       print("Working on ",s)
+       print(f"Working on scan {s} to contain 3 scans and 2 polarizations")
        for pl in [0,1]:            # two polarizations
-           sp1 = sdf1.gettp(scan=s+0,ifnum=1,fdnum=0,plnum=pl).timeaverage()
-           sp2 = sdf1.gettp(scan=s+1,ifnum=1,fdnum=0,plnum=pl).timeaverage()
-           sp3 = sdf1.gettp(scan=s+2,ifnum=1,fdnum=0,plnum=pl).timeaverage()
-           sp.append((sp1-sp2)/sp2 * sp1.meta["TSYS"])
-           sp.append((sp3-sp2)/sp2 * sp3.meta["TSYS"])
+           if Qraw:
+               sp1 = sdf1.gettp(scan=s+0,ifnum=1,fdnum=0,plnum=pl).timeaverage()
+               sp2 = sdf1.gettp(scan=s+1,ifnum=1,fdnum=0,plnum=pl).timeaverage()
+               sp3 = sdf1.gettp(scan=s+2,ifnum=1,fdnum=0,plnum=pl).timeaverage()
+               sp.append((sp1-sp2)/sp2 * sp1.meta["TSYS"])
+               sp.append((sp3-sp2)/sp2 * sp3.meta["TSYS"])
+           else:
+               try:
+                   sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
+                   sp.append(sp1)
+               except:
+                   print(f"Skipping missing scan {s+2} pol {pl}")
+               try:
+                   sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
+                   sp.append(sp2)
+               except:
+                   print(f"Skipping missing scan {s+2} pol {pl}")
 
     final_sp = sp[0].average(sp[1:])
+    final_sp.plot(xaxis_unit="km/s")
+    
+#%%   issue 558
+#    confusion between doppler_rest and rest_value
 
-    ta_plt = final_sp.plot(xaxis_unit="km/s", xmin=-4000, xmax=-3500, ymin=-0.1, ymax=1.6)
+from dysh.spectra import Spectrum
+s = Spectrum.fake_spectrum()
+print(s.rest_value.value)    # -> 1420405751.7
 
-    sb = sdf.gettp(scan=[56,57,58,59,60,61,62,63,64],ifnum=1,fdnum=0,plnum=0)
 
+s.plot()
+
+s.doppler_rest *= 1.2
+.    
 
 #%% 
 
