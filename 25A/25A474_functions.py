@@ -43,7 +43,7 @@ def select_my_catalog():
     print 'INFO: Selecting Catalog'
     LST = GetLST()
     mypath = '/home/astro-util/projects/25A474/'
-    if LST >= 0 and LST <= 6:
+    if LST >= 23 or LST <= 6:
         mycat = mypath+'targets_s1.cat'
         Comment("INFO: Using Catalog for LST 0-6 (S1)")
         altcal = "3C147"
@@ -55,7 +55,7 @@ def select_my_catalog():
         mycat = mypath+'targets_s3.cat'
         Comment("INFO: Using Catalog for LST 13-19 (S3)")
         altcal = "3C309_1"
-    elif LST > 19 and LST < 24: 
+    elif LST > 19 and LST < 23: 
         mycat = mypath+'targets_s4.cat'
         Comment("INFO: Using Catalog for LST 19-24 (S4)")
         altcal = "3C309_1"
