@@ -12,6 +12,7 @@ import numpy as np
 import astropy.units as u
 kms = u.km/u.s
 from scipy.stats import anderson
+from scipy.signal import medfilt
 
 from dysh.util.files import dysh_data
 from dysh.fits.sdfitsload import SDFITSLoad
@@ -19,15 +20,17 @@ from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
-project     = 'AGBT25A_474'                      # or 'AGBT15B_287_19'
+projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1
 sdfits_data = "/home/teuben/EDGE/GBT-EDGE-HI"    # default if not given via $SDFITS_DATA
 Qbatch      = True                               # controls matplotlib.use()
-Qbusy       = False                              # add the busyfit (needs an extra install)
+Qbusy       = True                               # add the busyfit (needs an extra install)
+Qspike      = True                               # median filter to remove spikes
 smooth      = 3                                  # boxcar smooth size (use 0 to skip and use raw)
+mode        = 0                                  # 0:2015 data   1:2025 data
 
 # hack for interactive work
-Qbatch      = True
-Qbusy       = True
+Qbatch      = False
+#Qbusy       = True
 #smooth      = 15
 
 if Qbatch:
@@ -126,11 +129,14 @@ def patch_nan(sp):
         sp.data[idx] = 0.5*(sp.data[idx-1] + sp.data[idx+1])
         sp.mask[idx] = False
 
+def patch_spike(sp, rms=None):
+    sp.data  = medfilt(sp.data, kernel_size=3) 
+
 def busyfit(sp, gal, rms):
     """
     the busyfit
     """
-    cmd = f"busyfit -c 1 2 {gal}.txt -n {rms} -o {gal} -noplot" 
+    cmd = f"busyfit -c 1 2 {gal}.txt -n {rms} -o {gal} -noplot; sleep 2" 
     print("BUSYFIT:  ",cmd)
     os.system(cmd)
     
@@ -153,8 +159,8 @@ def waterfall(gals, sdf, gal):
 def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     """  reduce multiple, here session and scans are both arrays
     
+    mode=0    2015 ON-OFF-ON getsigref style
     mode=1    2025 ON-OFF getps style
-    mode=2    2015 ON-OFF-ON getsigref style
     """
     print(f"Working on {gal} {vlsr} {dv} {dw}")
     blorder = 5
@@ -173,21 +179,22 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
             sp.append(sp0)
             sp.append(sp1)
-    elif mode == 2:    # 2015 data
+    elif mode == 0:    # 2015 data
         for i in range(ns1):
             sdf1 = sdf[sessions[i]]  # check
-            for pl in [0,1]:
-                #  we will try/except since sessions are not a multiple of 3 scans
-                try:
-                    sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
-                    sp.append(sp1)
-                except:
-                    print(f"Skipping missing scan {s+2} pol {pl}")
-                try:
-                    sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
-                    sp.append(sp2)
-                except:
-                    print(f"Skipping missing scan {s+2} pol {pl}")
+            for s in scans[i]:
+                for pl in [0,1]:
+                    #  we will try/except since sessions are not a multiple of 3 scans
+                    try:
+                        sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
+                        sp.append(sp1)
+                    except:
+                        print(f"Skipping missing scan {s+2} pol {pl}")
+                    try:
+                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
+                        sp.append(sp2)
+                    except:
+                        print(f"Skipping missing scan {s+2} pol {pl}")
                 
     if len(sp) == 0:
         print("Did not find any scans")
@@ -196,7 +203,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     sp = sp[0].average(sp[1:])
     patch_nan(sp)
-    
+    if Qspike:
+        patch_spike(sp)
     
     vmin = vlsr-dv-dw
     vmax = vlsr+dv+dw
@@ -477,28 +485,44 @@ if __name__ == "__main__":
         os.environ["SDFITS_DATA"] = sdfits_data
         
     #      get galaxy parameters
-    gals = get_gals()
+    if mode==0:
+        gals = get_gals("gals15.pars")
+    elif mode==1:
+        gals = get_gals("gals.pars")
 
     my_gals = gals.keys()
     if len(sys.argv) > 1:
         my_gals = sys.argv[1:]
 
-    
-    #  read all data (4 took 6 sec)    
-    sdf = {}
-    for i in range(7):
-        session = i+1
-        filename  = f'{project}_{session:02}'
-        print(f"# === {filename}")
-        sdf[session] =  GBTOffline(filename, skipflags=True)
-        sdf[session].summary()
 
+    project = projects[mode]
+
+
+    sdf = {}
+    if mode==0:
+        print("2015 data:   1,3,4,19 for now")
+        #for i in [1,3,4,19]:
+        for i sb.in [1,3]:
+            session = i
+            filename  = f'data/{project}_{session:02}.B.fits'
+            print(f"# === {filename}")
+            sdf[session] =  GBTFITSLoad(filename, skipflags=True)
+            sdf[session].summary()
+
+    elif mode==1:
+        print("2025 data:   1,2,3,4,5,6,7")
+        for i in range(7):
+            session = i+1
+            filename  = f'{project}_{session:02}'
+            print(f"# === {filename}")
+            sdf[session] =  GBTOffline(filename, skipflags=True)
+            sdf[session].summary()
 
 
     for gal in my_gals:
         print(gal)
         sessions, scans, vlsr, dv, dw = gals[gal]
-        sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw)    
+        sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode)
         sss = sps.plot(xaxis_unit="km/s")
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
         sss.savefig(f'{gal}.png')
