@@ -4,7 +4,8 @@
 # NOTE: this does not include masking of sub-integrations inside the bad scans
 
 # typically #IF=3  #POL=2  #INT=85    #FEED=1
-# DOPFREQ=1.42  RESTFREQ=1.395
+# data is in ifnum=1, so we only need the "B" files from the A/B/C
+# DOPFREQ=1.42  RESTFREQ=1.395 -> needs to be patched
 
 
 # Sessions 1-41, but missing are:    2,7 - so 39 files.
@@ -12,7 +13,7 @@
 
 # session  1:
 
-NGC3815       1     10,13,16     3667.7     300 1200   # 0.06K - lots of nearby spikes
+NGC3815       1     10,13,16     3667.7     300 1200   # 0.06K - lots of nearby spikes   3618.5(186.6)
 NGC3994       1     19,22,25     3057.6     300 1200   
 
 
@@ -95,7 +96,7 @@ UGC06312     13        23,26,29      6201.5  300 1000   # NGC3303    5878.3
 NGC3303      14         8,11         5878.3    300 1000
 UGC05598     14         14,17,20     5519.8    200  800
 UGC05498     14         23,26,29     6174.4    350 1400
-NGC5406      14         39           5302.2    300 1000     # 39 single
+#NGC5406      14         39           5302.2    300 1000     # 39 single
 
 # session 15:
 
@@ -206,14 +207,42 @@ NGC5732      27      32,35,38   3722.2  200  800
 NGC5394      27      41,44      3370.3  400 1200  # also nearby companion @2400
 NGC5980      27      54,57,60   4030.9  300 1000  # FAIL missing/bad scan?
 NGC6027      27      63,66,69   4370.1  300 1000  # FAIL
-IC1199       27      72,75      4663.0  300 1000  # FAIL     75 half
+#IC1199       27      72,75      4663.0  300 1000  # FAIL     75 half
 
 
 
 
 # session 28:
+
+IC1199      28        6,9       4663.0  300 1000   # no data???
+NGC6081     28        12,15     5032.1  300 1000
+NGC5947     28        18,21,24  5777.4  300 1000
+UGC09892    28        27,30,33  5569.7  300 1000
+NGC6478     28        36,39,42  6645.4  300 1000
+NGC6301     28        51        8148.2  300 1000
+
+
 # session 29:
+
+
+UGC05990    29        21,24,27  1609.3  300 1000    #  no data??
+NGC4676B    29        30,33,36  6389.2   300 1000
+UGC07145    29        39,42,45  6498.8  300 1000
+#NGC4003     29        48,51     6424.6   300 1000
+
+
+
 # session 30:
+
+NGC4003     30        8,11      6424.6  300 1000    # no data???
+NGC3811     30        14,17,20  3040.8  300 1000
+UGC07012    30        23,26,29  3031.5   300 1000
+NGC4047     30        32,35,38  3402.4  300 1000
+NGC4470     30        41,44,47  2339.6  300 1000
+NGC4961     30        56,58,61  2541.1   300 1000
+UGC08250    30        65,68,71  5184.0   300 1000
+UGC08267    30        74,77,80  7078.6  300 1000   # 80 single
+
 # session 31:
 # session 31:
 # session 32:
@@ -226,6 +255,9 @@ IC1199       27      72,75      4663.0  300 1000  # FAIL     75 half
 # session 39:
 # session 40:
 # session 41:
+
+UGC04029    41       8,11      4383.0  300 1000   # no data???
+UGC04132    41       14,17,20  5119.4  300 1000
 
 
 # disk space usage:
