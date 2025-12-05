@@ -26,12 +26,14 @@ Qbatch      = True                               # controls matplotlib.use()
 Qbusy       = True                               # add the busyfit (needs an extra install)
 Qspike      = True                               # median filter to remove spikes
 smooth      = 3                                  # boxcar smooth size (use 0 to skip and use raw)
-mode        = 0                                  # 0:2015 data   1:2025 data
+mode        = 0                                  # 0->2015 data   1->2025 data
+ss          = None                               # use a single session 
 
 # hack for interactive work
 Qbatch      = False
-#Qbusy       = True
+Qbusy       = False
 #smooth      = 15
+ss          = 1     # single session testing
 
 if Qbatch:
     print("MATPLOTLIB agg batch mode")
@@ -266,7 +268,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     # https://dysh.readthedocs.io/en/latest/explanations/cog/index.html
     try:
-        cog = sps.cog(vc = vlsr * kms)
+        #cog = sps.cog(vc = vlsr * kms)
+        cog = sps.cog()
         print('COG:',cog)
         flux2 = cog['flux']
         w95 = cog['width'][0.95]
@@ -497,12 +500,14 @@ if __name__ == "__main__":
 
     project = projects[mode]
 
-
     sdf = {}
     if mode==0:
         print("2015 data:   1,3,4,19 for now")
-        #for i in [1,3,4,19]:
-        for i sb.in [1,3]:
+        if ss is None:
+            try_sessions = [1,3,4,19]
+        else:
+            try_sessions = [ss]
+        for i in try_sessions:
             session = i
             filename  = f'data/{project}_{session:02}.B.fits'
             print(f"# === {filename}")
@@ -522,6 +527,9 @@ if __name__ == "__main__":
     for gal in my_gals:
         print(gal)
         sessions, scans, vlsr, dv, dw = gals[gal]
+        print("SESSIONS:",sessions)
+        if ss is not None and not ss in sessions:
+            continue
         sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode)
         sss = sps.plot(xaxis_unit="km/s")
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
@@ -529,3 +537,6 @@ if __name__ == "__main__":
         spectrum_plot(sps, gal, vlsr, dv, dw, pars)
         print("-----------------------------------")
 
+
+    if not Qbatch:
+        ans = input("Enter anything to exit script")
