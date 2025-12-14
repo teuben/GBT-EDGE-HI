@@ -1,13 +1,22 @@
-#! /usr/bin/env dysh
+#! /usr/bin/env python
 #
 # 2015 data:  
-# 2025 data:  typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)  spectral res = 1.2 km/s
+# 2025 data:  typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)  spectral res = 1.2 km/s   187mhz 32768ch
 #
-# timing:   2'33" for 4 sessions
+# Usage patterns:
+#    ./edge_hi.py --mode 1 --batch --water
+#    ./edge_hi.py --mode 1         --water UGC10972
+#    ./edge_hi.py --mode 0 --session 1 NGC3815
+#
+#
+#
+
+# timing:   
 # 201.52user 54.34system 4:55.45elapsed 86%CPU (0avgtext+0avgdata 12967412maxresident)k
 
 import os
 import sys
+import argparse
 import numpy as np
 import astropy.units as u
 kms = u.km/u.s
@@ -20,20 +29,64 @@ from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
-projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1
-sdfits_data = "/home/teuben/EDGE/GBT-EDGE-HI"    # default if not given via $SDFITS_DATA
-Qbatch      = True                               # controls matplotlib.use()
-Qbusy       = True                               # add the busyfit (needs an extra install)
-Qspike      = True                               # median filter to remove spikes
-smooth      = 3                                  # boxcar smooth size (use 0 to skip and use raw)
-mode        = 0                                  # 0->2015 data   1->2025 data
-ss          = None                               # use a single session 
+my_help = """
+   This is the EDGE-HI pipeline\n
+   use --help to get more help
+   """
+
+p = argparse.ArgumentParser(description=my_help)
+p.add_argument('gal',                     nargs='?',     help="Galaxy")
+p.add_argument('--session', type = int,   default = 0,   help='Single Session test')
+p.add_argument('--mode',    type = int,   default = 0,   help='0->2015 data   1->2025 data')
+p.add_argument('--smooth',  type = int,   default = 3,   help='boxcar smooth')
+p.add_argument('--order',   type = int,   default = 5,   help='baseline order')
+p.add_argument('--water',   action="store_true",         help='make waterfall plot')
+p.add_argument('--full',    action="store_true",         help='Use full A/B/C data for mode=0')
+p.add_argument('--batch',   action="store_true",         help='Batch mode, no interactive plots')
+p.add_argument('--busy',    action="store_true",         help='add the busyfit (needs an extra install)')
+p.add_argument('--spike',   action="store_true",         help='attempt spike removal')
+
+args = p.parse_args()
+
+mode    = int(args.mode)
+smooth  = int(args.smooth)
+ss      = int(args.session)
+blorder = int(args.order)
+my_gals = args.gal
+Qwater  = args.water
+Qfull   = args.full
+Qbatch  = args.batch
+Qbusy   = args.busy
+Qspike  = args.spike
+
+if ss==0:
+    ss = None
+
+print(args)
+
+projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
+sdfits_data = "/data2/teuben/sdfits/"            # default if not given via $SDFITS_DATA
+#Qbatch      = True                              # controls matplotlib.use()
+#Qbusy       = True                              # add the busyfit (needs an extra install)
+#Qspike      = True                              # median filter to remove spikes
+Qvlsr       = True                               # use our vlsr instead of cog() guessing it
+#Qfull       = True                              # use full (A,B,C) file for 2015 data; else just B
+#Qwater      = False                             # make waterfall plot
+#smooth      = 3                                 # boxcar smooth size (use 0 to skip and use raw)
+#mode        = 0                                 # 0->2015 data   1->2025 data
+#ss          = None                              # use a single session 
 
 # hack for interactive work
-Qbatch      = False
-Qbusy       = False
+#Qbatch      = False
+#Qbusy       = False
+#Qspike      = False
 #smooth      = 15
-ss          = 1     # single session testing
+#smooth      = 0
+#ss          = 41     # single session testing
+#ss = 23
+#Qfull       = False
+#mode = 0
+#Qwater = True
 
 if Qbatch:
     print("MATPLOTLIB agg batch mode")
@@ -42,7 +95,7 @@ if Qbatch:
 else:
     print("MATPLOTLIB default mode")
 
-def get_gals(filename = "gals.pars"):
+def get_gals(filename = "gals15.pars"):
     """ reads galaxy parameters. Currently:
     gal       name
     session   1,2,...
@@ -68,8 +121,12 @@ def get_gals(filename = "gals.pars"):
         else:
             gals[gal][0].append(session)
             gals[gal][1].append(scans)
-        print(gal,gals[gal])
+        # print(gal,gals[gal])
     fp.close()
+    if True:
+        print(f"Using {filename}")
+        for k in gals.keys():
+            print(k, gals[k])
     return gals
 
 def get_pars(sdf, session):
@@ -132,7 +189,17 @@ def patch_nan(sp):
         sp.mask[idx] = False
 
 def patch_spike(sp, rms=None):
-    sp.data  = medfilt(sp.data, kernel_size=3) 
+    if rms is None:
+        sp.data  = medfilt(sp.data, kernel_size=3)
+    else:
+        npatch = 0
+        data = sp.data
+        for i in range(len(sp.data)-2):
+            if 2*data[i]-data[i-1]-data[i+1] > rms:
+                sp.data[i] = 0.5*(data[i-1]+data[i+1])
+                npatch = npatch + 1
+        print(f"Patch_Spike: {npatch}")
+            
 
 def busyfit(sp, gal, rms):
     """
@@ -164,8 +231,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     mode=0    2015 ON-OFF-ON getsigref style
     mode=1    2025 ON-OFF getps style
     """
-    print(f"Working on {gal} {vlsr} {dv} {dw}")
-    blorder = 5
+    print(f"Working on {gal} {sessions} {scans} {vlsr} {dv} {dw}")
 
     ns1 = len(sessions)
     ns2 = len(scans)
@@ -173,10 +239,19 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         print("number of sessions and scans not the same")
         return None
 
-    sp = []
+    sp = []                                      # accumulate spectra in this list for later averaging
     if mode == 1:    # 2025 data
         for i in range(ns1):
             sdf1 = sdf[sessions[i]]
+            if Qwater:
+                scans_tp = []
+                for s in scans[i]:
+                    scans_tp.append(s)
+                    scans_tp.append(s+1)
+                print("waterfall",sessions[i],scans_tp)
+                sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=0)
+                sss = sb1.plot(vmax=1e10)
+                sss.savefig(f'{gal}_water_{sessions[i]}.png')                
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
             sp.append(sp0)
@@ -184,6 +259,16 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     elif mode == 0:    # 2015 data
         for i in range(ns1):
             sdf1 = sdf[sessions[i]]  # check
+            # waterfall?
+            if Qwater:
+                scans_tp=[]
+                for s in scans[i]:
+                    scans_tp.append(s)
+                    scans_tp.append(s+1)
+                    scans_tp.append(s+2)
+                sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=1)
+                sss = sb1.plot(vmax=1e10)
+                sss.savefig(f'{gal}_water_{sessions[i]}.png')
             for s in scans[i]:
                 for pl in [0,1]:
                     #  we will try/except since sessions are not a multiple of 3 scans
@@ -206,7 +291,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     sp = sp[0].average(sp[1:])
     patch_nan(sp)
     if Qspike:
-        patch_spike(sp)
+        patch_spike(sp, 0.1)
     
     vmin = vlsr-dv-dw
     vmax = vlsr+dv+dw
@@ -268,8 +353,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     # https://dysh.readthedocs.io/en/latest/explanations/cog/index.html
     try:
-        #cog = sps.cog(vc = vlsr * kms)
-        cog = sps.cog()
+        if Qvlsr:
+            cog = sps.cog(vc = vlsr * kms)
+        else:
+            cog = sps.cog()
         print('COG:',cog)
         flux2 = cog['flux']
         w95 = cog['width'][0.95]
@@ -295,9 +382,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     return sp, sps, pars
 
 def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
-    """   a more focused plotter, fuck the units
+    """   a more focused plotter, hardcoded units in km/s and mK
     """
-    print("plotting TBD")
     import matplotlib.pyplot as plt
 
     vel = sp.axis_velocity().value
@@ -388,12 +474,21 @@ def _rms(sp, mode='std'):
 
 if False:
     sdf1 = GBTOffline('AGBT15B_287_19') 
+    
+    if False:
+        sdf1['RESTFREQ'] = 1420405751.786
 
     sp1 = sdf1.gettp(scan=56,ifnum=1,fdnum=0,plnum=0).timeaverage()   
     sp2 = sdf1.gettp(scan=57,ifnum=1,fdnum=0,plnum=0).timeaverage()
     sp = (sp1-sp2)/sp2 * sp1.meta["TSYS"]
     sp.plot(xaxis_unit="km/s")
-
+    
+    if hasattr(sp1,"doppler_rest"):
+        print("doppler_resr",sp.doppler_rest)
+    print("rest_value",sp.rest_value)
+    
+    
+    
     # sp.set_radial_velocity_to(-3000*kms)
     # Cannot specify radial velocity or redshift if both target and observer are specified
 
@@ -402,6 +497,8 @@ if False:
 
     # why does this not work ???
     sdf1._index['RESTFREQ'] = 1.42041e9
+    # coz it's this:
+    sdf1['RESTFREQ'] = 1.42041e9    
 
     sp1 = sdf1.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
 
@@ -434,6 +531,24 @@ if False:
 #%%
 
 #    sb = sdf1.gettp(scan=[56,57,58,59,60,61,62,63,64],ifnum=1,fdnum=0,plnum=0)
+
+
+#%%
+if False:
+    sdf1 = GBTFITSLoad('data/AGBT15B_287_01.B.fits')
+    # 10-18
+    sdf1.write('junk15.fits',scan=[10,11,12,13,14,15,16,17,18],ifnum=1,plnum=0,fdnum=0, overwrite=True)
+    
+    sdf2 = GBTFITSLoad('junk15.fits')
+    sb = sdf2.gettp(ifnum=1,plnum=0,fdnum=0)
+    sbsb.plot()
+    # using roll=1 RMS is in RAW is about 35,420,341
+    
+    sdf3 = GBTOffline('AGBT25A_474_01')
+    sdf3.write('junk25.fits',scan=[8,9,10,11,12,13,14,15,16,17],ifnum=0,plnum=0,fdnum=0, overwrite=True)
+    
+    sdf4 = GBTFITSLoad('junk25.fits')
+    
 
 #%%
 Qraw = True
@@ -477,7 +592,13 @@ if False:
 
     final_sp = sp[0].average(sp[1:])
     final_sp.plot(xaxis_unit="km/s")
-    
+
+
+#%%
+
+if False:    
+    sdf1 = GBTOffline('AGBT15B_287_41')
+    sdf2 = GBTFITSLoad('data/AGBT15B_287_41.B.fits')
 
 #%% 
 
@@ -486,33 +607,47 @@ if __name__ == "__main__":
     if "SDFITS_DATA" not in os.environ:
         print(f"Setting SDFITS_DATA to {sdfits_data}")
         os.environ["SDFITS_DATA"] = sdfits_data
+    print("SDFITS_DATA:", os.environ["SDFITS_DATA"])
         
     #      get galaxy parameters
     if mode==0:
         gals = get_gals("gals15.pars")
     elif mode==1:
-        gals = get_gals("gals.pars")
+        gals = get_gals("gals25.pars")
 
-    my_gals = gals.keys()
-    if len(sys.argv) > 1:
-        my_gals = sys.argv[1:]
-
+    if my_gals is None:
+        my_gals = gals.keys()
+    else:
+        # only one galaxy
+        my_gals = [my_gals]
 
     project = projects[mode]
 
     sdf = {}
     if mode==0:
-        print("2015 data:   1,3,4,19 for now")
+        print("2015 data")
         if ss is None:
-            try_sessions = [1,3,4,19]
+            try_sessions = []
+            for g in my_gals:
+                sessions = gals[g][0]
+                for s in sessions:
+                    try_sessions.append(s)
+            print("PJT try_sessions:",try_sessions)
+
         else:
             try_sessions = [ss]
         for i in try_sessions:
             session = i
-            filename  = f'data/{project}_{session:02}.B.fits'
-            print(f"# === {filename}")
-            sdf[session] =  GBTFITSLoad(filename, skipflags=True)
+            if Qfull:
+                sdf[session] = GBTOffline(f'AGBT15B_287_{session:02}')
+                sdf[session]["RESTFREQ"] = 1420405751.786
+            else:
+                #filename = f'{project}/{project}_{session:02}.B.fits'
+                filename = f'data/{project}_{session:02}.B.fits'
+                print(f"# === {filename}")
+                sdf[session] = GBTFITSLoad(filename)   # , skipflags=True)
             sdf[session].summary()
+            print('FLAGS',sdf[session].final_flags)
 
     elif mode==1:
         print("2025 data:   1,2,3,4,5,6,7")
@@ -532,11 +667,12 @@ if __name__ == "__main__":
             continue
         sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode)
         sss = sps.plot(xaxis_unit="km/s")
-        sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
         sss.savefig(f'{gal}.png')
+        sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
+        spectrum_plot(sp, gal, vlsr, dv, dw, pars)
         spectrum_plot(sps, gal, vlsr, dv, dw, pars)
         print("-----------------------------------")
 
 
     if not Qbatch:
-        ans = input("Enter anything to exit script")
+        ans = input("Enter anything to exit script and close figures")
