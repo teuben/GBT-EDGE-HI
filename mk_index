@@ -1,0 +1,42 @@
+#! /usr/bin/env bash
+#
+
+echo '<HTML>'
+
+echo "Updated on $(date)"
+echo '<pre>'
+grep Flux edge_hi.log | sort | pr -T -n
+echo '</pre>'
+
+echo "Some info on parameters"
+echo "<OL>"
+echo "<LI> Flux: and error, our own method in the 2*dv line segment"
+echo "<LI> Flux2: CoG method, based on their bchan and echan"
+echo "<LI> rms: max of the four RMS values : two straight and two rolled.  Qb is defined as ratio of max over min"
+echo "<LI> w95: width at 95% of cumulative flux (CoG method)"
+echo "<LI> Qb: is 1 for perfect baselines, and starts getting bigger when the RMS"
+echo "on both sides differ and/or the RMS in a rolled spectrum is not the RMS of the spectrum"
+echo "itself, indicative of residuals"
+echo "<LI> Qa: asymmetry ratio of receding and approaching flux:  (Fr-Fa)/(Fr+Fa)"
+echo "</OL>"
+echo "If the Curve-of-Growth method fails, 0 values are shown. Usually other things are wrong here anyways"
+echo "<br>"
+echo "See also <A HREF=gals.pars>gals.pars</A> parameter file for the current settings and various comments"
+echo "<br>"
+echo "Supporting dysh code is in <A HREF=https://github.com/teuben/GBT-EDGE-HI>https://github.com/teuben/GBT-EDGE-HI</A>,"
+echo "see also information on <A HREF=https://dysh.readthedocs.io/en/latest/explanations/cog/index.html>Curve of Growth</A>."
+echo "<br>"
+echo "Pipeline <A HREF=edge_hi.log>edge_hi.log</A>"
+
+
+echo '<hr>'
+
+n=0
+for p in *.png; do
+    ((n++))
+    echo "<br> ${n}. $(basename -s .png $p) <br>"
+    echo "<A HREF=$p> <img src=$p> </A>"
+done
+
+echo '</HTML>'
+	 

@@ -1,0 +1,108 @@
+# table of galaxy parameters of AGBT25A_474
+
+# NOTE: this does not include masking of sub-integrations inside the bad scans
+
+
+# session 1:  nov 15, 2025
+
+# galaxy  session    scans           vlsr  dv   dw      # comments
+
+UGC10972      1    8,10,12,14,16      4652  250 1000
+NGC6154       1   18,20,22            5966  100  400
+NGC5480       1   25,27,29,31,33      1906  250 1000
+NGC5633       1   35,37,39,41,43      2326  200  800    
+UGC09476      1   45,47,51,53         3271  150  600    # 49 bad - companion?
+UGC08733      1   55,57,59            2336  150  600    # 61 last "ON", has no "OFF"
+
+# session 2:
+
+VV488NED02    2   8,10,12,14,16       4934 500 1500    # companion
+NGC7047       2  18,20,22,24,26       5787 250 1000     # weak
+UGC11717      2  28,30,32,34,36       6303 200 800     # no signal?
+UGC11792      2  38,40,42,44,46       4812 200 800
+NGC7025       2  48,50,52,54,56       4968 350 1400     # weak   PJT
+NGC7550       2  60,62,66             5078 300 1200    # 58,59, 65 bad -  still no good
+MCG-01-01-012 2  68,70,72,74,76       5765 300 1200
+UGC12274      2  82,86                7656 400 1600    # 78,80,84 bad  - no signal?
+NGC7194       2  88,90,92,94,96       8146 700 1500    # many components/group?
+NGC0681       2  98,100,102,104,106   1748 300 1200
+NGC0991       2  108,110,112,114,116  1532  75 300
+NGC0787       2  130,132,134,136      4747 250 800      # one missing
+UGC01368      2  140,142,144,146      7973 300 1200     # 138 bad - nothing?     PJT
+
+# session 3:
+
+NGC2595       3   8,10,12,14,16       4326 250 1000
+UGC04245      3  18,20,22,24,26       5203 300 1200
+NGC2554       3  28,30,32,34,36       4129 300 1200    # bad baseline     PJT
+UGC04455      3  38,42,44,46       9272 400 1200   # 40,41 bad baseline
+UGC04136      3  48,50,56             6682 400 1500    # 52,54 bad      - weak
+IC2341        3  62,64,66             5133 300 1200    # 58,60 bad, single peak at wrong vel    (67 also needs masking)
+
+# session 4:
+
+IC0674        4  12,14,16             7507 300 900  # 8,10 bad - strong signal
+UGC03960      4  18,20,22,24,26       2256 300 1200  # weak    PJT
+NGC3300       4  28,30,32,34,36       3018 200 800  # nothing
+NGC2691       4  38,40,42,44,46       4013 200 800  # ok
+NGC2918       4  48,50,52,54          6756 200 800  # 56 bad - weak? 
+UGC09542      4  58,60,62             5458 200 800  # sym double horn
+
+# session 5:
+NGC5934       5  8,10,12,14,16        5563 400 1600  # bad baseline
+NGC6154       5  18,20                5966 200 800   # 2nd shot, signal was strong enough
+UGC08781      5  28,30                7571 350 1200  # 22,24,26 bad - weak
+IC4215        5  32,34,36,38,40       3884 200 800   # weak
+UGC10905      5  42,44,46,48,50       7843 350 1400  # bad baselines
+UGC09711      5  52,54,56,58,60       8342 300 1200  # maybe 59 bad baselines
+UGC09629      5  62,64,66,68,70       7823 200 800   # nothing?
+UGC08234      5  76,78,80             8109 300 1200  # 72,74 bad   - nothing
+NGC6427       5  82                   3231 300 1200  # need more data
+
+# session 6:   18-nov
+
+UGC11717      6   8,10,12             6303 200 800
+NGC7550       6  14,16,18             5078 200 800
+MCG-01-52-012 6  20,24,26,28          3859 300 1200    # 22 bad - no signal
+UGC01368      6  30,32,34             7973 200 800    # 36 bad   ch.16820
+UGC02229      6  38,44,46          7304 300 1200    # 40,42 bad PJT
+#UGC02229      6  38,40,42,44,46          7304 300 1200    # 40,42 bad PJT
+UGC00335NED02 6  48,52,54,56       5491 300 1200    # 50,51 bad baseline  PJT
+UGC02222      6  58,60,62,64          4921 300 1200    #    PJT
+
+# session 7:  20-nov
+
+UGC08781      7 8,10,12               7571 200 800
+IC4215        7 14,16,18              3884 200 800
+UGC09629      7 24                    7823 200 800    #  20,22 bad
+#UGC09629      7 20,22,24                    7823 200 800    #  20,22 bad
+#UGC08234     7 -                     8109 300 1200    # 26,28 bad both. 
+UGC08234     7  26,28                  8109 300 1200    # 26,28 bad both. 
+
+# Nov 15 20:45 | Nov 16 01:45 | 00:05 | 5.00 | Bolatto | L    | VEGAS | GBT25A-474 - 01
+# Nov 16 04:45 | Nov 16 09:45 | 08:06 | 4.00 | Bolatto | L    | VEGAS | GBT25A-474 - 02
+# Nov 15 10:30 | Nov 15 15:30 | 13:48 | 5.00 | Bolatto | L    | VEGAS | GBT25A-474 - 03
+# Nov 15 17:15 | Nov 15 22:15 | 20:34 | 3.50 | Bolatto | L    | VEGAS | GBT25A-474 - 04
+
+# The session this morning finished observing all galaxies aimed in that session (GBT25A-474 - 02).
+# Nov 17 05:45 | Nov 17 10:45 | 09:10 | 4.00 | Bolatto  | L        | VEGAS  | GBT25A-474 - 02
+
+# There are 3 upcoming sessions tomorrow:
+# Nov 18 10:15 | Nov 18 15:15 | 13:45 | 5.00 | Bolatto  | L     | VEGAS  | GBT25A-474 - 03
+# 12 galaxies left, 3 of which have been partially observed.
+# Nov 18 18:00 | Nov 18 23:00 | 21:31 |  3.50 | Bolatto   | L         | VEGAS   | GBT25A-474 - 04
+# Nov 18 21:30 | Nov 19 02:30 | 01:02 |  0.50 | Bolatto   | L         | VEGAS   | GBT25A-474 - 01
+# 6 galaxies left (combining both sessions), 1 of which is almost done (4/5 scans).
+
+# Nov 20 13:15 | Nov 20 18:15 | 16:53 | 1.75 | Bolatto  | L     | VEGAS  | GBT25A-474 - 03
+
+# disk space usage:
+
+# 1054408 AGBT25A_474_01
+# 2551316 AGBT25A_474_02
+# 1203468 AGBT25A_474_03
+# 1114660 AGBT25A_474_04
+# 1499012 AGBT25A_474_05
+# 1163996 AGBT25A_474_06
+#  462820 AGBT25A_474_07
+

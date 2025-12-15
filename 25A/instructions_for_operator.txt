@@ -1,0 +1,91 @@
+"""
+Instructions for project GBT25A_474 - OPERATOR RUN MODE
+
+- QUICK REFERENCE
+
+This project uses the L-band receiver to observe HI in multiple galaxies.
+
+1. Submit 25A474_operator in Astrid
+2. Check the first AutoPeakFocus looks ok
+3. Check VEGAS gets selected and balances
+4. At the end of the time hit 'Stop' (or 'Abort', but only if you must).
+
+*** If the scheduling block ends by itself (check on it every now and then),
+    follow the instructions in the last section of the detailed instructions
+    below.
+
+
+---------------------- DETAILED INSTRUCTIONS --------------------------
+
+- Starting the Observation
+
+1. Select the 'Run' tab in astrid
+2. Choose AGBT25A_474 under 'Project'. 
+3. Allow astrid to automatically increase the session number.
+4. Enter appropriate values for the 'Observer' and 'Operator'.
+5. Select the observing script '25A474_operator' from the list of available
+   scheduling blocks.
+6. Click 'Submit'.
+
+
+- Monitor 1st Peak/Focus
+
+1. The script will perform an AutoPeakFocus at the start of the experiment.
+2. Select the 'DataDisplay' tab in Astrid.
+3. Select the 'Pointing' sub-tab directly under 'DataDisplay'.
+3. 4 peak scans should appear sequentially in the window.  All four should
+   show a peak centered around zero.
+   Example: /home/astro-util/projects/15B287_operator/pointing.jpeg
+4. 1 focus scan will then be performed.
+   Example: /home/astro-util/projects/15B287_operator/focus.jpeg
+
+  - PLEASE NOTE: the script may decide to perform an additional AutoPeak
+    after the above AutoPeakFocus.  Just let it run, you should not need to
+    check anything if the first peaks were ok.
+
+
+- VEGAS Observations
+
+1. The system will reconfigure to use VEGAS.
+2. In cleo select the VEGAS screen.
+3. 1 bank of VEGAS should be selected (highlighted green box under
+   'SubSysSelect' column).
+4. VEGAS will balance.  Check values of selected bank is around -20 in the
+   'Power' column.
+
+
+- At the end of the session.
+
+1. Hit 'Stop' in Astrid (or 'Abort' if 'Stop' is greyed out)
+2. If possible, click 'Export Log' and save the log as
+   /home/astro-util/projects/25A474/logs/DDMMYYYY_hhmm.txt
+   Please change DDMMYYYY_hhmm to real date-times values. No need to be
+   exact with the hours and minutes.
+
+
+- EXCEPTIONS AND ERRORS:
+
+In case of unexpected aborts that happen in between science target observations,
+please re-start by running the script: 25A474_operator_scienceonly
+This will skip the pointing and flux calibration scans.
+
+Otherwise, the script should not fail, but it is conceivable that it could end
+without performing any scans.  This is because it selects sources based on LST 
+ranges and the start time of the submitted script.  If nothing is observed,
+then there are no sources left to observe in that LST range. If this happens:
+
+ - Resubmit the script
+
+       OR (if that fails)
+
+ - Run the alternate script: 25A474_operator_backup
+
+The backup script will search through all available sources for the project
+and attempt to find one that is observable.  If the script continues to
+start/immediately stop (without an error message) then there is nothing else
+you can do since the project has been scheduled at a bad time.  The best you
+could do is resubmit the script in 10-15 minutes intervals in the
+hope that an observable source will have risen above the horizon.
+
+In the case of an error leading to abort, call Eltha Teng (858-241-1297).
+"""

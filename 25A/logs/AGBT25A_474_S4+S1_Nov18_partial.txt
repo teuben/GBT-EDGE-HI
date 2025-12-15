@@ -1,0 +1,401 @@
+[00:19:15] MCG-01-52-012: OBS COMPLETE = 1/5
+[00:19:15] Updating Catalogs
+[00:19:15] Starting on-off scan
+[00:19:15] source : MCG-01-52-012
+               N_OBS : 0.0
+               SESSION : 4.0
+               location : J2000 @ (20:37:49.99, -06:05:26.69)
+               CALIBRATOR : 3C48
+               VELOCITY : 3859.0
+[00:19:15] OnOff: Subscan 1 of 2
+[00:19:31] *** Notice: This subscan will be numbered as scan #22 in your data reduction package.
+[00:22:35] OnOff: Subscan 2 of 2
+[00:22:51] *** Notice: This subscan will be numbered as scan #23 in your data reduction package.
+[00:25:55] MCG-01-52-012: OBS COMPLETE = 2/5
+[00:25:55] Updating Catalogs
+[00:25:55] Starting on-off scan
+[00:25:55] source : MCG-01-52-012
+               N_OBS : 0.0
+               SESSION : 4.0
+               location : J2000 @ (20:37:49.99, -06:05:26.69)
+               CALIBRATOR : 3C48
+               VELOCITY : 3859.0
+[00:25:55] OnOff: Subscan 1 of 2
+[00:26:10] *** Notice: This subscan will be numbered as scan #24 in your data reduction package.
+[00:29:14] OnOff: Subscan 2 of 2
+[00:29:29] *** Notice: This subscan will be numbered as scan #25 in your data reduction package.
+[00:32:33] MCG-01-52-012: OBS COMPLETE = 3/5
+[00:32:33] Updating Catalogs
+[00:32:33] Starting on-off scan
+[00:32:33] source : MCG-01-52-012
+               N_OBS : 0.0
+               SESSION : 4.0
+               location : J2000 @ (20:37:49.99, -06:05:26.69)
+               CALIBRATOR : 3C48
+               VELOCITY : 3859.0
+[00:32:33] OnOff: Subscan 1 of 2
+[00:32:49] *** Notice: This subscan will be numbered as scan #26 in your data reduction package.
+[00:35:53] OnOff: Subscan 2 of 2
+[00:36:08] *** Notice: This subscan will be numbered as scan #27 in your data reduction package.
+[00:39:12] MCG-01-52-012: OBS COMPLETE = 4/5
+[00:39:12] Updating Catalogs
+[00:39:12] Starting on-off scan
+[00:39:12] source : MCG-01-52-012
+               N_OBS : 0.0
+               SESSION : 4.0
+               location : J2000 @ (20:37:49.99, -06:05:26.69)
+               CALIBRATOR : 3C48
+               VELOCITY : 3859.0
+[00:39:12] OnOff: Subscan 1 of 2
+[00:39:28] *** Notice: This subscan will be numbered as scan #28 in your data reduction package.
+[00:42:32] OnOff: Subscan 2 of 2
+[00:42:47] *** Notice: This subscan will be numbered as scan #29 in your data reduction package.
+[00:45:51] MCG-01-52-012: OBS COMPLETE = 5/5
+[00:45:51] Updating Catalogs
+[00:45:51] INFO: Selecting Catalog
+[00:45:51] INFO: Using Catalog for LST 0-6 (S1)
+[00:45:51] ('sanity check:::::', '2025-11-19 00:45:51.27')
+[00:45:55] ALT: 43d36m36.3494s
+[00:45:55] source : UGC01368
+               N_OBS : 4.0
+               SESSION : 1.0
+               location : J2000 @ (01:54:13.15, 07:53:01.04)
+               CALIBRATOR : 3C48
+               VELOCITY : 7973.0
+[00:45:55] Slewing to source.
+[00:49:22] Balancing IF system.
+[00:49:23] Balancing IFRack
+[00:49:25] the sampler values are:
+[00:49:25] RF_power 1 : 2.998047
+[00:49:25] RF_power 2 : 0.004882812
+[00:49:25] RF_power 3 : 2.802734
+[00:49:25] RF_power 4 : 0.009765625
+[00:49:25] RF_power 5 : 0.05859375
+[00:49:25] RF_power 6 : 0.01953125
+[00:49:25] RF_power 7 : 0.0390625
+[00:49:25] RF_power 8 : 0.04394531
+[00:49:25] IFRack  balance result:  1
+[00:49:25] Balancing VEGAS
+[00:49:31] VEGAS  balance result:  True
+[00:49:32] Starting on-off scan
+[00:49:32] source : UGC01368
+               N_OBS : 4.0
+               SESSION : 1.0
+               location : J2000 @ (01:54:13.15, 07:53:01.04)
+               CALIBRATOR : 3C48
+               VELOCITY : 7973.0
+[00:49:32] OnOff: Subscan 1 of 2
+[00:49:53] *** Notice: This subscan will be numbered as scan #30 in your data reduction package.
+[00:52:57] OnOff: Subscan 2 of 2
+[00:53:13] *** Notice: This subscan will be numbered as scan #31 in your data reduction package.
+[00:56:17] UGC01368: OBS COMPLETE = 5/8
+[00:56:17] Updating Catalogs
+[00:56:17] Starting on-off scan
+[00:56:17] source : UGC01368
+               N_OBS : 4.0
+               SESSION : 1.0
+               location : J2000 @ (01:54:13.15, 07:53:01.04)
+               CALIBRATOR : 3C48
+               VELOCITY : 7973.0
+[00:56:17] OnOff: Subscan 1 of 2
+[00:56:34] *** Notice: This subscan will be numbered as scan #32 in your data reduction package.
+[00:59:38] OnOff: Subscan 2 of 2
+[00:59:54] *** Notice: This subscan will be numbered as scan #33 in your data reduction package.
+[01:02:58] UGC01368: OBS COMPLETE = 6/8
+[01:02:58] Updating Catalogs
+[01:02:58] Starting on-off scan
+[01:02:58] source : UGC01368
+               N_OBS : 4.0
+               SESSION : 1.0
+               location : J2000 @ (01:54:13.15, 07:53:01.04)
+               CALIBRATOR : 3C48
+               VELOCITY : 7973.0
+[01:02:58] OnOff: Subscan 1 of 2
+[01:03:15] *** Notice: This subscan will be numbered as scan #34 in your data reduction package.
+[01:06:19] OnOff: Subscan 2 of 2
+[01:06:36] *** Notice: This subscan will be numbered as scan #35 in your data reduction package.
+[01:09:40] UGC01368: OBS COMPLETE = 7/8
+[01:09:40] Updating Catalogs
+[01:09:40] Starting on-off scan
+[01:09:40] source : UGC01368
+               N_OBS : 4.0
+               SESSION : 1.0
+               location : J2000 @ (01:54:13.15, 07:53:01.04)
+               CALIBRATOR : 3C48
+               VELOCITY : 7973.0
+[01:09:40] OnOff: Subscan 1 of 2
+[01:09:57] *** Notice: This subscan will be numbered as scan #36 in your data reduction package.
+[01:13:01] OnOff: Subscan 2 of 2
+[01:13:18] *** Notice: This subscan will be numbered as scan #37 in your data reduction package.
+[01:16:22] UGC01368: OBS COMPLETE = 8/8
+[01:16:22] Updating Catalogs
+[01:16:22] ('sanity check:::::', '2025-11-19 01:16:22.30')
+[01:16:23] ALT: 34d59m08.9855s
+[01:16:23] source : UGC02229
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:27.57, 00:54:51.73)
+               CALIBRATOR : 3C48
+               VELOCITY : 7304.0
+[01:16:23] Slewing to source.
+[01:17:22] Balancing IF system.
+[01:17:22] Balancing IFRack
+[01:17:24] the sampler values are:
+[01:17:24] RF_power 1 : 3.037109
+[01:17:24] RF_power 2 : 0.004882812
+[01:17:24] RF_power 3 : 2.817383
+[01:17:24] RF_power 4 : 0.009765625
+[01:17:24] RF_power 5 : 0.05859375
+[01:17:24] RF_power 6 : 0.02441406
+[01:17:24] RF_power 7 : 0.0390625
+[01:17:24] RF_power 8 : 0.0390625
+[01:17:24] IFRack  balance result:  1
+[01:17:24] Balancing VEGAS
+[01:17:26] VEGAS  balance result:  True
+[01:17:27] Starting on-off scan
+[01:17:27] source : UGC02229
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:27.57, 00:54:51.73)
+               CALIBRATOR : 3C48
+               VELOCITY : 7304.0
+[01:17:27] OnOff: Subscan 1 of 2
+[01:17:52] *** Notice: This subscan will be numbered as scan #38 in your data reduction package.
+[01:20:56] OnOff: Subscan 2 of 2
+[01:21:11] *** Notice: This subscan will be numbered as scan #39 in your data reduction package.
+[01:24:15] UGC02229: OBS COMPLETE = 1/5
+[01:24:15] Updating Catalogs
+[01:24:15] Starting on-off scan
+[01:24:15] source : UGC02229
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:27.57, 00:54:51.73)
+               CALIBRATOR : 3C48
+               VELOCITY : 7304.0
+[01:24:15] OnOff: Subscan 1 of 2
+[01:24:32] *** Notice: This subscan will be numbered as scan #40 in your data reduction package.
+[01:27:36] OnOff: Subscan 2 of 2
+[01:27:51] *** Notice: This subscan will be numbered as scan #41 in your data reduction package.
+[01:30:55] UGC02229: OBS COMPLETE = 2/5
+[01:30:55] Updating Catalogs
+[01:30:55] Starting on-off scan
+[01:30:55] source : UGC02229
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:27.57, 00:54:51.73)
+               CALIBRATOR : 3C48
+               VELOCITY : 7304.0
+[01:30:55] OnOff: Subscan 1 of 2
+[01:31:11] *** Notice: This subscan will be numbered as scan #42 in your data reduction package.
+[01:34:15] OnOff: Subscan 2 of 2
+[01:34:32] *** Notice: This subscan will be numbered as scan #43 in your data reduction package.
+[01:37:36] UGC02229: OBS COMPLETE = 3/5
+[01:37:36] Updating Catalogs
+[01:37:37] Starting on-off scan
+[01:37:37] source : UGC02229
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:27.57, 00:54:51.73)
+               CALIBRATOR : 3C48
+               VELOCITY : 7304.0
+[01:37:37] OnOff: Subscan 1 of 2
+[01:37:53] *** Notice: This subscan will be numbered as scan #44 in your data reduction package.
+[01:40:57] OnOff: Subscan 2 of 2
+[01:41:13] *** Notice: This subscan will be numbered as scan #45 in your data reduction package.
+[01:44:17] UGC02229: OBS COMPLETE = 4/5
+[01:44:17] Updating Catalogs
+[01:44:17] Starting on-off scan
+[01:44:17] source : UGC02229
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:27.57, 00:54:51.73)
+               CALIBRATOR : 3C48
+               VELOCITY : 7304.0
+[01:44:17] OnOff: Subscan 1 of 2
+[01:44:33] *** Notice: This subscan will be numbered as scan #46 in your data reduction package.
+[01:47:37] OnOff: Subscan 2 of 2
+[01:47:53] *** Notice: This subscan will be numbered as scan #47 in your data reduction package.
+[01:50:57] UGC02229: OBS COMPLETE = 5/5
+[01:50:57] Updating Catalogs
+[01:50:57] ('sanity check:::::', '2025-11-19 01:50:57.23')
+[01:51:00] ALT: 58d53m34.3091s
+[01:51:00] source : UGC00335NED02
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (00:33:57.35, 07:16:05.50)
+               CALIBRATOR : 3C48
+               VELOCITY : 5491.0
+[01:51:00] Slewing to source.
+[01:52:39] Balancing IF system.
+[01:52:39] Balancing IFRack
+[01:52:41] the sampler values are:
+[01:52:41] RF_power 1 : 2.792969
+[01:52:41] RF_power 2 : 0.004882812
+[01:52:41] RF_power 3 : 2.895508
+[01:52:41] RF_power 4 : 0.009765625
+[01:52:41] RF_power 5 : 0.05859375
+[01:52:41] RF_power 6 : 0.01953125
+[01:52:41] RF_power 7 : 0.04394531
+[01:52:41] RF_power 8 : 0.04394531
+[01:52:41] IFRack  balance result:  1
+[01:52:41] Balancing VEGAS
+[01:52:43] VEGAS  balance result:  True
+[01:52:44] Starting on-off scan
+[01:52:44] source : UGC00335NED02
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (00:33:57.35, 07:16:05.50)
+               CALIBRATOR : 3C48
+               VELOCITY : 5491.0
+[01:52:44] OnOff: Subscan 1 of 2
+[01:53:09] *** Notice: This subscan will be numbered as scan #48 in your data reduction package.
+[01:56:13] OnOff: Subscan 2 of 2
+[01:56:32] *** Notice: This subscan will be numbered as scan #49 in your data reduction package.
+[01:59:36] UGC00335NED02: OBS COMPLETE = 1/5
+[01:59:36] Updating Catalogs
+[01:59:37] Starting on-off scan
+[01:59:37] source : UGC00335NED02
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (00:33:57.35, 07:16:05.50)
+               CALIBRATOR : 3C48
+               VELOCITY : 5491.0
+[01:59:37] OnOff: Subscan 1 of 2
+[01:59:56] *** Notice: This subscan will be numbered as scan #50 in your data reduction package.
+[02:03:00] OnOff: Subscan 2 of 2
+[02:03:19] *** Notice: This subscan will be numbered as scan #51 in your data reduction package.
+[02:06:23] UGC00335NED02: OBS COMPLETE = 2/5
+[02:06:23] Updating Catalogs
+[02:06:24] Starting on-off scan
+[02:06:24] source : UGC00335NED02
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (00:33:57.35, 07:16:05.50)
+               CALIBRATOR : 3C48
+               VELOCITY : 5491.0
+[02:06:24] OnOff: Subscan 1 of 2
+[02:06:43] *** Notice: This subscan will be numbered as scan #52 in your data reduction package.
+[02:09:47] OnOff: Subscan 2 of 2
+[02:10:06] *** Notice: This subscan will be numbered as scan #53 in your data reduction package.
+[02:13:10] UGC00335NED02: OBS COMPLETE = 3/5
+[02:13:10] Updating Catalogs
+[02:13:11] Starting on-off scan
+[02:13:11] source : UGC00335NED02
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (00:33:57.35, 07:16:05.50)
+               CALIBRATOR : 3C48
+               VELOCITY : 5491.0
+[02:13:11] OnOff: Subscan 1 of 2
+[02:13:30] *** Notice: This subscan will be numbered as scan #54 in your data reduction package.
+[02:16:34] OnOff: Subscan 2 of 2
+[02:16:53] *** Notice: This subscan will be numbered as scan #55 in your data reduction package.
+[02:19:57] UGC00335NED02: OBS COMPLETE = 4/5
+[02:19:57] Updating Catalogs
+[02:19:57] Starting on-off scan
+[02:19:57] source : UGC00335NED02
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (00:33:57.35, 07:16:05.50)
+               CALIBRATOR : 3C48
+               VELOCITY : 5491.0
+[02:19:57] OnOff: Subscan 1 of 2
+[02:20:17] *** Notice: This subscan will be numbered as scan #56 in your data reduction package.
+[02:23:21] OnOff: Subscan 2 of 2
+[02:23:40] *** Notice: This subscan will be numbered as scan #57 in your data reduction package.
+[02:26:44] UGC00335NED02: OBS COMPLETE = 5/5
+[02:26:44] Updating Catalogs
+[02:26:44] ('sanity check:::::', '2025-11-19 02:26:44.32')
+[02:26:53] ALT: 67d57m24.7321s
+[02:26:53] source : UGC02222
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:09.69, 32:59:23.30)
+               CALIBRATOR : 3C48
+               VELOCITY : 4921.0
+[02:26:53] Slewing to source.
+[02:30:02] Balancing IF system.
+[02:30:02] Balancing IFRack
+[02:30:04] the sampler values are:
+[02:30:04] RF_power 1 : 2.807617
+[02:30:04] RF_power 2 : 0.004882812
+[02:30:04] RF_power 3 : 2.998047
+[02:30:04] RF_power 4 : 0.009765625
+[02:30:04] RF_power 5 : 0.05859375
+[02:30:04] RF_power 6 : 0.02441406
+[02:30:04] RF_power 7 : 0.04882812
+[02:30:04] RF_power 8 : 0.0390625
+[02:30:04] IFRack  balance result:  1
+[02:30:04] Balancing VEGAS
+[02:30:06] VEGAS  balance result:  True
+[02:30:07] Starting on-off scan
+[02:30:07] source : UGC02222
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:09.69, 32:59:23.30)
+               CALIBRATOR : 3C48
+               VELOCITY : 4921.0
+[02:30:07] OnOff: Subscan 1 of 2
+[02:30:32] *** Notice: This subscan will be numbered as scan #58 in your data reduction package.
+[02:33:36] OnOff: Subscan 2 of 2
+[02:33:58] *** Notice: This subscan will be numbered as scan #59 in your data reduction package.
+[02:37:02] UGC02222: OBS COMPLETE = 1/5
+[02:37:02] Updating Catalogs
+[02:37:02] Starting on-off scan
+[02:37:02] source : UGC02222
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:09.69, 32:59:23.30)
+               CALIBRATOR : 3C48
+               VELOCITY : 4921.0
+[02:37:02] OnOff: Subscan 1 of 2
+[02:37:25] *** Notice: This subscan will be numbered as scan #60 in your data reduction package.
+[02:40:29] OnOff: Subscan 2 of 2
+[02:40:52] *** Notice: This subscan will be numbered as scan #61 in your data reduction package.
+[02:43:56] UGC02222: OBS COMPLETE = 2/5
+[02:43:56] Updating Catalogs
+[02:43:56] Starting on-off scan
+[02:43:56] source : UGC02222
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:09.69, 32:59:23.30)
+               CALIBRATOR : 3C48
+               VELOCITY : 4921.0
+[02:43:56] OnOff: Subscan 1 of 2
+[02:44:20] *** Notice: This subscan will be numbered as scan #62 in your data reduction package.
+[02:47:24] OnOff: Subscan 2 of 2
+[02:47:48] *** Notice: This subscan will be numbered as scan #63 in your data reduction package.
+[02:50:52] UGC02222: OBS COMPLETE = 3/5
+[02:50:52] Updating Catalogs
+[02:50:52] Starting on-off scan
+[02:50:52] source : UGC02222
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:09.69, 32:59:23.30)
+               CALIBRATOR : 3C48
+               VELOCITY : 4921.0
+[02:50:52] OnOff: Subscan 1 of 2
+[02:51:17] *** Notice: This subscan will be numbered as scan #64 in your data reduction package.
+[02:54:21] OnOff: Subscan 2 of 2
+[02:54:46] *** Notice: This subscan will be numbered as scan #65 in your data reduction package.
+[02:57:50] UGC02222: OBS COMPLETE = 4/5
+[02:57:50] Updating Catalogs
+[02:57:50] Starting on-off scan
+[02:57:50] source : UGC02222
+               N_OBS : 0.0
+               SESSION : 1.0
+               location : J2000 @ (02:45:09.69, 32:59:23.30)
+               CALIBRATOR : 3C48
+               VELOCITY : 4921.0
+[02:57:50] OnOff: Subscan 1 of 2
+[02:58:16] *** Notice: This subscan will be numbered as scan #66 in your data reduction package.
+[03:00:06] ygor.Telescope: RuntimeError msg: Abort detected!
+[03:00:06] ygor.Telescope: WaitForRunning: Asking abort confirmation.
+
+[03:00:06] User queried: "Abort detected! Terminate block?" waiting for reply...
+[03:00:11] User replied: "Yes".
+[03:00:12] Exiting scheduling block.
+
+[03:00:12] ******** End Scheduling Block
+[03:00:12] ******** observer = OPERATOR, SB name = 25A474_operator, project ID = AGBT25A_474
+

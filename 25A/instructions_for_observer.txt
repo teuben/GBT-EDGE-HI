@@ -1,13 +1,15 @@
 """
-Instructions for project GBT25A_474 - OPERATOR RUN MODE
+Observer Instructions for project GBT25A_474
 
 - QUICK REFERENCE
+
+This project uses the L-band receiver to observe HI in multiple galaxies.
 
 1. Submit 25A474_operator in Astrid
 2. Check the first AutoPeakFocus looks ok
 3. Check VEGAS gets selected and balances
 4. At the end of the time hit 'Stop' (or 'Abort', but only if you must).
-5. Export the log to /users/yteng/EDGE-HI/logs/
+5. Export the log to /home/astro-util/projects/25A474/logs/
 
 *** If the scheduling block ends by itself (check on it every now and then),
     follow the instructions in the last section of the detailed instructions
@@ -64,15 +66,19 @@ Instructions for project GBT25A_474 - OPERATOR RUN MODE
 2. Go to the 'ObservationManagement' tab of Astrid and then click 'Export Log'
    at the bottom of the screen.
 3. Save the log as
-   /users/yteng/EDGE-HI/logs/DDMMYYYY_hhmm.txt
+   /home/astro-util/projects/25A474/logs/DDMMYYYY_hhmm.txt
    Please change DDMMYYYY_hhmm to real date-times values. No need to be
    exact with the hours and minutes.
 
 
 - EXCEPTIONS AND ERRORS:
 
-The script should not fail, but it is conceivable that it could end without
-performing any scans.  This is because it selects sources based on LST 
+In case of unexpected aborts that happen in between science target observations,
+please re-start by running the script: 25A474_operator_scienceonly
+This will skip the pointing and flux calibration scans.
+
+Otherwise, the script should not fail, but it is conceivable that it could end 
+without performing any scans.  This is because it selects sources based on LST 
 ranges and the start time of the submitted script.  If nothing is observed,
 then there are no sources left to observe in that LST range. If this happens:
 

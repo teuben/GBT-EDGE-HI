@@ -43,7 +43,7 @@ def select_my_catalog():
     print 'INFO: Selecting Catalog'
     LST = GetLST()
     mypath = '/home/astro-util/projects/25A474/'
-    if LST >= 0 and LST <= 6:
+    if LST >= 23 or LST <= 6:
         mycat = mypath+'targets_s1.cat'
         Comment("INFO: Using Catalog for LST 0-6 (S1)")
         altcal = "3C147"
@@ -55,7 +55,7 @@ def select_my_catalog():
         mycat = mypath+'targets_s3.cat'
         Comment("INFO: Using Catalog for LST 13-19 (S3)")
         altcal = "3C309_1"
-    elif LST > 19 and LST < 24: 
+    elif LST > 19 and LST < 23: 
         mycat = mypath+'targets_s4.cat'
         Comment("INFO: Using Catalog for LST 19-24 (S4)")
         altcal = "3C309_1"
@@ -67,11 +67,13 @@ def select_my_catalog():
 
 
 def get_altitude(source_ra, source_dec, obs_time):
+    obs_time = obs_time.date + ' ' + obs_time.time
+    print("sanity check:::::", obs_time)
     # Based on GBT location
     GBT = EarthLocation(lat="38d25m59.236s", lon="-79d50m23.406s", height=807.43*u.m)
     coord = SkyCoord(ra=source_ra, dec=source_dec, unit=(u.deg, u.deg), frame="icrs")
 
-    aa = AltAz(location=GBT, obstime=obs_time)
+    aa = AltAz(location=GBT, obstime=obs_time)#, format=u'datetime')
     altaz = coord.transform_to(aa)
 
     print "ALT:", altaz.alt

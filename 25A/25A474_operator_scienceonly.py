@@ -4,34 +4,15 @@
 ########## SETTINGS #############
 h = Horizon(20.0)  # minimum of 20 degrees elevation
 myOff = Offset("AzEl", 1.0, 0.0, cosv=True)  # Off position relative to source
-doFirstPointing = True  # Setting to False will skip the first pointing
-doFirstCal = True  # Setting to False will skip the first 3C calibrator OnOff scan
+doFirstPointing = False  # Setting to False will skip the first pointing
+doFirstCal = False  # Setting to False will skip the first 3C calibrator OnOff scan
 scanTime = 180  # 180 seconds = 3 min for an on OR off scan 
 n_scans = 5  # do OnOff for 5 time on each science source (i.e. 15 min on + 15 min off per source)
 n_repeat = 1  # observe once per source
 keyhole = 74  # maximum elevation limit of GBT (in degree)
 #####################################
 
-ResetConfig()
-
-config_string = """
-receiver = 'Rcvr1_2'
-obstype = 'Spectroscopy'
-backend = 'VEGAS'
-restfreq = 1420.4058
-bandwidth = 187.5
-nchan = 32768
-swmode = "tp"
-swtype = "none"
-swper = 1.0
-tint = 5.0
-vframe = "bary"
-vdef = "Optical"
-noisecal = "lo"
-pol = "Linear"
-"""
-
-Configure(config_string)
+# Skipped reconfigurations, pointings, and fluxcals
 
 execfile("/home/astro-util/projects/25A474/25A474_functions.py")
 Catalog(fluxcal)

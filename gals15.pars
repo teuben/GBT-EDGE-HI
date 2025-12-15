@@ -1,0 +1,269 @@
+# table of galaxy parameters of AGBT15B_287
+# observations are an ON-OFF-ON triplets , usually 3 triplets per galaxy
+
+# NOTE: this does not include masking of sub-integrations inside the bad scans
+
+# typically #IF=3  #POL=2  #INT=85    #FEED=1
+# data is in ifnum=1, so we only need the "B" files from the A/B/C
+# DOPFREQ=1.42  RESTFREQ=1.395 -> needs to be patched
+
+
+# Sessions 1-41, but missing are:    2,7 - so 39 files.
+# Also to note that only ifnum=1 contains HI data, which is the raw.vegas.B.fits file
+
+# session  1:
+
+NGC3815       1     10,13,16     3667.7     300 1200   # 0.06K - lots of nearby spikes   3618.5(186.6)  GPS (10,11,12)
+NGC3994       1     19,22,25     3057.6     300 1200   # bit GPS in 20
+
+
+# session  3:
+
+NGC4210       3     8,11,14      2693.2    300 1200   # 0.05K  GPS(12,28)
+NGC4149       3     17,20        3048.1    300 1200   # no signal - 23,24 only a pair   (GPS(18,22)
+
+# session  4:
+
+NGC5876       4      8,11,14     3231.8    300 1200   # 0.03k  bad baseline due to spikes
+UGC10123      4      17,20,23    3720.0    300 1200   # 0.03   bad baseline due to spikes
+NGC6155       4      32          2400.2    300 1200   #   bad order baseline  
+
+# session  5:
+
+NGC5520       5      8,11,14     1865.3    200  800   #  60mk    11.0 +/- 0.1 K.km/s
+NGC5000       5      17,20,23    5493.0    125  500   #  80mk     9.1
+NGC5406       5      32,35       5302.2    250 1000   #  50mk     9.3
+
+
+# session  6:
+
+UGC04280      6      8,11,14      3469.7   200  800    #   6.6
+NGC2410       6      17,20,23     4602.2   300 1000    #  14.0
+#NGC2730       6      32,35        3795.1   150  600    #   9.9     35 is half
+
+
+# session  8:
+
+NGC6155       8      8,11,14       2400.2   150  600     #  9.3
+NGC6310       8      17,20,23      3370.9   250 1000      # 4.4
+#NGC6497       8      33,36         3114.2   300 1000      # no signal   36 is half
+
+
+# session  9:
+
+NGC2730       9      8,11          3795.1   150  600     # baseline wavy
+NGC2880       9      14,17,20      1530.1   300 1000     # no signal
+NGC2916       9      23,26,29      3683.6   325 1000     # 19.4 
+#NGC3687       9      38,41         2480.2   125  500     # 16.4     41 half 
+
+# session 10:
+
+#NGC6497      10       8,11          3114.2  300 1000   # FAIL
+#NGC6762      10       14,17,20      2899.8  300 1000   # FAIL
+#NGC2480      10       23,26,29      2320.8  300 1000   # FAIL
+
+# session 11:
+
+NGC2480      11       39,42,45      2320.8  300 1000    # 3.8
+NGC2639      11       48,51,54      3219.0  350 1400    # very weak
+NGC2487      11       63,66,69      4758.9  175  700
+UGC04461     11       72,75,78      4906.5  200  800
+IC2487       11       87,90,93      4292.1  300 1000
+NGC4644      11       96,99,102     4852.9  300 1000
+NGC4711      11       111,114,117   4020.1  200  800
+#NGC4185      11       120,123       3834.2  200  800
+
+# session 12:
+
+NGC3687      12       8,11          2480.2   125 500
+#IC0540       12       14,17         2056.6   300 1000      # 17 half  - weak
+
+
+
+# session 13:
+
+NGC4185      13        8             3834.2  300 1000
+NGC4149      13        11            3048.1  300 1000    # GPS(11)
+#NGC4676A     13        14,17,20      6504.1  400 1600
+NGC4676A     13        14,17,20      6420    350 1400   # clearly wrong vlsr from 6504.1
+UGC06312     13        23,26,29      6201.5  300 1000   # NGC3303    5878.3
+#NGC3303      13        38,41         5878.3  300 1000
+#NGC3303      13        38,41         6050     300 1000
+
+
+# session 14:
+
+NGC3303      14         8,11         5878.3    300 1000
+UGC05598     14         14,17,20     5519.8    200  800
+UGC05498     14         23,26,29     6174.4    350 1400
+NGC5406      14         39           5302.2    300 1000     # 39 single
+
+# session 15:
+
+NGC6497      15         8,11         3114.2    300 1000
+NGC6762      15         14,17,20     2899.8    300 1000   # no signal
+
+# session 16:
+
+#NGC5930      16         8,11         2600.5      300 1000
+NGC5930      16         8,11         2500       300 1000    # wrong vlsr
+NGC6125      16         14           4555.8     300 1000  # no signal
+
+# session 17:
+IC0540       17         8,11          2056.6   300 1000
+UGC05111     17         14,17,20      6595.5   300 1000
+NGC2918      17         23,26,29      6615.2   300 1000   # bad baseline, needs masking?
+UGC05108     17         38,41,44      7913.4   300 1000   # bad baseline, needs masking?
+UGC04054     17         47            2130.8   300 1000   # single
+
+
+# session 18:
+
+NGC5930      18         13             2600.5  300 1000
+NGC6125      18         16,19,22       4555.8  300 1000   # no signal
+#UGC10331     18         25,28,31       4485.4  300 1000   # 31 single, wrong vlsr, or asymm
+UGC10331     18         25,28,31       4385    300 1000   # 31 single, wrong vlsr, or asymm
+
+
+# session 19:  
+
+NGC0528      19     8,11,14      4745.5    300 1200   # no signal at -750
+UGC04054     19    17,20,23      2130.8    300 1200   # -3360  strong 0.1K - single spike needs removed
+NGC2481      19    32,35,38      2172.0    300 1200   # -3210  weak 0.02
+NGC2604      19    41,44,47      2067.0    300 1200    # -3347  strong 0.2  - spike (+ and -) at high res visible
+NGC2805      19    56,59,62      1809.2    300 1200   # -3720  strong 1.4  
+NGC4211N     19    65,68,71      6542.7    400 1200   #  1091  weak 0.02     - some spikes
+#NGC3057      19    80,83         1516.4    300 1200   #  -3920 strong 0.2
+
+# session 20:
+
+UGC10331     20    19            4485.4   300 1000   # wrong vlsr
+#NGC6146      20    22            8505.6   300 1000   # GPS
+#NGC6394      20    25,28,31      8285.3   300 1000   # GPS
+NGC6394      20     31      8285.3   300 1000   # GPS
+                     
+NGC3057      20    43            1516.4   100  400   #
+NGC0447      20    46,49,52      5489.6   150  600   # 
+
+
+# session 21:
+
+
+NGC3381      21     14,17,20     1614.9   100  400   #
+UGC05359     21     23,26,29     8249.5   300 1000   # 
+UGC05244     21     38,41,44     2981.7   150  600   #
+NGC2906      21     47,50,53     2124.8   200  800   #
+NGC2623      21     62,65,68     5437.6   300 1000   # negative sidelobes
+IC2247       21     71,74        4261.7   300 1000   # wrong vlsr=4200
+NGC3106      21     77,80,83     6082.6   200  800   #
+
+# session 22:
+
+
+IC2247       22     14           4261.7  300 1000
+#UGC03969     22     17,20,23     8022.8   300 1000   # wrong vlsr=7880
+UGC03969     22     17,20,23     7880      300 1000   # wrong vlsr=7880
+NGC2486      22     26           4569.7  300 1000
+
+
+# session 23:
+
+
+IC4566       23     8,11,14      5479.5  300 1000   # signal at 6000 ?
+#NGC6146      23     14,17        8505.6  300 1000   # GPS - also odd waterfall in 17
+NGC6146      23     14           8505.6  300 1000   # GPS - also odd waterfall in 17        8505.6  300 1000   # GPS - also odd waterfall in 17
+#NGC6394      23     20,23,26     8285.3  300 1000   # GPS
+#NGC6394      23     26     8285.3  300 1000   # GPS
+
+# session 24:
+
+
+NGC6361      24     8,11,14      3777.3   300 1000  # 
+NGC2486      24     17,20        4569.7   300 1000  #
+UGC03899     24     23,26,29     3834.4   300 1000  # very bad baseline
+UGC03995     24     38,41,44     4701.1   300 1000  # cute 3 
+NGC2449      24     47,50,53     4818.5   300 1000  # 
+IC0480       24     62           4492.9   300 1000  # 62 is half
+
+
+# session 25:
+
+
+NGC5406      25     1            5302.2  300 1000
+NGC5485      25     4,7,10       1900.3  300 1000   # very bad baseline
+NGC5657      25     13           3870.7  200  800   # 13 is half
+
+
+# session 26:
+
+
+IC0480       26     8,11,14     4492.9  250 1000
+NGC3158      26     17          6777.2  300 1000  # GPS(17)
+
+
+# session 27:
+
+
+
+NGC5657      27      8,11,14    3870.7  200  800  # 
+NGC5784      27      17,20,23   5337.3  300 1000  # weak, bad baseline
+NGC5732      27      32,35,38   3722.2  200  800
+NGC5394      27      41,44      3370.3  400 1200  # also nearby companion @2400
+NGC5980      27      54,57,60   4030.9  300 1000  # FAIL missing/bad scan?
+NGC6027      27      63,66,69   4370.1  300 1000  # FAIL
+IC1199       27      72,75      4663.0  300 1000  # FAIL     75 half
+
+
+
+
+# session 28:
+
+IC1199      28        6,9       4663.0  300 1000   # no data???
+NGC6081     28        12,15     5032.1  300 1000
+NGC5947     28        18,21,24  5777.4  300 1000
+UGC09892    28        27,30,33  5569.7  300 1000
+NGC6478     28        36,39,42  6645.4  300 1000
+NGC6301     28        51        8148.2  300 1000
+
+
+# session 29:
+
+
+UGC05990    29        21,24,27  1609.3  300 1000    #  no data??
+NGC4676B    29        30,33,36  6389.2   300 1000
+UGC07145    29        39,42,45  6498.8  300 1000
+NGC4003     29        48,51     6424.6   300 1000
+
+
+
+# session 30:
+
+NGC4003     30        8,11      6424.6  300 1000    # no data???
+NGC3811     30        14,17,20  3040.8  300 1000
+UGC07012    30        23,26,29  3031.5   300 1000
+NGC4047     30        32,35,38  3402.4  300 1000
+NGC4470     30        41,44,47  2339.6  300 1000
+NGC4961     30        56,58,61  2541.1   300 1000
+UGC08250    30        65,68,71  5184.0   300 1000
+UGC08267    30        74,77,80  7078.6  300 1000   # 80 single
+
+# session 31:
+# session 31:
+# session 32:
+# session 33:
+# session 34:
+# session 35:
+# session 36:
+# session 37:
+# session 38:
+# session 39:
+# session 40:
+# session 41:
+
+UGC04029    41       8,11      4383.0  300 1000   # no data???
+UGC04132    41       14,17,20  5119.4  300 1000
+
+
+# disk space usage:
+# 8523340 AGBT15B_287_19
+
