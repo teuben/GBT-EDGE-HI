@@ -4,6 +4,10 @@ HI survey of EDGE galaxies.   Started with **AGBT15B_287**, where 100+ galaxies 
 observed in a modified PositionSwitch using ON-OFF-ON and a corresponding getsigref
 procedure. The original GBTIDL procedure can be done with `edge.pro`.
 
+
+Utomo, Dyas	GBT/15B-287	HI Follow-up Observations of the EDGE-CALIFA Survey	125.5h
+
+
 The followup project code is **AGBT25A_474**.
 
 Old observing scripts at GBO:
@@ -98,3 +102,7 @@ Receiver schedule: https://dss.gb.nrao.edu/receivers
 TAC report (including LST pressure plots): https://science.nrao.edu/observing/proposal-types/tac-reports/25a-tac-report
 
 Science program: https://science.nrao.edu/science/science-program/2025a
+
+### Important directories
+
+* /home/astro-util/projects/25A474  : observing file, catalogs etc.
