@@ -2,14 +2,16 @@
 
 - Project ID:   AGBT15B_287
 
-For HI F0=1.420405751786, but the data were taken with F0=1.395, so
-a correction is needed.
+- 116 galaxies
 
-One hack is to use the patch_restfreq.py script.  Recent versions of dysh
-support setting the retfreq in a spectra, we can also set it using sdf["RESTFREQ"],
-but this will apply all rows in the BINTABLE.
+- For HI F0=1.420405751786, but the data were taken with F0=1.395, so
+  a patch is needed.
 
-This script also reduces diskspace by 3 by just using the 2nd if (ifnum=1)
+  One hack is to use the patch_restfreq.py script.  Recent versions of dysh
+  support setting the retfreq in a spectra, we can also set it using sdf["RESTFREQ"],
+  but this will apply all rows in the BINTABLE.
+
+  This script also reduces diskspace by 3 by just using the 2nd if (ifnum=1)
 
 - BW = 100 MHz; 32768 channels; channels 0.644 km/s at HI
      

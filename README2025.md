@@ -5,6 +5,7 @@
 - 43 in total
      - 7 non-detections (to be confirmed)
      - 7 weak (to be confirmed)
+     - one in common with 2015 data (NGC 2xxx, right smack with GPS)
 
 - BW = 187.5 MHz; 32768 channels; channels 1.208 km/s at HI
      
@@ -14,6 +15,6 @@
 - GPS at 1.381 GHz (8300 km/s) is intermittent
       - currently those scans are removed (about 10%)
       - subscan (integration) flagging can improve, but needs algorithm (TBD)
-      - data above xxxxx km/s can be affected
+      - data within 1000 km/s can be affected
  
 - disk space:  the single IF raw data is in 7 sessions, and take up 9.7 GB
