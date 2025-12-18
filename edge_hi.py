@@ -12,14 +12,21 @@
 #    ./edge_hi.py --mode 1 --batch                               all 2025 galaxies (43)
 #
 # Bugs @todo
-#    - there are some blank figures in interactive mode
 #    - do we need plt.show() ???   there's a plt.ion() in dysh somewhere
 #
 #  313.22user  180.56system    8:17.60elapsed 99%CPU   - 2025 data
-#  186.39user   42.83system    3:54.27elapsed 97%CPU 
+#  186.39user   42.83system    3:54.27elapsed 97%CPU
+
+#  232.38user   8.60system  2:25.58elapsed 165%CPU                  P14s
+#  237.26user   6.40system  2:26.46elapsed 166%CPU
+#  333.19user   8.65system  4:04.64elapsed 139%CPU                  P14s --water
+#  334.61user   9.03system  4:06.45elapsed 139%CPU
+# 1172.40user 106.86system 18:19.91elapsed 116%CPU                     P14s
+# 1251.60user 218.47system 22:22.71elapsed 109%CPU                          --water
+
 # 1618.99user 3627.52system 1:35:15elapsed    91%CPU   - 2015 data
 #
-#  NGC2918 is duplicated in both campaigns
+#  NGC2918 is duplicated in both campaigns, but complicated with VLSR in the GPS RFI band
 
 # timing:   
 # 201.52user 54.34system 4:55.45elapsed 86%CPU (0avgtext+0avgdata 12967412maxresident)k
@@ -51,7 +58,7 @@ blorder = 5
 my_help = f"""
    This is the EDGE-HI pipeline. \n
    Currently supporting {projects[0]} (mode=0) and {projects[1]} (mode=1)\n
-   Make sure $SDFITS_DATA has been set.
+   Make sure $SDFITS_DATA has been set for mode=0.
 
    """
 
