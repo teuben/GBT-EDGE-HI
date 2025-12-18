@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 #
-# 2015 data:  
-# 2025 data:  typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)  spectral res = 1.2 km/s   187mhz 32768ch
+# 
 #
 # Usage patterns:
 #    ./edge_hi.py --mode 1 --batch --water
@@ -34,14 +33,18 @@
 # ---- 2025 data
 # 1172.40user 106.86system 18:19.91elapsed 116%CPU                     P14s
 # 1251.60user 218.47system 22:22.71elapsed 109%CPU                          --water
+#
+# 529.35user 22.33system 5:53.58elapsed 156%CPU        lma
+# 296.52user 10.14system 5:08.25elapsed 99%CPU         lma w/ ONT=1
 
 
 # 1618.99user 3627.52system 1:35:15elapsed    91%CPU   - 2015 data
 #
 #  NGC2918 is duplicated in both campaigns, but complicated with VLSR in the GPS RFI band
-
-# timing:   
-# 201.52user 54.34system 4:55.45elapsed 86%CPU (0avgtext+0avgdata 12967412maxresident)k
+#
+# 2015 data:  
+# 2025 data:  typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)  spectral res = 1.2 km/s   187mhz 32768ch
+#
 
 import os
 import sys
@@ -256,6 +259,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=0)
                 sss = sb1.plot(vmax=1e10)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
+                #sss.write(f'{gal}_water_{sessions[i]}.fits')
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
@@ -274,6 +278,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=1)
                 sss = sb1.plot(vmax=1e10)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
+                #sss.write(f'{gal}_water_{sessions[i]}.fits')                
                 #plt.show()
             for s in scans[i]:
                 for pl in [0,1]:
