@@ -16,7 +16,10 @@
 #    - do we need plt.show() ???   there's a plt.ion() in dysh somewhere
 #
 #  313.22user  180.56system    8:17.60elapsed 99%CPU   - 2025 data
-#  186.39user   42.83system    3:54.27elapsed 97%CPU 
+#  186.39user   42.83system    3:54.27elapsed 97%CPU
+#  182.79user   75.26system    4:22.92elapsed 98%CPU
+#  180.87user   49.10system    3:49.42elapsed 100%CPU
+
 # 1618.99user 3627.52system 1:35:15elapsed    91%CPU   - 2015 data
 #
 #  NGC2918 is duplicated in both campaigns
