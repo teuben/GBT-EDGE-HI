@@ -8,12 +8,18 @@
 #    ./edge_hi.py --mode 1         --water UGC10972
 #    ./edge_hi.py --mode 0 --session 1 NGC3815
 #    ./edge_hi.py --mode 0 --session 1 NGC3815 --full
+#    ./edge_hi.py --mode 0                                       all 2015 galaxies (113)
+#    ./edge_hi.py --mode 1 --batch                               all 2025 galaxies (43)
 #
 # Bugs @todo
 #    - there are some blank figures in interactive mode
 #    - do we need plt.show() ???   there's a plt.ion() in dysh somewhere
 #
+#  313.22user  180.56system    8:17.60elapsed 99%CPU   - 2025 data
+#  186.39user   42.83system    3:54.27elapsed 97%CPU 
+# 1618.99user 3627.52system 1:35:15elapsed    91%CPU   - 2015 data
 #
+#  NGC2918 is duplicated in both campaigns
 
 # timing:   
 # 201.52user 54.34system 4:55.45elapsed 86%CPU (0avgtext+0avgdata 12967412maxresident)k
@@ -315,8 +321,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     rms0_0 = (spb0.stats()['rms']).to("mK")
     rms1_0 = (spb1.stats()['rms']).to("mK")
                     
-    rms0_1 = (spb0.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
-    rms1_1 = (spb1.stats(roll=1)['rms']/np.sqrt(2)).to("mK")
+    rms0_1 = (spb0.stats(roll=1)['rms']).to("mK")
+    rms1_1 = (spb1.stats(roll=1)['rms']).to("mK")
 
     ad0 = p_anderson(spb0)
     ad1 = p_anderson(spb1)
@@ -374,7 +380,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     return sp, sps, pars
 
-def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
+def spectrum_plot(sp, gal, vlsr, dv, dw, pars, label="smooth"):
     """   a more dedicated EDGE plotter, hardcoded units in km/s and mK
     """
     import matplotlib.pyplot as plt
@@ -426,7 +432,7 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars):
     plt.ylabel("Intensity (mK)")
     plt.title(f'{gal}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
     plt.legend()
-    plt.savefig(f"{gal}_smooth.png")
+    plt.savefig(f"{gal}_{label}.png")
     #plt.show()
     
 #%%   https://github.com/SJVeronese/nicci-package/
@@ -532,7 +538,7 @@ if False:
 
 #%%
 if False:
-    sdf1 = GBTFITSLoad('data/AGBT15B_287_01.B.fits')
+    sdf1 = GBTFITSLoad('data/AGBT15B_287_01.fits')
     # 10-18
     sdf1.write('junk15.fits',scan=[10,11,12,13,14,15,16,17,18],ifnum=1,plnum=0,fdnum=0, overwrite=True)
     
@@ -556,6 +562,7 @@ if False:
     #sdf1 = GBTFITSLoad("EDGE_19.fits")
     sdf1 = GBTFITSLoad('AGBT15B_287_19.B.fits')
     sdf1.get_summary()
+
 
     sp = []
     s0 = 8        # NGC0528   nothing
@@ -607,10 +614,12 @@ if __name__ == "__main__":
     print("SDFITS_DATA:", os.environ["SDFITS_DATA"])
         
     #      get galaxy parameters
-    if mode==0:
+    if mode==0 or mode==15:
         gals = get_gals("gals15.pars")
-    elif mode==1:
+        mode=0
+    elif mode==1 or mode==25:
         gals = get_gals("gals25.pars")
+        mode=1
 
     if my_gals is None:
         my_gals = gals.keys()
@@ -629,7 +638,8 @@ if __name__ == "__main__":
                 sessions = gals[g][0]
                 for s in sessions:
                     try_sessions.append(s)
-            print("PJT try_sessions:",try_sessions)
+            try_sessions = list(set(try_sessions))                    
+            print("PJT try_sessions mode=0:",try_sessions)
 
         else:
             try_sessions = [ss]
@@ -659,7 +669,7 @@ if __name__ == "__main__":
                 for s in sessions:
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))
-            print("PJT try_sessions:",try_sessions)
+            print("PJT try_sessions mode=1:",try_sessions)
         else:
             try_sessions = [ss]
             
@@ -671,8 +681,9 @@ if __name__ == "__main__":
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
 
-    for gal in my_gals:
-        print(gal)
+    ngal = len(my_gals)
+    for (gal,i) in zip(my_gals,range(ngal)):
+        print(f"{gal}  {i+1}/{ngal}")
         sessions, scans, vlsr, dv, dw = gals[gal]
         print("SESSIONS:",sessions)
         if ss is not None and not ss in sessions:
@@ -682,8 +693,8 @@ if __name__ == "__main__":
         sss.savefig(f'{gal}.png')
         #plt.show()
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
-        spectrum_plot(sp, gal, vlsr, dv, dw, pars)
-        spectrum_plot(sps, gal, vlsr, dv, dw, pars)
+        spectrum_plot(sp, gal, vlsr, dv, dw, pars,  "wide")
+        spectrum_plot(sps, gal, vlsr, dv, dw, pars, "smooth")
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
