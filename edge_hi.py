@@ -1,43 +1,28 @@
 #! /usr/bin/env python
+#               dysh      (issue 946)
 #
-# 
+# dysh pipeline for GBT-EDGE-HI 
 #
 # Usage patterns:
 #    ./edge_hi.py --mode 1 --batch --water
 #    ./edge_hi.py --mode 1         --water UGC10972
 #    ./edge_hi.py --mode 0 --session 1 NGC3815
 #    ./edge_hi.py --mode 0 --session 1 NGC3815 --full
-#    ./edge_hi.py --mode 0                                       all 2015 galaxies (113)
+#    ./edge_hi.py --mode 0 --batch                               all 2015 galaxies (113)
 #    ./edge_hi.py --mode 1 --batch                               all 2025 galaxies (43)
 #
 # Bugs @todo
 #    - do we need plt.show() ???   there's a plt.ion() in dysh somewhere
 #
-#  --- 2015 data
-#  186.39user   42.83system    3:54.27elapsed 97%CPU       d76 (3.12.7)
-#  182.79user   75.26system    4:22.92elapsed 98%CPU      
-#  180.87user   49.10system    3:49.42elapsed 100%CPU
-#  179.47user   49.48system    3:45.27elapsed 101%CPU
-#  180.99user   61.21system    3:59.00elapsed 101%CPU  odd
-#  179.38user   92.62system    4:26.94elapsed 101%CPU  odd
-#  172.72user   98.73system    4:31.56elapsed 99%CPU   odd (and ONT=1)
-#  285.15user  280.06system    9:25.53elapsed 99%CPU --water
-#  284.77user  360.40system   10:45.47elapsed 99%CPU 
-
-
-#  232.38user   8.60system  2:25.58elapsed 165%CPU                  P14s  (3.12.7)
-#  237.26user   6.40system  2:26.46elapsed 166%CPU
-#  333.19user   8.65system  4:04.64elapsed 139%CPU                  P14s --water
-#  334.61user   9.03system  4:06.45elapsed 139%CPU
+#  -- 2025 data:
+#  CPU info (based on OMP_NUM_THREADS=1)
+#  Ultra 7 155H :  100% cpu; but large variable system time    180" + 50" = 230"
+#  AMD          :  165% cpu; small system time:                230" +  8" =
+#  lma          :  156% CPU: small system                      297 +  10" =
+#  M4           :  166% CPU: small system                      105 +  10" = 121
 #
-# ---- 2025 data
+# ---- 2015 data
 # 1172.40user 106.86system 18:19.91elapsed 116%CPU                     P14s
-# 1251.60user 218.47system 22:22.71elapsed 109%CPU                          --water
-#
-# 529.35user 22.33system 5:53.58elapsed 156%CPU        lma
-# 296.52user 10.14system 5:08.25elapsed 99%CPU         lma w/ ONT=1
-
-
 # 1618.99user 3627.52system 1:35:15elapsed    91%CPU   - 2015 data
 #
 #  NGC2918 is duplicated in both campaigns, but complicated with VLSR in the GPS RFI band
@@ -65,48 +50,52 @@ projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the ind
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
 
 # CLI defaults
-ss      = 0
 smooth  = 3
 mode    = 0
 blorder = 5
 
 my_help = f"""
    This is the EDGE-HI pipeline. \n
-   Currently supporting {projects[0]} (mode=0) and {projects[1]} (mode=1)\n
-   Make sure $SDFITS_DATA has been set for mode=0.
+   Currently supporting {projects[0]} (mode=0 or 15) and {projects[1]} (mode=1 or 25)\n
+   Make sure $SDFITS_DATA has been set for mode=1.
 
    """
 
 p = argparse.ArgumentParser(description=my_help)
-p.add_argument('gal',                     nargs='?',           help=f'Galaxy, if one to pick')
-p.add_argument('--session', type = int,   default = ss,        help=f'Force single session for given galaxy, 0=all.  [{ss}]')
+p.add_argument('gal',                     nargs='?',           help=f'Galaxy, use all if left blank')
+p.add_argument('--session', type = int,   default = None,      help=f'Force single session for given galaxy, [all]')
 p.add_argument('--mode',    type = int,   default = mode,      help=f'0->2015 data   1->2025 data [{mode}]')
 p.add_argument('--smooth',  type = int,   default = smooth,    help=f'boxcar smooth size (channels), use 0 to use raw. [{smooth}]')
 p.add_argument('--order',   type = int,   default = blorder,   help=f'baseline order [{blorder}]')
+p.add_argument('--vlsr',    type = float, default = None,      help=f'Override vlsr [pars table entry]')
+p.add_argument('--dv',      type = float, default = None,      help=f'Override dv  [pars table entry]')
+p.add_argument('--dw',      type = float, default = None,      help=f'Override dw  [pars table entry]')
+p.add_argument('--avechan', type = int,   default = -1,        help=f'Number of channels to average in waterfall fits file [skip]')
 p.add_argument('--water',   action="store_true",              help='make waterfall plot')
 p.add_argument('--full',    action="store_true",              help='Use full A/B/C data for mode=0')
 p.add_argument('--batch',   action="store_true",              help='Batch mode, no interactive plots')
 p.add_argument('--busy',    action="store_true",              help='add the busyfit (needs an extra install)')
 p.add_argument('--spike',   action="store_true",              help='attempt spike removal')
-p.add_argument('--vlsr',    action="store_true",              help='use our vlsr instead of cog() guessing it')
+p.add_argument('--cog',     action="store_false",             help='use vel_cog instead of our vlsr')
 
 
 args = p.parse_args()
 
-mode    = int(args.mode)
-smooth  = int(args.smooth)
-ss      = int(args.session)
-blorder = int(args.order)
+mode    = args.mode
+smooth  = args.smooth
+ss      = args.session
+blorder = args.order
+vlsr    = args.vlsr
+dv      = args.dv
+dw      = args.dw
+avechan = args.avechan
 my_gals = args.gal
 Qwater  = args.water
 Qfull   = args.full
 Qbatch  = args.batch
 Qbusy   = args.busy
 Qspike  = args.spike
-Qvlsr   = args.vlsr
-
-if ss==0:
-    ss = None
+Qcog    = args.cog
 
 print(args)
 
@@ -258,8 +247,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 print("waterfall",sessions[i],scans_tp)
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=0)
                 sss = sb1.plot(vmax=1e10)
+                print(sss)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
-                #sss.write(f'{gal}_water_{sessions[i]}.fits')
+                if avechan > 0:
+                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan)
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
@@ -278,7 +269,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=1)
                 sss = sb1.plot(vmax=1e10)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
-                #sss.write(f'{gal}_water_{sessions[i]}.fits')                
+                if avechan > 0:
+                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan)        
                 #plt.show()
             for s in scans[i]:
                 for pl in [0,1]:
@@ -312,8 +304,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     print(f"Looking at {vlsr} from {vmin} to {vmax}")
     spn = sp[vmin*kms:vmax*kms]
 
-    spn.baseline(blorder,exclude=(gmin*kms,gmax*kms))
-    spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
+    if blorder >= 0:
+        spn.baseline(blorder,exclude=(gmin*kms,gmax*kms))
+        spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
 
     if smooth > 0:
         sps = spn.smooth("box",smooth)
@@ -364,10 +357,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     # https://dysh.readthedocs.io/en/latest/explanations/cog/index.html
     try:
-        if Qvlsr:
-            cog = sps.cog(vc = vlsr * kms)
-        else:
+        if Qcog:
             cog = sps.cog()
+        else:
+            cog = sps.cog(vc = vlsr * kms)
         print('COG:',cog)
         flux2 = cog['flux']
         w95 = cog['width'][0.95]
@@ -699,7 +692,10 @@ if __name__ == "__main__":
     ngal = len(my_gals)
     for (gal,i) in zip(my_gals,range(ngal)):
         print(f"{gal}  {i+1}/{ngal}")
-        sessions, scans, vlsr, dv, dw = gals[gal]
+        sessions, scans, vlsr1, dv1, dw1 = gals[gal]
+        if vlsr is None:  vlsr = vlsr1
+        if dv   is None:  dv   = dv1
+        if dw   is None:  dw   = dw1
         print("SESSIONS:",sessions)
         if ss is not None and not ss in sessions:
             continue
