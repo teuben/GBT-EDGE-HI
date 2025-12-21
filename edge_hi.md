@@ -25,6 +25,13 @@ along especially the 2nd baseline. Cutting the baseline in half, i.e. `--dw 500`
 the flux to be `16.82 +/- 0.22`. Clearly the systematic error is larger than the random error
 based on the rms.
 
+## Caution
+
+1. the `--spike` is under construction, be cautious using it. Should not be needed for 2025 data.
+2. the flux listed from cog  and our pipeline differs. needs to be investigated.
+3. there is no visual of the fitted baseline 
+
+
 ## Output
 
 Although the important parameters are all in the final spectrum (e.g. NGC3815_smooth.png), the full output also contains
