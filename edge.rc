@@ -4,5 +4,7 @@
 # source $HOME/GBT/anaconda3/python_start.sh
 
 # 2. set the SDFITS directory
-export SDFITS_FITS=$HOME/GBT/sdfits
+export SDFITS_DATA=$HOME/GBT/sdfits
+
+# for EDGE-GBT-HI use the --full data or ensure the subdirectory data points to where the AGBT15B_287_*.fits files are
 
