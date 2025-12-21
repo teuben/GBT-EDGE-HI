@@ -1,0 +1,8 @@
+#  example "rc" file to source to set up the environment for the EDGE-GBT-HI pipeline
+
+# 1.   enable the python that has dysh pip installed
+# source $HOME/GBT/anaconda3/python_start.sh
+
+# 2. set the SDFITS directory
+export SDFITS_FITS=$HOME/GBT/sdfits
+
