@@ -48,7 +48,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "20-dec-2025"
+version     = "21-dec-2025"
 
 # CLI defaults
 smooth  = 3
@@ -221,26 +221,32 @@ def patch_spike2(sp, n0, n1, clip):
     npatch2 = 0
     n = len(sp.data)
     d = sp.data
-    print("Patch_spike2:",n,n0,n1)
+    print("Patch_spike2: nchan,n0,n1",n,n0,n1)
     if False:
         for i in range(n0-1):
             if abs(d[i]-d[i+1]) > clip:
-                sp.mask[i] = True            
+                sp.mask[i] = True
         for i in range(n-n1,n-1):
             if abs(d[i]-d[i+1]) > clip:
                 sp.mask[i] = True
     else:
         p=[]
         last = False
-        for i in range(n-1):
+        for i in range(1,n-2):
             if last:
                 last = False
                 continue
             if abs(d[i]-d[i+1]) > clip:
-                sp.mask[i] = True
+                if False:
+                    sp.mask[i] = True
+                    sp.mask[i+1] = True
+                else:
+                    sp.data[i]   = (2*sp.data[i-1] +   sp.data[i+2])/3
+                    sp.data[i+1] = (  sp.data[i-1] + 2*sp.data[i+2])/3
                 npatch2 = npatch2 + 1
                 p.append(i)
                 last = True
+                print("spike2: ",i,d[i]-d[i+1])                
         print(f"Patch_Spike2 double spike on {clip}: {npatch2} ")
         print(p)
         if False:
