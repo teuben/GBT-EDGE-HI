@@ -4,12 +4,12 @@
 # dysh pipeline for GBT-EDGE-HI 
 #
 # Usage patterns:
-#    ./edge_hi.py --mode 1 --batch --water
-#    ./edge_hi.py --mode 1         --water UGC10972
-#    ./edge_hi.py --mode 0 --session 1 NGC3815
-#    ./edge_hi.py --mode 0 --session 1 NGC3815 --full
-#    ./edge_hi.py --mode 0 --batch                               all 2015 galaxies (113)
-#    ./edge_hi.py --mode 1 --batch                               all 2025 galaxies (43)
+#    ./edge_hi.py --mode 25 --batch --water
+#    ./edge_hi.py --mode 25         --water UGC10972
+#    ./edge_hi.py --mode 15 --session 1 NGC3815
+#    ./edge_hi.py --mode 15 --session 1 NGC3815 --full
+#    ./edge_hi.py --mode 15 --batch                               all 2015 galaxies (113)
+#    ./edge_hi.py --mode 25 --batch                               all 2025 galaxies (43)
 #
 # Bugs @todo
 #    - do we need plt.show() ???   there's a plt.ion() in dysh somewhere
@@ -51,32 +51,38 @@ sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SD
 
 # CLI defaults
 smooth  = 3
-mode    = 0
+mode    = 15
 blorder = 5
+ptype   = 'png'
 
 my_help = f"""
    This is the EDGE-HI pipeline. \n
    Currently supporting {projects[0]} (mode=0 or 15) and {projects[1]} (mode=1 or 25)\n
    Make sure $SDFITS_DATA has been set for mode=1.
 
+   Examples
+      ./edge_hi.py --mode 25 UGC10972
+      ./edge_hi.py --mode 15 NGC3815 
    """
 
-p = argparse.ArgumentParser(description=my_help)
+p = argparse.ArgumentParser(description=my_help, formatter_class=argparse.RawTextHelpFormatter)
+
 p.add_argument('gal',                     nargs='?',           help=f'Galaxy, use all if left blank')
 p.add_argument('--session', type = int,   default = None,      help=f'Force single session for given galaxy, [all]')
-p.add_argument('--mode',    type = int,   default = mode,      help=f'0->2015 data   1->2025 data [{mode}]')
+p.add_argument('--mode',    type = int,   default = mode,      help=f'0 or 15->2015 data   1 or 25->2025 data [{mode}]')
 p.add_argument('--smooth',  type = int,   default = smooth,    help=f'boxcar smooth size (channels), use 0 to use raw. [{smooth}]')
-p.add_argument('--order',   type = int,   default = blorder,   help=f'baseline order [{blorder}]')
-p.add_argument('--vlsr',    type = float, default = None,      help=f'Override vlsr [pars table entry]')
-p.add_argument('--dv',      type = float, default = None,      help=f'Override dv  [pars table entry]')
-p.add_argument('--dw',      type = float, default = None,      help=f'Override dw  [pars table entry]')
+p.add_argument('--order',   type = int,   default = blorder,   help=f'baseline order fit (use -1 to skip) [{blorder}]')
+p.add_argument('--v0',      type = float, default = None,      help=f'Override vlsr as center of galaxy [pars table entry]')
+p.add_argument('--dv',      type = float, default = None,      help=f'Override dv for half signal portion  [pars table entry]')
+p.add_argument('--dw',      type = float, default = None,      help=f'Override dw for each half baseline [pars table entry]')
 p.add_argument('--avechan', type = int,   default = -1,        help=f'Number of channels to average in waterfall fits file [skip]')
-p.add_argument('--water',   action="store_true",              help='make waterfall plot')
-p.add_argument('--full',    action="store_true",              help='Use full A/B/C data for mode=0')
-p.add_argument('--batch',   action="store_true",              help='Batch mode, no interactive plots')
-p.add_argument('--busy',    action="store_true",              help='add the busyfit (needs an extra install)')
-p.add_argument('--spike',   action="store_true",              help='attempt spike removal')
-p.add_argument('--cog',     action="store_false",             help='use vel_cog instead of our vlsr')
+p.add_argument('--plot',                  default = ptype,     help=f'Default plotting type [{ptype}]')
+p.add_argument('--water',   action="store_true",               help='make waterfall plot')
+p.add_argument('--full',    action="store_true",               help='Use full A/B/C data for mode=0')
+p.add_argument('--batch',   action="store_true",               help='Batch mode, no interactive plots')
+p.add_argument('--busy',    action="store_true",               help='add the busyfit (needs an extra install)')
+p.add_argument('--spike',   action="store_true",               help='attempt spike removal')
+p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
 
 
 args = p.parse_args()
@@ -85,10 +91,11 @@ mode    = args.mode
 smooth  = args.smooth
 ss      = args.session
 blorder = args.order
-vlsr    = args.vlsr
+vlsr    = args.v0
 dv      = args.dv
 dw      = args.dw
 avechan = args.avechan
+ptype   = args.plot
 my_gals = args.gal
 Qwater  = args.water
 Qfull   = args.full
@@ -184,18 +191,69 @@ def patch_nan(sp):
         sp.data[idx] = 0.5*(sp.data[idx-1] + sp.data[idx+1])
         sp.mask[idx] = False
 
-def patch_spike(sp, rms=None):
-    if rms is None:
+def patch_spike(sp, clip=None):
+    if clip is None:
         sp.data  = medfilt(sp.data, kernel_size=3)
     else:
-        npatch = 0
+        # 4 cases:     single spike up
+        #              single spike down
+        #              spike up/down
+        #              spike down/up
+        npatchp = 0
+        npatchn = 0
         data = sp.data
         for i in range(len(sp.data)-2):
-            if 2*data[i]-data[i-1]-data[i+1] > rms:
+            if 2*data[i]-data[i-1]-data[i+1] > clip:
                 sp.data[i] = 0.5*(data[i-1]+data[i+1])
-                npatch = npatch + 1
-        print(f"Patch_Spike: {npatch}")
-            
+                npatchp = npatchp + 1
+            elif 2*data[i]-data[i-1]-data[i+1] < -clip:
+                sp.data[i] = 0.5*(data[i-1]+data[i+1])
+                npatchn = npatchn + 1
+                
+        print(f"Patch_Spike on {clip}: {npatchp} {npatchn}")
+        
+def patch_spike2(sp, n0, n1, clip):
+    npatchp = 0
+    npatchn = 0
+    npatch1 = 0
+    npatch2 = 0
+    n = len(sp.data)
+    d = sp.data
+    print("Patch_spike2:",n,n0,n1)
+    if False:
+        for i in range(n0-1):
+            if abs(d[i]-d[i+1]) > clip:
+                sp.mask[i] = True            
+        for i in range(n-n1,n-1):
+            if abs(d[i]-d[i+1]) > clip:
+                sp.mask[i] = True
+    else:
+        p=[]
+        last = False
+        for i in range(n-1):
+            if last:
+                last = False
+                continue
+            if abs(d[i]-d[i+1]) > clip:
+                sp.mask[i] = True
+                npatch2 = npatch2 + 1
+                p.append(i)
+                last = True
+        print(f"Patch_Spike2 double spike on {clip}: {npatch2} ")
+        print(p)
+        if False:
+            # now search for single peaks
+            p=[]
+            for i in range(1,n-1):
+                if sp.mask[i]:
+                    continue
+                if abs(d[i+1]+d[i-1] - 2*d[i]) > clip:
+                    sp.mask[i] = True
+                    npatch1 = npatch1 + 1
+                    p.append(i)
+                    last = True                
+            print(f"Patch_Spike2 single spike on {clip}: {npatch1} ")
+            print(p)
 
 def busyfit(sp, gal, rms):
     """
@@ -204,23 +262,7 @@ def busyfit(sp, gal, rms):
     cmd = f"busyfit -c 1 2 {gal}.txt -n {rms} -o {gal} -noplot; sleep 2" 
     print("BUSYFIT:  ",cmd)
     os.system(cmd)
-    
-def waterfall(gals, sdf, gal):
-    """ plot waterfall(s) for a given galaxy
-        gals: input
-        sdf:  input
-        gal:  input
-    """
-    if gal in gals:
-        sessions, scans, vlsr, dv, dw = gals[gal]
-        print(sessions,scans)
-        for i in range(len(sessions)):
-            smin = scans[i][0]
-            smax = scans[i][-1]+1
-            print("Session",sessions[i], "scans",smin,smax)
-            sb = sdf[sessions[i]].gettp(scan=list(range(smin,smax+1)),ifnum=0, fdnum=0, plnum=0)
-            sb.plot()
-      
+
 def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     """  reduce multiple, here session and scans are both arrays
     
@@ -289,20 +331,25 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     if len(sp) == 0:
         print("Did not find any scans")
         return None
-        
 
-    sp = sp[0].average(sp[1:])
-    patch_nan(sp)
-    if Qspike:
-        patch_spike(sp, 0.1)
-    
     vmin = vlsr-dv-dw
     vmax = vlsr+dv+dw
     gmin = vlsr-dv
     gmax = vlsr+dv
 
+    sp = sp[0].average(sp[1:])    # average all scans
+    patch_nan(sp)
+
     print(f"Looking at {vlsr} from {vmin} to {vmax}")
     spn = sp[vmin*kms:vmax*kms]
+
+    if Qspike:
+        spb0 = spn[vmin*kms:gmin*kms]
+        spb1 = spn[gmax*kms:vmax*kms]
+        rms = min(spb0.stats(roll=2)["rms"], spb1.stats(roll=2)["rms"])
+        n0 = len(spb0.data)
+        n1 = len(spb1.data)
+        patch_spike2(spn, n0, n1, 5*rms.value)
 
     if blorder >= 0:
         spn.baseline(blorder,exclude=(gmin*kms,gmax*kms))
@@ -332,8 +379,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     rms0_1 = (spb0.stats(roll=1)['rms']).to("mK")
     rms1_1 = (spb1.stats(roll=1)['rms']).to("mK")
 
-    ad0 = p_anderson(spb0)
-    ad1 = p_anderson(spb1)
+    ad1 = spb0.normalness()  # baseline left
+    ad2 = spb1.normalness()  # baseline right
+    ad3 = spg.normalness()   # galaxy (possibly smoothed)
+    ad0 = spn.normalness()   # whole interval
 
     print(f'rms0: {rms0_0:.1f} {rms0_1:.1f}')
     print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
@@ -341,8 +390,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     rms = max(rms0_1,rms1_1)
     Qb = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
 
-    print(f'Anderson-Darling test: {ad0:.2f}  {ad1:.2f}    Qb {Qb:.2f}')
-    
+    print(f'Anderson-Darling test: {ad1:.2f}  {ad2:.2f} {ad3:.2} {ad0:.3}      Qb {Qb:.2f}')
                     
     dflux = rms.to("K")*deltav*np.sqrt(ngal)
 
@@ -388,7 +436,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     return sp, sps, pars
 
-def spectrum_plot(sp, gal, vlsr, dv, dw, pars, label="smooth"):
+def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth"):
     """   a more dedicated EDGE plotter, hardcoded units in km/s and mK
     """
     import matplotlib.pyplot as plt
@@ -438,31 +486,12 @@ def spectrum_plot(sp, gal, vlsr, dv, dw, pars, label="smooth"):
     plt.text
     plt.xlabel("Velocity (km/s)")
     plt.ylabel("Intensity (mK)")
-    plt.title(f'{gal}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
+    plt.title(f'{gal} {project}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
     plt.legend()
-    plt.savefig(f"{gal}_{label}.png")
+    plt.savefig(f"{gal}_{project}.png")
     #plt.show()
     
-#%%   https://github.com/SJVeronese/nicci-package/
-
-def p_anderson(sp):
-    """  The Anderon-Darling test
-         p-value taken from nicci-package
-         The p-value gives the probability that the spectrum is gaussian.
-         If p>0.05, the spectrum can be considered gaussian   
-    """
-    anderson_test=anderson(sp.data)
-    print("ANDERSON:", anderson_test.statistic)
-    if anderson_test.statistic >= .6:
-        p = np.exp(1.2937 - 5.709*anderson_test.statistic + .0186*anderson_test.statistic**2)
-    elif anderson_test.statistic >= .34:
-        p = np.exp(0.9177 - 4.279*anderson_test.statistic - 1.38*anderson_test.statistic**2)
-    elif anderson_test.statistic >= .2:
-        p = 1-np.exp(-8.318 + 42.796*anderson_test.statistic - 59.938*anderson_test.statistic**2)
-    else:
-        p = 1-np.exp(-13.436 + 101.14*anderson_test.statistic - 223.73*anderson_test.statistic**2) 
-    return p
-
+# deprecate
 def g_test(sp, size=10):
     """kanekar test
     Based on mock gaussian spectra, 95% of the gaussian spectra have 1.16 >= g_test >= 0.79. 
@@ -472,6 +501,7 @@ def g_test(sp, size=10):
     ratio = sp.smooth("box", size).stats()["rms"] * np.sqrt(size) / sp.stats()["rms"]
     return ratio
 
+# deprecate
 def _rms(sp, mode='std'):
     """
     """
@@ -498,11 +528,6 @@ if False:
         print("doppler_resr",sp.doppler_rest)
     print("rest_value",sp.rest_value)
     
-    
-    
-    # sp.set_radial_velocity_to(-3000*kms)
-    # Cannot specify radial velocity or redshift if both target and observer are specified
-
 
     sp_s = sp.with_spectral_axis_unit(u.Hz, rest_value = 1.42041e9 * u.Hz, velocity_convention ='radio')
 
@@ -704,8 +729,8 @@ if __name__ == "__main__":
         sss.savefig(f'{gal}.png')
         #plt.show()
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
-        spectrum_plot(sp, gal, vlsr, dv, dw, pars,  "wide")
-        spectrum_plot(sps, gal, vlsr, dv, dw, pars, "smooth")
+        spectrum_plot(sp, gal, project, vlsr, dv, dw, pars,  "wide")
+        spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth")
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
