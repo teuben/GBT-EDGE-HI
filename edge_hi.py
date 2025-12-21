@@ -48,6 +48,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
+version     = "20-dec-2025"
 
 # CLI defaults
 smooth  = 3
@@ -56,13 +57,14 @@ blorder = 5
 ptype   = 'png'
 
 my_help = f"""
-   This is the EDGE-HI pipeline. \n
+   This is the EDGE-HI pipeline, version {version} \n
    Currently supporting {projects[0]} (mode=0 or 15) and {projects[1]} (mode=1 or 25)\n
    Make sure $SDFITS_DATA has been set for mode=1.
 
    Examples
       ./edge_hi.py --mode 25 UGC10972
-      ./edge_hi.py --mode 15 NGC3815 
+      ./edge_hi.py --mode 15 NGC3815
+
    """
 
 p = argparse.ArgumentParser(description=my_help, formatter_class=argparse.RawTextHelpFormatter)
