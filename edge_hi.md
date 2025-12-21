@@ -8,15 +8,22 @@ will remind you how to run the pipeline.
 
 Here is an example how to run an individual galaxy:
 
-      ./edge_hi.py --mode 15 --spike --water NGC3815
+      ./edge_hi.py --mode 25 --spike --water UGC10972
 
-but for some experiments you may need an additional ``--smooth`` parameter (default: 3), and
-sometimes ``--order`` (default: 5).
+but for some experiments you may need an additional `--smooth` parameter (default: 3), and
+sometimes `--order` (default: 5).
 
 Experiment with the correct values of the baseline and galaxy sections of the spectrum,
-change them with ``--v0``, ``--dv`` and ``--dw``. Typically you will find that
-``dv ~ w95/2`` (maybe little bit more) and ``dw ~ 4 * dv``.  Find good values for
-v0, dv and dw to get a reliable value for the Flux. 
+change them with `--v0`, `--dv` and `--dw`. Typically you will find that
+`dv ~ w95/2` (maybe little bit more) and `dw ~ 4 * dv`.  Find good values for
+v0, dv and dw to get a reliable value for the Flux.
+
+We need to get an idea how robust the error in the flux is depending on the various
+parameters we give it. Take the example UGC10972 above: the default flux
+is `15.89 +/- 0.22` - but with `Qb=1.17` a bit high. This is obvious from the erratic residuals
+along especially the 2nd baseline. Cutting the baseline in half, i.e. `--dw 500`, we now find
+the flux to be `16.82 +/- 0.22`. Clearly the systematic error is larger than the random error
+based on the rms.
 
 ## Output
 
