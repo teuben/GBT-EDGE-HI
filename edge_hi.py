@@ -48,11 +48,11 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "21-dec-2025"
+version     = "21-dec-2025"                      # version ID
 
 # CLI defaults
 smooth  = 3
-mode    = 15
+mode    = 25
 blorder = 5
 ptype   = 'png'
 
@@ -237,6 +237,8 @@ def patch_spike2(sp, n0, n1, clip):
                 last = False
                 continue
             if abs(d[i]-d[i+1]) > clip:
+                if abs(d[i-1]-d[i-2]) > clip: continue
+                #if abs(d[i+2]-d[i+3]) > clip: continue
                 if False:
                     sp.mask[i] = True
                     sp.mask[i+1] = True
@@ -360,7 +362,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         patch_spike2(spn, n0, n1, 5*rms.value)
 
     if blorder >= 0:
-        spn.baseline(blorder,exclude=(gmin*kms,gmax*kms))
+        #spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=False)
+        #spn.plot(xaxis_unit="km/s")
+        # bug:  solution not shown?
         spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
 
     if smooth > 0:
@@ -509,143 +513,8 @@ def g_test(sp, size=10):
     ratio = sp.smooth("box", size).stats()["rms"] * np.sqrt(size) / sp.stats()["rms"]
     return ratio
 
-# deprecate
-def _rms(sp, mode='std'):
-    """
-    """
-    if mode=='std':
-        rms=np.sqrt(np.nanmean(dummy**2)) #the rms is the same of the standard deviation, if and only if, the mean of the data is 0, i.e., the data are following a Gaussian distribution
-    elif mode=='mad':
-        rms=np.nanmedian(np.abs(dummy-np.nanmedian(dummy)))*1.48
-    return rms
-
-#%% issue 558 / 682
-
-if False:
-    sdf1 = GBTOffline('AGBT15B_287_19') 
-    
-    if False:
-        sdf1['RESTFREQ'] = 1420405751.786
-
-    sp1 = sdf1.gettp(scan=56,ifnum=1,fdnum=0,plnum=0).timeaverage()   
-    sp2 = sdf1.gettp(scan=57,ifnum=1,fdnum=0,plnum=0).timeaverage()
-    sp = (sp1-sp2)/sp2 * sp1.meta["TSYS"]
-    sp.plot(xaxis_unit="km/s")
-    
-    if hasattr(sp1,"doppler_rest"):
-        print("doppler_resr",sp.doppler_rest)
-    print("rest_value",sp.rest_value)
-    
-
-    sp_s = sp.with_spectral_axis_unit(u.Hz, rest_value = 1.42041e9 * u.Hz, velocity_convention ='radio')
-
-    # why does this not work ???
-    sdf1._index['RESTFREQ'] = 1.42041e9
-    # coz it's this:
-    sdf1['RESTFREQ'] = 1.42041e9    
-
-    sp1 = sdf1.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
-
-    sdf1.write("test56.fits", overwrite=True, scan=[56,57],ifnum=1,fdnum=0,plnum=0)
-
-
-
-    sdf2 = GBTFITSLoad("test56a.fits")
-    sdf2._index['RESTFREQ'] = 1.42041e9
-    sp2 = sdf2.getsigref(scan=56,ref=57,fdnum=0,ifnum=1,plnum=0).timeaverage()
-    sp2.plot(xaxis_unit="km/s")
-
-    sdf2.write("test56a.fits", overwrite=True)    #  this also doesn't write 1.42
-
-
-    sdf2 = SDFITSLoad("test56.fits")
-    sdf2._bintable[0].data["RESTFREQ"] = 1.42041e9
-    sdf2.write("test56a.fits", overwrite=True) 
-
-    sdf3 = SDFITSLoad("/home/teuben/GBT/dysh_data/sdfits/AGBT15B_287_19/AGBT15B_287_19.raw.vegas/AGBT15B_287_19.raw.vegas.B.fits")
-    sdf3._bintable[0].data["RESTFREQ"] = 1.42041e9
-    sdf3.write("EDGE_19.fits", overwrite=True)  # 2.7 GB
-
-    # these do not work
-    sdf4 = GBTFITSLoad("AGBT15B_287_19/AGBT15B_287_19.raw.vegas/AGBT15B_287_19.raw.vegas.B.fits")
-    sdf4 = GBTFITSLoad("AGBT15B_287_19")
-    sdf4 = GBTFITSLoad("AGBT15B_287_19/AGBT15B_287_19.raw.vegas")
-
 
 #%%
-
-#    sb = sdf1.gettp(scan=[56,57,58,59,60,61,62,63,64],ifnum=1,fdnum=0,plnum=0)
-
-
-#%%
-if False:
-    sdf1 = GBTFITSLoad('data/AGBT15B_287_01.fits')
-    # 10-18
-    sdf1.write('junk15.fits',scan=[10,11,12,13,14,15,16,17,18],ifnum=1,plnum=0,fdnum=0, overwrite=True)
-    
-    sdf2 = GBTFITSLoad('junk15.fits')
-    sb = sdf2.gettp(ifnum=1,plnum=0,fdnum=0)
-    sbsb.plot()
-    # using roll=1 RMS is in RAW is about 35,420,341
-    
-    sdf3 = GBTOffline('AGBT25A_474_01')
-    sdf3.write('junk25.fits',scan=[8,9,10,11,12,13,14,15,16,17],ifnum=0,plnum=0,fdnum=0, overwrite=True)
-    
-    sdf4 = GBTFITSLoad('junk25.fits')
-    
-
-#%%
-Qraw = True
-Qraw = False
-
-if False:
-    #sdf1 = GBTOffline('AGBT15B_287_19') 
-    #sdf1 = GBTFITSLoad("EDGE_19.fits")
-    sdf1 = GBTFITSLoad('AGBT15B_287_19.B.fits')
-    sdf1.get_summary()
-
-
-    sp = []
-    s0 = 8        # NGC0528   nothing
-    s0 = 17      # UGC04054   ~2085
-    s0 = 32      # NGC2481    ~2210
-    s0 = 41      # NGC2604     2049
-    s0 = 56      # NGC2805      1714
-    #s0 = 65      # NGC4211N      6414
-    s0 = 80      # NGC3057      1509
-    for s in [s0, s0+3, s0+6]:
-    #for s in [s0, s0+3]:    
-       print(f"Working on scan {s} to contain 3 scans and 2 polarizations")
-       for pl in [0,1]:            # two polarizations
-           if Qraw:
-               sp1 = sdf1.gettp(scan=s+0,ifnum=1,fdnum=0,plnum=pl).timeaverage()
-               sp2 = sdf1.gettp(scan=s+1,ifnum=1,fdnum=0,plnum=pl).timeaverage()
-               sp3 = sdf1.gettp(scan=s+2,ifnum=1,fdnum=0,plnum=pl).timeaverage()
-               sp.append((sp1-sp2)/sp2 * sp1.meta["TSYS"])
-               sp.append((sp3-sp2)/sp2 * sp3.meta["TSYS"])
-           else:
-               try:
-                   sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
-                   sp.append(sp1)
-               except:
-                   print(f"Skipping missing scan {s+2} pol {pl}")
-               try:
-                   sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
-                   sp.append(sp2)
-               except:
-                   print(f"Skipping missing scan {s+2} pol {pl}")
-
-    final_sp = sp[0].average(sp[1:])
-    final_sp.plot(xaxis_unit="km/s")
-
-
-#%%
-
-if False:    
-    sdf1 = GBTOffline('AGBT15B_287_41')
-    sdf2 = GBTFITSLoad('data/AGBT15B_287_41.B.fits')
-
-#%% 
 
 if __name__ == "__main__":
 
