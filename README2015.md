@@ -1,5 +1,7 @@
 # Comments on the 2015 data reduction
 
+- 117 galaxies in 39 sessions, numbered 1 - 41 (2 and 7 are skipped)
+
 For HI F0=1.420405751786, but the data were taken with F0=1.395, so
 a correction is needed.
 
