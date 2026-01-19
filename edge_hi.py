@@ -58,6 +58,7 @@ my_help = f"""
    This is the EDGE-HI pipeline, version {version}
    Currently supporting {projects[0]} (mode=0 or 15) and {projects[1]} (mode=1 or 25)
    Make sure $SDFITS_DATA has been set for mode=25 or full mode in mode=15
+   Compressed 2015 data should be in data/AGBT15B_287_??.fits (39 files).
 
    Examples
       ./edge_hi.py --mode 25 UGC10972
