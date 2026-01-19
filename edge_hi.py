@@ -45,7 +45,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "7-jan-2026"                       # version ID
+version     = "19-jan-2026"                      # version ID
 
 # CLI defaults
 smooth  = 3
@@ -193,9 +193,9 @@ def patch_nan(sp):
     for idx in idx_nan:
         print('IDX',idx)
         if idx==0: continue
-        print(f"PJT: patching a NaN at {idx}", sp.mask[idx])
-        sp.data[idx] = 0.5*(sp.data[idx-1] + sp.data[idx+1])
-        # sp.mask[idx] = True
+        sp._data[idx] = 0.5*(sp._data[idx-1] + sp._data[idx+1])
+        sp.mask[idx] = False
+        print(f"PJT: patching a NaN at {idx} to ", sp.mask[idx], sp.data[idx])
 
 
 # deprecated
@@ -565,9 +565,10 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
             print("Some failure in busyfit plotting")
     # draw a vlsr line in green
     ax1.plot([vlsr,vlsr],[-rms,+rms],color='green',label=f'vlsr={vlsr} km/s')
-    # draw the cog() 'vel' in red
+    # draw the cog() 'vel' in red, as long as it's not 0
     vel_cog = pars['vel_cog']
-    ax1.plot([vel_cog,vel_cog],[rms,3*rms],color='red',label=f'vel_cog={vel_cog:.1f} km/s')    
+    if vel_cog != 0.0:
+        ax1.plot([vel_cog,vel_cog],[rms,3*rms],color='red',label=f'vel_cog={vel_cog:.1f} km/s')    
     #
     plt.text
     plt.xlabel("Velocity (km/s)")
