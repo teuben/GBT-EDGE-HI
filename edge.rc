@@ -1,12 +1,11 @@
 #  example "rc" file to source to set up the environment for the EDGE-GBT-HI pipeline
 
-cd  ~/GBT
 
 # 1.   enable the python that has dysh pip installed - or use venv
 # source $HOME/GBT/anaconda3/python_start.sh
 
-if [ -d venv ]; then
-  source venv/bin/activate
+if [ -d ~/GBT/venv ]; then
+  source ~/GBT/venv/bin/activate
 fi
 
 # 2. set the SDFITS directory
