@@ -1,15 +1,25 @@
+# GBT-EDGE-HI under $HOME/GBT
+# -*- mode: sh; sh-shell: bash; -*-
+#
 #  example "rc" file to source to set up the environment for the EDGE-GBT-HI pipeline
 
+gbt=$HOME/GBT
 
-# 1.   enable the python that has dysh pip installed - or use venv
-# source $HOME/GBT/anaconda3/python_start.sh
+# 1.   enable the python that has dysh pip installed 
 
-if [ -d ~/GBT/venv ]; then
-  source ~/GBT/venv/bin/activate
+if [ -e $gbt/anaconda3 ]; then
+  echo "Loading $gbt/anaconda3"
+  source $gbt/anaconda3/python_start.sh
+fi	
+
+if [ -d $gbt/venv ]; then
+  echo "activating $gbt/venv"
+  source $gbt/venv/bin/activate
 fi
 
 # 2. set the SDFITS directory
-export SDFITS_DATA=$HOME/GBT/sdfits
+export SDFITS_DATA=$gbt/sdfits
+echo "SDFITS_DATA=$gbt/sdfits"
 
 # for EDGE-GBT-HI use the --full data or ensure the subdirectory data points to where the AGBT15B_287_*.fits files are
 
