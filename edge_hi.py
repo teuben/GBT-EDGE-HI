@@ -45,7 +45,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "19-jan-2026"                      # version ID
+version     = "21-jan-2026"                      # version ID
 
 # CLI defaults
 smooth  = 3
@@ -461,6 +461,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     print(f'rms0: {rms0_0:.1f} {rms0_1:.1f}')
     print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
+
+    rad1 = spb0.radiometer()
+    rad2 = spb1.radiometer()
+    print(f'radiometer: {rad1} {rad2}')
 
     rms = max(rms0_1,rms1_1)
     Qb = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
