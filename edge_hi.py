@@ -45,7 +45,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "21-jan-2026"                      # version ID
+version     = "22-jan-2026"                      # version ID
 
 # CLI defaults
 smooth  = 3
@@ -85,6 +85,8 @@ p.add_argument('--batch',   action="store_true",               help='Batch mode,
 p.add_argument('--busy',    action="store_true",               help='add the busyfit (needs an extra install)')
 p.add_argument('--spike',   action="store_true",               help='attempt spike removal')
 p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
+p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
+
 
 
 args = p.parse_args()
@@ -106,6 +108,7 @@ Qbatch  = args.batch
 Qbusy   = args.busy
 Qspike  = args.spike
 Qcog    = args.cog
+Qshow   = args.show
 
 print(args)
 
@@ -610,6 +613,10 @@ if __name__ == "__main__":
     elif mode==1 or mode==25:
         gals = get_gals("gals25.pars")
         mode=1
+
+    if Qshow:
+        print(f"Found {len(gals)} galaxies")
+        sys.exit(0)
 
     if my_gals is None:
         my_gals = gals.keys()
