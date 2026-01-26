@@ -77,7 +77,7 @@ p.add_argument('--nsigma',  type = float, default = nsigma,    help=f'nsigma [{n
 p.add_argument('--v0',      type = float, default = None,      help=f'Override vlsr as center of galaxy [pars table entry]')
 p.add_argument('--dv',      type = float, default = None,      help=f'Override dv for half signal portion  [pars table entry]')
 p.add_argument('--dw',      type = float, default = None,      help=f'Override dw for each half baseline [pars table entry]')
-p.add_argument('--avechan', type = int,   default = -1,        help=f'Number of channels to average in waterfall fits file [skip]')
+p.add_argument('--avechan',               default = None,      help=f'Number of channels to average in waterfall fits file [skip]')
 p.add_argument('--plot',                  default = ptype,     help=f'Default plotting type [{ptype}]')
 p.add_argument('--water',   action="store_true",               help='make waterfall plot')
 p.add_argument('--full',    action="store_true",               help='Use full A/B/C data for mode=0')
@@ -86,6 +86,7 @@ p.add_argument('--busy',    action="store_true",               help='add the bus
 p.add_argument('--spike',   action="store_true",               help='attempt spike removal')
 p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
 p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
+p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
 
 
 
@@ -109,6 +110,12 @@ Qbusy   = args.busy
 Qspike  = args.spike
 Qcog    = args.cog
 Qshow   = args.show
+Qchan   = args.chan
+
+if avechan is None:
+    avechan = []
+else:
+    avechan = [int(num) for num in avechan.split(',')]    # can have 1 or 3 numbers
 
 print(args)
 
@@ -363,8 +370,11 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sss = sb1.plot(vmax=1e10)
                 print(sss)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
-                if avechan > 0:
-                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan)
+                if len(avechan) > 0:
+                    if len(avechan) > 1:
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                    else:
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
@@ -383,8 +393,11 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=1)
                 sss = sb1.plot(vmax=1e10)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
-                if avechan > 0:
-                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan)        
+                if len(avechan) > 1:
+                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                else:
+                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
+
                 #plt.show()
             for s in scans[i]:
                 for pl in [0,1]:
@@ -412,8 +425,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     sp = sp[0].average(sp[1:])    # average all scans
     patch_nan(sp)
 
+    sp.set_convention("optical")   # 2015 data was in radio convention, 2025 was ok
+
     #  if you haven't ensured the restfreq is correct, do it here
-    #sp.rest_value = 1420405751.786 * u.Hz
+    sp.rest_value = 1420405751.786 * u.Hz
 
     print(f"Looking at {vlsr} from {vmin} to {vmax}")
     spn = sp[vmin*kms:vmax*kms]
@@ -515,7 +530,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     return sp, sps, pars
 
-def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = None):
+def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = None, Qchan = False):
     """   a more dedicated EDGE plotter, hardcoded units in km/s and mK
 
           spbl:   optional sp with baseline solution to plot
@@ -523,13 +538,20 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
     import matplotlib.pyplot as plt
 
     vel = sp.axis_velocity().value
+    #vel = sp.with_velocity_convention('optical').axis_velocity().value
+    print("Velocity axis:",vel[0],vel[-1])
+    ch  = np.arange(len(vel))
     sflux = sp.flux.to("mK").value
     #fig=plt.figure(figsize=(8,4))
     fig,ax1 = plt.subplots()
     Qb = pars["Qb"]
     Qa = pars["Qa"]
     w95 = pars["w95"]
-    plt.plot(vel,sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
+    if Qchan:
+        plt.plot(ch, sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
+        return
+    else:
+        plt.plot(vel,sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
     #if False:  # sp.subtracted:
     if sp.subtracted:
         # bug: for smoothed spectrum, baseline fit is gone
@@ -615,7 +637,7 @@ if __name__ == "__main__":
         mode=1
 
     if Qshow:
-        print(f"Found {len(gals)} galaxies")
+        print(f"Found {len(gals)} galaxies in {projects[mode]}")
         sys.exit(0)
 
     if my_gals is None:
@@ -689,12 +711,13 @@ if __name__ == "__main__":
         if ss is not None and not ss in sessions:
             continue
         sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode)
-        sss = sps.plot(xaxis_unit="km/s")
+        #sss = sps.plot(xaxis_unit="km/s", doppler_convention='optical')  # vel_frame=
+        sss = sps.plot(xaxis_unit="km/s")  # doppler_convention='optical')  # vel_frame=
         sss.savefig(f'{gal}.png')
         #plt.show()
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
         spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth")
-        spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide")
+        spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", Qchan=Qchan) 
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
