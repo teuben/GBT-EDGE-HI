@@ -3,6 +3,9 @@
 # 1.   enable the python that has dysh pip installed
 # source $HOME/GBT/anaconda3/python_start.sh
 
+# 2.   enable virtual environment if one is present
+# source venv/bin/activate
+
 # 2. set the SDFITS directory
 export SDFITS_DATA=$HOME/GBT/sdfits
 
