@@ -1,6 +1,6 @@
 # GBT-EDGE-HI
 
-HI survey of EDGE galaxies.   Started with **AGBT15B_287**, where 100+ galaxies were
+HI survey of EDGE galaxies.   Started with **AGBT15B_287**, where 113 galaxies were
 observed in a modified PositionSwitch using ON-OFF-ON and a corresponding getsigref
 procedure. The original GBTIDL procedure can be done with `edge.pro`.
 
@@ -8,7 +8,8 @@ procedure. The original GBTIDL procedure can be done with `edge.pro`.
 Utomo, Dyas	GBT/15B-287	HI Follow-up Observations of the EDGE-CALIFA Survey	125.5h
 
 
-The followup project code is **AGBT25A_474**.
+The followup project code is **AGBT25A_474**, where 43 galaxies were observed. Only one
+case had overlap with the 2015 data, NGC2918.
 
 Old observing scripts at GBO:
 

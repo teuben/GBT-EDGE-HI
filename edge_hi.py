@@ -22,13 +22,10 @@
 #  M4           :  166% CPU: small system                      105 +  10" = 121
 #
 # ---- 2015 data
-# 1172.40user 106.86system 18:19.91elapsed 116%CPU                     P14s
+# 1172.40user  106.86system   18:19.91elapsed 116%CPU                     P14s
 # 1618.99user 3627.52system 1:35:15elapsed    91%CPU   - 2015 data
 #
 #  NGC2918 is duplicated in both campaigns, but complicated with VLSR in the GPS RFI band
-#
-# 2015 data:  
-# 2025 data:  typical scan has 37 x 2.5sec exposures = 92.5 sec  (both the ON and OFF)  spectral res = 1.2 km/s   187mhz 32768ch
 #
 
 import os
@@ -48,18 +45,20 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "21-dec-2025"                      # version ID
+version     = "22-jan-2026"                      # version ID
 
 # CLI defaults
 smooth  = 3
 mode    = 25
 blorder = 5
+nsigma  = 5
 ptype   = 'png'
 
 my_help = f"""
-   This is the EDGE-HI pipeline, version {version} \n
-   Currently supporting {projects[0]} (mode=0 or 15) and {projects[1]} (mode=1 or 25)\n
-   Make sure $SDFITS_DATA has been set for mode=1.
+   This is the EDGE-HI pipeline, version {version}
+   Currently supporting {projects[0]} (mode=0 or 15) and {projects[1]} (mode=1 or 25)
+   Make sure $SDFITS_DATA has been set for mode=25 or full mode in mode=15
+   Compressed 2015 data should be in data/AGBT15B_287_??.fits (39 files).
 
    Examples
       ./edge_hi.py --mode 25 UGC10972
@@ -74,10 +73,11 @@ p.add_argument('--session', type = int,   default = None,      help=f'Force sing
 p.add_argument('--mode',    type = int,   default = mode,      help=f'0 or 15->2015 data   1 or 25->2025 data [{mode}]')
 p.add_argument('--smooth',  type = int,   default = smooth,    help=f'boxcar smooth size (channels), use 0 to use raw. [{smooth}]')
 p.add_argument('--order',   type = int,   default = blorder,   help=f'baseline order fit (use -1 to skip) [{blorder}]')
+p.add_argument('--nsigma',  type = float, default = nsigma,    help=f'nsigma [{nsigma}]')
 p.add_argument('--v0',      type = float, default = None,      help=f'Override vlsr as center of galaxy [pars table entry]')
 p.add_argument('--dv',      type = float, default = None,      help=f'Override dv for half signal portion  [pars table entry]')
 p.add_argument('--dw',      type = float, default = None,      help=f'Override dw for each half baseline [pars table entry]')
-p.add_argument('--avechan', type = int,   default = -1,        help=f'Number of channels to average in waterfall fits file [skip]')
+p.add_argument('--avechan',               default = None,      help=f'Number of channels to average in waterfall fits file [skip]')
 p.add_argument('--plot',                  default = ptype,     help=f'Default plotting type [{ptype}]')
 p.add_argument('--water',   action="store_true",               help='make waterfall plot')
 p.add_argument('--full',    action="store_true",               help='Use full A/B/C data for mode=0')
@@ -85,6 +85,9 @@ p.add_argument('--batch',   action="store_true",               help='Batch mode,
 p.add_argument('--busy',    action="store_true",               help='add the busyfit (needs an extra install)')
 p.add_argument('--spike',   action="store_true",               help='attempt spike removal')
 p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
+p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
+p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
+
 
 
 args = p.parse_args()
@@ -93,6 +96,7 @@ mode    = args.mode
 smooth  = args.smooth
 ss      = args.session
 blorder = args.order
+nsigma  = args.nsigma
 vlsr    = args.v0
 dv      = args.dv
 dw      = args.dw
@@ -105,18 +109,25 @@ Qbatch  = args.batch
 Qbusy   = args.busy
 Qspike  = args.spike
 Qcog    = args.cog
+Qshow   = args.show
+Qchan   = args.chan
+
+if avechan is None:
+    avechan = []
+else:
+    avechan = [int(num) for num in avechan.split(',')]    # can have 1 or 3 numbers
 
 print(args)
 
 if Qbatch:
     print("MATPLOTLIB agg batch mode")
     import matplotlib
-    matplotlib.use('agg')     # batch mode
+    matplotlib.use('agg')
 else:
-    print("MATPLOTLIB default mode")
+    print("MATPLOTLIB default interactive mode")
     import matplotlib.pyplot as plt    
 
-def get_gals(filename = "gals15.pars"):
+def get_gals(filename = "gals15.pars", debug=True):
     """ reads galaxy parameters. Currently:
     gal       name
     session   1,2,...
@@ -142,15 +153,14 @@ def get_gals(filename = "gals15.pars"):
         else:
             gals[gal][0].append(session)
             gals[gal][1].append(scans)
-        # print(gal,gals[gal])
     fp.close()
-    if True:
+    if debug:
         print(f"Using {filename}")
         for k in gals.keys():
             print(k, gals[k])
     return gals
 
-def get_pars(sdf, session):
+def get_pars(sdf, session, debug=True):
     """ get the pars from an sdf summary, do some sanity checks
     'SCAN',      accumulate the PROCSEQ=1 in scans
     'OBJECT',    gal
@@ -180,19 +190,26 @@ def get_pars(sdf, session):
                 scans.append(int(s))
         dv = 200
         dw = 800
-        print(gal,session,scans,vlsr,dv,dw)
-    print("Be sure to sanitize this list in gals.pars")
+        if debug:
+            print(gal,session,scans,vlsr,dv,dw)
 
 def patch_nan(sp):
+    """   These are normally vegas spurs, could we just ignore them?
+          Here we interpolate accross them
+    """
+    print("NAN STATS",sp.stats())
+    print("8192-b: ",sp.data[8191],sp.data[8192],sp.data[8193])
     idx_nan = np.where(np.isnan(sp.flux))[0]
     nidx = len(idx_nan)
     for idx in idx_nan:
         print('IDX',idx)
         if idx==0: continue
-        print(f"PJT: patching a NaN at {idx}")
-        sp.data[idx] = 0.5*(sp.data[idx-1] + sp.data[idx+1])
+        sp._data[idx] = 0.5*(sp._data[idx-1] + sp._data[idx+1])
         sp.mask[idx] = False
+        print(f"PJT: patching a NaN at {idx} to ", sp.mask[idx], sp.data[idx])
 
+
+# deprecated
 def patch_spike(sp, clip=None):
     if clip is None:
         sp.data  = medfilt(sp.data, kernel_size=3)
@@ -213,7 +230,8 @@ def patch_spike(sp, clip=None):
                 npatchn = npatchn + 1
                 
         print(f"Patch_Spike on {clip}: {npatchp} {npatchn}")
-        
+
+# under development       
 def patch_spike2(sp, n0, n1, clip):
     npatchp = 0
     npatchn = 0
@@ -264,6 +282,57 @@ def patch_spike2(sp, n0, n1, clip):
                     last = True                
             print(f"Patch_Spike2 single spike on {clip}: {npatch1} ")
             print(p)
+# under development       
+def patch_spike3(sp, n0, n1, clip):
+    """ based on NEMO's tabclip with clip== option
+    """
+    npt = len(sp.data)
+    nf = 3
+    ok = np.full(npt, True, dtype=bool)
+    y = np.copy(sp.data)
+    d = np.abs(y[1:]-y[:-1])
+    d = np.roll(d,1)
+    i = 1
+    n1 = n2 = n3 = 0
+    while i < npt - 1 - nf:
+        if d[i]>clip and d[i+2]<clip:
+            print(f"SPIKE1 at {i} {d[i]}  {d[i+1]} {d[i+2]}")
+            ok[i] = False
+            #sp.mask[i] = True
+            sp.data[i] = 0.5*(y[i-1]+y[i+1])
+            i = i + 2
+            n1 = n1 + 1
+            continue
+        if d[i]>clip and d[i+1]>clip and d[i+3]<clip:
+        #if d[i]>clip and d[i+1]>clip and y[i+2]+y[i+3]<2*clip:
+            print(f"SPIKE2 at {i} {d[i]}  {d[i+1]} {d[i+2]} {d[i+3]}")
+            #sp.mask[i] = True
+            #sp.mask[i+1] = True
+            ok[i] = False
+            ok[i+1] = False
+            sp.data[i] = 0.5*(y[i-1]+y[i+2])
+            sp.data[i+1] = sp.data[i]
+            n2 = n2 + 1            
+            i = i + 3
+            continue
+        if d[i]>clip and d[i+1]>clip and d[i+2]>clip and d[i+4]<clip:
+        #if d[i]>clip and d[i+1]>clip and d[i+2]>clip and y[i+3]+y[i+4]<2*clip:
+            print(f"SPIKE3 at {i} {d[i]}  {d[i+1]} {d[i+2]} {d[i+3]} {d[i+4]}")
+            #sp.mask[i] = True
+            #sp.mask[i+1] = True
+            #sp.mask[i+2] = True
+            ok[i] = False
+            ok[i+1] = False
+            ok[i+2] = False
+            sp.data[i] = 0.5*(y[i-3]+y[i+5])  ## 3
+            sp.data[i+1] = sp.data[i]
+            sp.data[i+2] = sp.data[i]
+            n3 = n3 + 1
+            i = i + 4
+            continue
+        i = i + 1
+    print(f"With clip={clip} n1={n1} n2={n2} n3={n3}")
+
 
 def busyfit(sp, gal, rms):
     """
@@ -274,10 +343,10 @@ def busyfit(sp, gal, rms):
     os.system(cmd)
 
 def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
-    """  reduce multiple, here session and scans are both arrays
+    """  pipeline for a galaxies; here sessions and scans are both lists
     
-    mode=0    2015 ON-OFF-ON getsigref style
-    mode=1    2025 ON-OFF getps style
+    mode=0 or 15    2015 ON-OFF-ON getsigref style  (final ON is sometimes missing)
+    mode=1 or 25    2025 ON-OFF    getps style
     """
     print(f"Working on {gal} {sessions} {scans} {vlsr} {dv} {dw}")
 
@@ -301,8 +370,11 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sss = sb1.plot(vmax=1e10)
                 print(sss)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
-                if avechan > 0:
-                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan)
+                if len(avechan) > 0:
+                    if len(avechan) > 1:
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                    else:
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
@@ -321,8 +393,11 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=1)
                 sss = sb1.plot(vmax=1e10)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
-                if avechan > 0:
-                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan)        
+                if len(avechan) > 1:
+                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                else:
+                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
+
                 #plt.show()
             for s in scans[i]:
                 for pl in [0,1]:
@@ -350,6 +425,11 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     sp = sp[0].average(sp[1:])    # average all scans
     patch_nan(sp)
 
+    sp.set_convention("optical")   # 2015 data was in radio convention, 2025 was ok
+
+    #  if you haven't ensured the restfreq is correct, do it here
+    sp.rest_value = 1420405751.786 * u.Hz
+
     print(f"Looking at {vlsr} from {vmin} to {vmax}")
     spn = sp[vmin*kms:vmax*kms]
 
@@ -359,7 +439,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         rms = min(spb0.stats(roll=2)["rms"], spb1.stats(roll=2)["rms"])
         n0 = len(spb0.data)
         n1 = len(spb1.data)
-        patch_spike2(spn, n0, n1, 5*rms.value)
+        #patch_spike2(spn, n0, n1, 5*rms.value)
+        patch_spike3(spn, n0, n1, nsigma*rms.value)
 
     if blorder >= 0:
         #spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=False)
@@ -399,10 +480,14 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     print(f'rms0: {rms0_0:.1f} {rms0_1:.1f}')
     print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
 
+    rad1 = spb0.radiometer()
+    rad2 = spb1.radiometer()
+    print(f'radiometer: {rad1} {rad2}')
+
     rms = max(rms0_1,rms1_1)
     Qb = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
 
-    print(f'Anderson-Darling test: {ad1:.2f}  {ad2:.2f} {ad3:.2} {ad0:.3}      Qb {Qb:.2f}')
+    print(f'Anderson-Darling normalness test: {ad1:.2f}  {ad2:.2f} {ad3:.2} {ad0:.3}      Qb {Qb:.2f}')
                     
     dflux = rms.to("K")*deltav*np.sqrt(ngal)
 
@@ -443,24 +528,43 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     print(f"{gal:.15s} Flux: {flux.value:.2f} +/- {dflux:.2f}  {flux2:.2f}  w95 {w95:.1f} rms {rms:.2f} Qb {Qb:.2f} Qa {Qa:.2f} nchan {ngal}")
 
-
-    print('sps.plot(xaxis_unit="km/s")')
-
     return sp, sps, pars
 
-def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth"):
+def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = None, Qchan = False):
     """   a more dedicated EDGE plotter, hardcoded units in km/s and mK
+
+          spbl:   optional sp with baseline solution to plot
     """
     import matplotlib.pyplot as plt
 
     vel = sp.axis_velocity().value
+    #vel = sp.with_velocity_convention('optical').axis_velocity().value
+    print("Velocity axis:",vel[0],vel[-1])
+    ch  = np.arange(len(vel))
     sflux = sp.flux.to("mK").value
     #fig=plt.figure(figsize=(8,4))
     fig,ax1 = plt.subplots()
     Qb = pars["Qb"]
     Qa = pars["Qa"]
     w95 = pars["w95"]
-    plt.plot(vel,sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
+    if Qchan:
+        plt.plot(ch, sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
+        return
+    else:
+        plt.plot(vel,sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
+    #if False:  # sp.subtracted:
+    if sp.subtracted:
+        # bug: for smoothed spectrum, baseline fit is gone
+        print("PJT: showing baseline fit",len(vel))
+        if spbl is not None:
+            # need to find the slice on sp.spectral_axis
+            # sp.spectral_axis.to(kms)[0] to [-1]
+            bl = spbl._baseline_model(sp.spectral_axis).to("mK")
+        else:
+            bl = sp._baseline_model(sp.spectral_axis).to("mK")            
+        plt.plot(vel,bl,color='red',label='subtracted')
+    else:
+        print("PJT: not showing baseline fit",len(vel))
     print("PARS:",pars)
     rms = pars["rms"].to("mK").value
     flux = pars["flux"]
@@ -491,9 +595,10 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth"):
             print("Some failure in busyfit plotting")
     # draw a vlsr line in green
     ax1.plot([vlsr,vlsr],[-rms,+rms],color='green',label=f'vlsr={vlsr} km/s')
-    # draw the cog() 'vel' in red
+    # draw the cog() 'vel' in red, as long as it's not 0
     vel_cog = pars['vel_cog']
-    ax1.plot([vel_cog,vel_cog],[rms,3*rms],color='red',label=f'vel_cog={vel_cog:.1f} km/s')    
+    if vel_cog != 0.0:
+        ax1.plot([vel_cog,vel_cog],[rms,3*rms],color='red',label=f'vel_cog={vel_cog:.1f} km/s')    
     #
     plt.text
     plt.xlabel("Velocity (km/s)")
@@ -531,6 +636,10 @@ if __name__ == "__main__":
         gals = get_gals("gals25.pars")
         mode=1
 
+    if Qshow:
+        print(f"Found {len(gals)} galaxies in {projects[mode]}")
+        sys.exit(0)
+
     if my_gals is None:
         my_gals = gals.keys()
     else:
@@ -564,8 +673,8 @@ if __name__ == "__main__":
                 #filename = f'data/{project}_{session:02}.B.fits'
                 filename = f'data/{project}_{session:02}.fits'
                 print(f"# === {filename}")
-                sdf[session] = GBTFITSLoad(filename)   # , skipflags=True)
-            sdf[session]["RESTFREQ"] = 1420405751.786
+                sdf[session] = GBTFITSLoad(filename)   # flag_vegas=False, skipflags=True)
+            sdf[session]["RESTFREQ"] = 1420405751.786    # should really use sp.rest_value = 1.4... * u.Hz
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
 
@@ -587,7 +696,7 @@ if __name__ == "__main__":
             session = i
             filename  = f'{project}_{session:02}'
             print(f"# === {filename}")
-            sdf[session] =  GBTOffline(filename)  # skipflags=True)
+            sdf[session] =  GBTOffline(filename)  # flag_vegas=False, skipflags=True)
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
 
@@ -602,15 +711,15 @@ if __name__ == "__main__":
         if ss is not None and not ss in sessions:
             continue
         sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode)
-        sss = sps.plot(xaxis_unit="km/s")
+        #sss = sps.plot(xaxis_unit="km/s", doppler_convention='optical')  # vel_frame=
+        sss = sps.plot(xaxis_unit="km/s")  # doppler_convention='optical')  # vel_frame=
         sss.savefig(f'{gal}.png')
         #plt.show()
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
-        spectrum_plot(sp, gal, project, vlsr, dv, dw, pars,  "wide")
         spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth")
+        spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", Qchan=Qchan) 
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
-
     if not Qbatch:
-        ans = input("Enter anything to exit script and close figures")
+        ans = input("Enter to exit script and close figures:")
