@@ -85,6 +85,36 @@ Maryland. Unfortunately, the GBT falls within the GPS signal's
 footprint, so it may be a frequent occurrence in our data. The GPS L3 intermsignal
 has a center frequency of 1381.05 MHz, or around 8300 km/s.
 
+## Comparing with GTBIDL
+
+```
+    gbtidl
+    .compile edge
+    tic
+    filein,'AGBT15B_287_01.B.fits'
+    edge, 10,18
+    toc
+
+    tic
+    filein,'AGBT15B_287_01.B.fits'
+    edge, 10,12
+    toc
+
+    tic
+    filein,'AGBT15B_287_01.B.fits'
+    edge, 10,15
+    toc
+
+
+    
+    fileout,'ngc3815_gbtidl.fits'
+    keep
+```
+
+   -> 41.7 min
+
+2.2sec vs. 0.90 sec vs. 1.50 sec
+   
 ## GBT links
 
 DSS project page: https://dss.gb.nrao.edu/project/GBT25A-474
