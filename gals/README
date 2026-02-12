@@ -17,4 +17,4 @@ tail +2 Veselina/CALIFA_HI_sample_archive.csv | tabcols - 1 | sort | uniq > gals
 tabcols Veselina/MasQue_Bright_galaxies.txt 1 | sort | uniq > gals/MasQue_Bright.txt
 
 # 568
-(cd Veselina/hiedge_all_spectra ; ls | awk -F_ '{print $1}') > gals/hiedge_all.txt
+(cd Veselina/hiedge_all_spectra ; ls | awk -F_ '{print $1}' | sort ) > gals/hiedge_all.txt
