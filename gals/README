@@ -1,0 +1,20 @@
+# 113
+tabcols gals15.pars  1  | sort | uniq > gals/2015.txt
+
+# 43
+tabcols gals25.pars  1  | sort | uniq > gals/2025.txt
+
+# 82
+tail +2 CALIFA_archival_search_results.csv |tabcols - 1 | sort | uniq > gals/GBT_archival.txt
+
+# 95      only NGC3303 common in GMRT and VLA
+tabcols Tony/MasQue_all_sample.txt 1 | sort | uniq > gals/MasQue_all.txt
+
+# 923
+tail +2 Veselina/CALIFA_HI_sample_archive.csv | tabcols - 1 | sort | uniq > gals/CALIFA_HI_sample_archive.txt
+
+# 95 (same as Tony's)
+tabcols Veselina/MasQue_Bright_galaxies.txt 1 | sort | uniq > gals/MasQue_Bright.txt
+
+# 568
+(cd Veselina/hiedge_all_spectra ; ls | awk -F_ '{print $1}') > gals/hiedge_all.txt
