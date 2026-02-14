@@ -202,11 +202,10 @@ def patch_nan(sp):
     idx_nan = np.where(np.isnan(sp.flux))[0]
     nidx = len(idx_nan)
     for idx in idx_nan:
-        print('IDX',idx)
         if idx==0: continue
         sp._data[idx] = 0.5*(sp._data[idx-1] + sp._data[idx+1])
         sp.mask[idx] = False
-        print(f"PJT: patching a NaN at {idx} to ", sp.mask[idx], sp.data[idx])
+        print(f"Patching a NaN at {idx} to ", sp.mask[idx], sp.data[idx])
 
 
 # deprecated
@@ -442,16 +441,17 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         #patch_spike2(spn, n0, n1, 5*rms.value)
         patch_spike3(spn, n0, n1, nsigma*rms.value)
 
-    if blorder >= 0:
-        #spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=False)
-        #spn.plot(xaxis_unit="km/s")
-        # bug:  solution not shown?
-        spn.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
-
     if smooth > 0:
         sps = spn.smooth("box",smooth)
+        if blorder >= 0:
+            sps.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
+            print("Baseline model 1 excl:",sps.baseline_model)
     else:
         sps = spn
+        if blorder >= 0:
+            sps.baseline(blorder,include=[(vmin*kms,gmin*kms),(gmax*kms,vmax*kms)],remove=True)            
+            print("Baseline model 2 incl:",sps.baseline_model)
+
 
     #   flux a simple sum between gmin and gmax
     spg = sps[gmin*kms:gmax*kms]
@@ -461,7 +461,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     flux = sumflux * deltav
     vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux
     vlsr3 = np.nansum(sps.flux * sps.velocity) / np.nansum(sps.flux)
-    print("PJT:",vlsr,vlsr2,vlsr3)
+    print(f"VEL: vlsr={vlsr}  vlsr2={vlsr2}  vlsr3={vlsr3}")
 
     spb0 = sps[vmin*kms:gmin*kms]
     spb1 = sps[gmax*kms:vmax*kms]
@@ -477,8 +477,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     ad3 = spg.normalness()   # galaxy (possibly smoothed)
     ad0 = spn.normalness()   # whole interval
 
-    print(f'rms0: {rms0_0:.1f} {rms0_1:.1f}')
-    print(f'rms1: {rms1_0:.1f} {rms1_1:.1f}')
+    print(f'rms0: {rms0_0:.1f} {rms0_1:.1f} left')
+    print(f'rms1: {rms1_0:.1f} {rms1_1:.1f} right')
 
     rad1 = spb0.radiometer()
     rad2 = spb1.radiometer()
@@ -498,9 +498,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     pars['rms'] = rms
     pars['vlsr2'] = vlsr2
     
-    print("VLSR2:",vlsr2)
-
     # https://dysh.readthedocs.io/en/latest/explanations/cog/index.html
+    # https://dysh.readthedocs.io/en/latest/users_guide/cog.html
     try:
         if Qcog:
             cog = sps.cog()
@@ -534,8 +533,11 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
     """   a more dedicated EDGE plotter, hardcoded units in km/s and mK
 
           spbl:   optional sp with baseline solution to plot
+          Qchan:  simpler plot with just channel numbers
     """
     import matplotlib.pyplot as plt
+
+    print("SPECTRUM_PLOT =============================================")
 
     vel = sp.axis_velocity().value
     #vel = sp.with_velocity_convention('optical').axis_velocity().value
@@ -552,19 +554,26 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         return
     else:
         plt.plot(vel,sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
-    #if False:  # sp.subtracted:
     if sp.subtracted:
-        # bug: for smoothed spectrum, baseline fit is gone
-        print("PJT: showing baseline fit",len(vel))
+        print(f"Showing baseline fit with {len(vel)} channels")
         if spbl is not None:
             # need to find the slice on sp.spectral_axis
             # sp.spectral_axis.to(kms)[0] to [-1]
             bl = spbl._baseline_model(sp.spectral_axis).to("mK")
+            plt.plot(vel,bl,color='red',label='subtracted')
         else:
-            bl = sp._baseline_model(sp.spectral_axis).to("mK")            
-        plt.plot(vel,bl,color='red',label='subtracted')
+            print("PJT: sp - no offset plot of baseline done")
+            bl = sp._baseline_model(sp.spectral_axis).to("mK")
+            # don't plot, it's offset
+        bl._vel = vel
     else:
-        print("PJT: not showing baseline fit",len(vel))
+        print(f"No native baseline fit with {len(vel)} channels")
+        bl = None
+    if spbl is not None:
+        print("BL fit:")
+        #print(f"BL:",spbl[0],spbl[-1])
+        #print(f"VEL:  {spbl._vel[0]} .. {spbl._vel[-1]}")
+        plt.plot(spbl._vel,spbl,color='red',label='baseline fit')
     print("PARS:",pars)
     rms = pars["rms"].to("mK").value
     flux = pars["flux"]
@@ -607,6 +616,7 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
     plt.legend()
     plt.savefig(f"{gal}_{project}.png")
     #plt.show()
+    return bl
     
 # deprecate
 def g_test(sp, size=10):
@@ -716,8 +726,8 @@ if __name__ == "__main__":
         sss.savefig(f'{gal}.png')
         #plt.show()
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
-        spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth")
-        spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", Qchan=Qchan) 
+        bl = spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth", spbl = None)
+        spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", spbl = bl, Qchan=Qchan) 
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
