@@ -1,13 +1,13 @@
-# 113
+# 113   GBT 2015 data
 tabcols gals15.pars  1  | sort | uniq > gals/2015.txt
 
-# 43
+# 43    GBT 2025 data
 tabcols gals25.pars  1  | sort | uniq > gals/2025.txt
 
-# 82
+# 82    GBT archival
 tail +2 CALIFA_archival_search_results.csv |tabcols - 1 | sort | uniq > gals/GBT_archival.txt
 
-# 95      only NGC3303 common in GMRT and VLA
+# 95    only NGC3303 common in GMRT and VLA
 tabcols Tony/MasQue_all_sample.txt 1 | sort | uniq > gals/MasQue_all.txt
 
 # 923
