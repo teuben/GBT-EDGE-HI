@@ -45,7 +45,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "22-jan-2026"                      # version ID
+version     = "15-feb-2026"                      # version ID
 
 # CLI defaults
 smooth  = 3
