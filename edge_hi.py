@@ -45,7 +45,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "15-feb-2026"                      # version ID
+version     = "22-feb-2026"                      # version ID
 
 # CLI defaults
 smooth  = 3
@@ -116,6 +116,9 @@ if avechan is None:
     avechan = []
 else:
     avechan = [int(num) for num in avechan.split(',')]    # can have 1 or 3 numbers
+
+dysh_plots = []          # accumulate plots dysh makes
+rf_hi = 1420405751.786   # HI line restfreq in Hz
 
 print(args)
 
@@ -367,6 +370,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 print("waterfall",sessions[i],scans_tp)
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=0)
                 sss = sb1.plot(vmax=1e10)
+                dysh_plots.append(sss)
                 print(sss)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
                 if len(avechan) > 0:
@@ -391,12 +395,13 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     scans_tp.append(s+2)
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=1)
                 sss = sb1.plot(vmax=1e10)
+                dysh_plots.append(sss)
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
-                if len(avechan) > 1:
-                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
-                else:
-                    sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
-
+                if len(avechan) > 0:
+                    if len(avechan) > 1:
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                    else:
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
             for s in scans[i]:
                 for pl in [0,1]:
@@ -427,7 +432,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     sp.set_convention("optical")   # 2015 data was in radio convention, 2025 was ok
 
     #  if you haven't ensured the restfreq is correct, do it here
-    sp.rest_value = 1420405751.786 * u.Hz
+    sp.rest_value = rf_hi * u.Hz
 
     print(f"Looking at {vlsr} from {vmin} to {vmax}")
     spn = sp[vmin*kms:vmax*kms]
@@ -528,14 +533,16 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     print(f"{gal:.15s} Flux: {flux.value:.2f} +/- {dflux:.2f}  {flux2:.2f}  w95 {w95:.1f} rms {rms:.2f} Qb {Qb:.2f} Qa {Qa:.2f} nchan {ngal}")
 
     return sp, sps, pars
+    # end_of_edge2
 
 def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = None, Qchan = False):
     """   a more dedicated EDGE plotter, hardcoded units in km/s and mK
+          uses matplotlib
 
           spbl:   optional sp with baseline solution to plot
           Qchan:  simpler plot with just channel numbers
     """
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt    # not needed here anymore
 
     print("SPECTRUM_PLOT =============================================")
 
@@ -547,13 +554,12 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
     #fig=plt.figure(figsize=(8,4))
     fig,ax1 = plt.subplots()
     Qb = pars["Qb"]
-    Qa = pars["Qa"]
     w95 = pars["w95"]
     if Qchan:
-        plt.plot(ch, sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
+        plt.plot(ch, sflux,label=f'w95 {w95:.1f}')
         return
     else:
-        plt.plot(vel,sflux,label=f'w95 {w95:.1f}  Qa={Qa:.2f}')
+        plt.plot(vel,sflux,label=f'w95 {w95:.1f}')
     if sp.subtracted:
         print(f"Showing baseline fit with {len(vel)} channels")
         if spbl is not None:
@@ -614,7 +620,7 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
     plt.ylabel("Intensity (mK)")
     plt.title(f'{gal} {project}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
     plt.legend()
-    plt.savefig(f"{gal}_{project}.png")
+    plt.savefig(f"{gal}_{label}.png")
     #plt.show()
     return bl
     
@@ -683,8 +689,8 @@ if __name__ == "__main__":
                 #filename = f'data/{project}_{session:02}.B.fits'
                 filename = f'data/{project}_{session:02}.fits'
                 print(f"# === {filename}")
-                sdf[session] = GBTFITSLoad(filename)   # flag_vegas=False, skipflags=True)
-            sdf[session]["RESTFREQ"] = 1420405751.786    # should really use sp.rest_value = 1.4... * u.Hz
+                sdf[session] = GBTFITSLoad(filename)     # flag_vegas=False, skipflags=True)
+            sdf[session]["RESTFREQ"] = rf_hi             # should really use sp.rest_value = 1.4... * u.Hz
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
 
@@ -720,16 +726,24 @@ if __name__ == "__main__":
         print("SESSIONS:",sessions)
         if ss is not None and not ss in sessions:
             continue
+        # edge2() will do optional waterfall
         sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode)
         #sss = sps.plot(xaxis_unit="km/s", doppler_convention='optical')  # vel_frame=
         sss = sps.plot(xaxis_unit="km/s")  # doppler_convention='optical')  # vel_frame=
-        sss.savefig(f'{gal}.png')
+        dysh_plots.append(sss)
+        sss.savefig(f'{gal}_dysh.png')
         #plt.show()
+        # @todo    do this in velocity space
         sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
         bl = spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth", spbl = None)
         spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", spbl = bl, Qchan=Qchan) 
+        if not Qbatch:
+            plt.show()
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
     if not Qbatch:
-        ans = input("Enter to exit script and close figures:")
+        if len(dysh_plots) > 0:
+            print(f"dysh plotting blocking needed for {len(dysh_plots)} plot(s)")
+            dysh_plots[0].show(block=True)
+        ans = input(f"Hit enter to exit script")
