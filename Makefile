@@ -1,5 +1,5 @@
 #
-
+URL5  = https://github.com/tonywong94/edge_pydb
 
 .PHONY : help
 
@@ -21,3 +21,6 @@ SEQ = 99
 ## summary:   make summarylogs file, needs SEQ=
 summary:
 	./mk_summary.py $(SEQ) > summarylogs/AGBT25A_474_$(SEQ).summary
+
+edge_pydb:
+	git clone $(URL5)
