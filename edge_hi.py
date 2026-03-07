@@ -48,11 +48,12 @@ sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SD
 version     = "6-mar-2026"                       # version ID
 
 # CLI defaults
-smooth  = 3
-mode    = 25
-blorder = 5
-nsigma  = 5
-ptype   = 'png'
+smooth    = 3
+smoothref = 1
+mode      = 25
+blorder   = 5
+nsigma    = 5
+ptype     = 'png'
 
 my_help = f"""
    This is the EDGE-HI pipeline, version {version}
@@ -72,6 +73,7 @@ p.add_argument('gal',                     nargs='?',           help=f'Galaxy, us
 p.add_argument('--session', type = int,   default = None,      help=f'Force single session for given galaxy, [all]')
 p.add_argument('--mode',    type = int,   default = mode,      help=f'0 or 15->2015 data   1 or 25->2025 data [{mode}]')
 p.add_argument('--smooth',  type = int,   default = smooth,    help=f'boxcar smooth size (channels), use 0 to use raw. [{smooth}]')
+p.add_argument('--smoothref',type = int,  default = smoothref, help=f'smooth reference size (channels), use 1 to skip. [{smoothref}]')
 p.add_argument('--order',   type = int,   default = blorder,   help=f'baseline order fit (use -1 to skip) [{blorder}]')
 p.add_argument('--nsigma',  type = float, default = nsigma,    help=f'nsigma [{nsigma}]')
 p.add_argument('--v0',      type = float, default = None,      help=f'Override vlsr as center of galaxy [pars table entry]')
@@ -95,6 +97,7 @@ args = p.parse_args()
 
 mode    = args.mode
 smooth  = args.smooth
+smoothref = args.smoothref
 ss      = args.session
 blorder = args.order
 nsigma  = args.nsigma
@@ -381,8 +384,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     else:
                         sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
-            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
-            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1).timeaverage()
+            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, smoothref=smoothref).timeaverage()
+            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, smoothref=smoothred).timeaverage()
             sp.append(sp0)
             sp.append(sp1)
     elif mode == 0:    # 2015 data
@@ -409,12 +412,12 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 for pl in [0,1]:
                     #  we will try/except since sessions are not a multiple of 3 scans
                     try:
-                        sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
+                        sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothref=smoothref).timeaverage()
                         sp.append(sp1)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
                     try:
-                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl).timeaverage()
+                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothred=smoothref).timeaverage()
                         sp.append(sp2)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
