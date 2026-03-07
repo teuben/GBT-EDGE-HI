@@ -86,6 +86,7 @@ p.add_argument('--full',    action="store_true",               help='Use full A/
 p.add_argument('--batch',   action="store_true",               help='Batch mode, no interactive plots')
 p.add_argument('--busy',    action="store_true",               help='add the busyfit (needs an extra install)')
 p.add_argument('--spike',   action="store_true",               help='attempt spike removal')
+p.add_argument('--gps',     action="store_true",               help='attempt GPS flagging')
 p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
 p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
 p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
@@ -111,6 +112,7 @@ Qfull   = args.full
 Qbatch  = args.batch
 Qbusy   = args.busy
 Qspike  = args.spike
+Qgps    = args.gps
 Qcog    = args.cog
 Qshow   = args.show
 Qchan   = args.chan
@@ -423,6 +425,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     if len(sp) == 0:
         print("Did not find any scans")
         return None
+
+    if Qgps:
+        print("GPS flagging not implemented yet")
 
     vmin = vlsr-dv-dw
     vmax = vlsr+dv+dw
