@@ -45,7 +45,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "6-mar-2026"                       # version ID
+version     = "7-mar-2026"                       # version ID
 
 # CLI defaults
 smooth    = 3
@@ -417,7 +417,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
                     try:
-                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothred=smoothref).timeaverage()
+                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothre
+                                             d=smoothref).timeaverage()
                         sp.append(sp2)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
