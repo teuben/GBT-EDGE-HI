@@ -45,7 +45,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "22-feb-2026"                      # version ID
+version     = "7-mar-2026"                       # version ID
 
 # CLI defaults
 smooth    = 3
@@ -587,7 +587,7 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         print("BL fit:")
         #print(f"BL:",spbl[0],spbl[-1])
         #print(f"VEL:  {spbl._vel[0]} .. {spbl._vel[-1]}")
-        plt.plot(spbl._vel,spbl,color='red',label='baseline fit')
+        plt.plot(spbl._vel,spbl,color='red',label=f"baseline_{blorder}")
     print("PARS:",pars)
     rms = pars["rms"].to("mK").value
     flux = pars["flux"]
