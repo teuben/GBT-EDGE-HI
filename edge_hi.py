@@ -385,7 +385,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                         sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, smoothref=smoothref).timeaverage()
-            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, smoothref=smoothred).timeaverage()
+            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, smoothref=smoothref).timeaverage()
             sp.append(sp0)
             sp.append(sp1)
     elif mode == 0:    # 2015 data
@@ -417,7 +417,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
                     try:
-                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothred=smoothref).timeaverage()
+                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothref=smoothref).timeaverage()
                         sp.append(sp2)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
