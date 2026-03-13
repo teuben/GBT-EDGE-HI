@@ -43,9 +43,9 @@ from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
-projects    = ['AGBT15B_287', 'AGBT25A_474']     # mode=0 or 1 (if more, the index into this array)
-sdfits_data = "/data2/teuben/sdfits/"            # default, unless given via $SDFITS_DATA
-version     = "7-mar-2026"                       # version ID
+projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
+sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
+version     = "13-mar-2026"                                     # version ID
 
 # CLI defaults
 smooth    = 3
@@ -62,8 +62,9 @@ my_help = f"""
    Compressed 2015 data should be in data/AGBT15B_287_??.fits (39 files).
 
    Examples
-      ./edge_hi.py --mode 25 UGC10972
       ./edge_hi.py --mode 15 NGC3815
+      ./edge_hi.py --mode 25 UGC10972
+      ./edge_hi.py --mode 26 UGC11578
 
    """
 
@@ -166,6 +167,7 @@ def get_gals(filename = "gals15.pars", debug=True):
         print(f"Using {filename}")
         for k in gals.keys():
             print(k, gals[k])
+        print(f"Found {len(gals)} objects")
     return gals
 
 def get_pars(sdf, session, debug=True):
@@ -354,6 +356,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     
     mode=0 or 15    2015 ON-OFF-ON getsigref style  (final ON is sometimes missing)
     mode=1 or 25    2025 ON-OFF    getps style
+    mode=2 or 26   
     """
     print(f"Working on {gal} {sessions} {scans} {vlsr} {dv} {dw}")
 
@@ -362,6 +365,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     if ns1 != ns2:
         print("number of sessions and scans not the same")
         return None
+
+    flux = {"zenith_opacity": 0.008, "units": "flux"}
+    flux = {}
 
     sp = []                                      # accumulate spectra in this list for later averaging
     if mode == 1:    # 2025 data
@@ -386,6 +392,30 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, smoothref=smoothref).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, smoothref=smoothref).timeaverage()
+            sp.append(sp0)
+            sp.append(sp1)
+    if mode == 2:    # 2026 data
+        for i in range(ns1):
+            sdf1 = sdf[sessions[i]]
+            if Qwater:
+                scans_tp = []
+                for s in scans[i]:
+                    scans_tp.append(s)
+                    scans_tp.append(s+1)
+                print("waterfall",sessions[i],scans_tp)
+                sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=0)
+                sss = sb1.plot(vmax=1e10)
+                dysh_plots.append(sss)
+                print(sss)
+                sss.savefig(f'{gal}_water_{sessions[i]}.png')
+                if len(avechan) > 0:
+                    if len(avechan) > 1:
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                    else:
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
+                #plt.show()
+            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, smoothref=smoothref, *flux).timeaverage()
+            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, smoothref=smoothref, *flux).timeaverage()
             sp.append(sp0)
             sp.append(sp1)
     elif mode == 0:    # 2015 data
@@ -417,8 +447,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
                     try:
-                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothre
-                                             d=smoothref).timeaverage()
+                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothref=smoothref).timeaverage()
                         sp.append(sp2)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
@@ -660,6 +689,9 @@ if __name__ == "__main__":
     elif mode==1 or mode==25:
         gals = get_gals("gals25.pars")
         mode=1
+    elif mode==2 or mode==26:
+        gals = get_gals("gals26.pars")
+        mode=2
 
     if Qshow:
         print(f"Found {len(gals)} galaxies in {projects[mode]}")
@@ -722,6 +754,35 @@ if __name__ == "__main__":
             filename  = f'{project}_{session:02}'
             print(f"# === {filename}")
             sdf[session] =  GBTOffline(filename)  # flag_vegas=False, skipflags=True)
+            sdf[session].summary()
+            print('FLAGS',sdf[session].final_flags)
+
+    elif mode==2:
+        print("2016 hi_survey data", my_gals)
+        if ss is None:
+            try_sessions = []
+            for g in my_gals:
+                sessions = gals[g][0]
+                for s in sessions:
+                    try_sessions.append(s)
+            try_sessions = list(set(try_sessions))                    
+            print("PJT try_sessions mode=0:",try_sessions)
+
+        else:
+            try_sessions = [ss]
+        for i in try_sessions:
+            session = i
+            if Qfull:
+                filename = f'AGBT04A_008_{session:02}'
+                print("Opening",filename)
+                sdf[session] = GBTOffline(filename)
+            else:
+                #filename = f'{project}/{project}_{session:02}.B.fits'
+                #filename = f'data/{project}_{session:02}.B.fits'
+                filename = f'{project}_{session:02}.raw.acs.fits'
+                print(f"# === {filename}")
+                sdf[session] = GBTOffline(filename)     # flag_vegas=False, skipflags=True)
+            sdf[session]["RESTFREQ"] = rf_hi             # should really use sp.rest_value = 1.4... * u.Hz
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
 
