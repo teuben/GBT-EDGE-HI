@@ -1,0 +1,32 @@
+# table of galaxy parameters of AGBT04A_008
+
+# Note only U8503 has noise diodes. Others need to obtain Tsys from thr Track observations
+# tsys_0 = 25.84 (0.66)
+# tsys_1 = 30.49 (0.50)
+
+# galaxy  session    scans              vlsr  dv   dw      # comments
+
+# session 2
+U8091       2         263,272            224      40   90      #  6.55 0.93     not used  (weird flux)
+U8249       2         267,275	        2550     100  150      #  7.65 0.54 
+U8503       2         270               4690      50  100      #  3.31 6.37    (bench in hi_survey)
+U9007       2         284               4635      50  100      #  2.53 0.15
+U9803       2         289               5257      50  200      #  2.67 0.19
+U9965       2         278               4524      75   75      #  7.19 0.46
+U10351      2         281                882      50  150      # 14.72 0.96
+U10629      2         295,297           2975      140 150      #  8.89 0.61     RFI at 3300 -      not used
+U11017      2         300,302           4635      110 150      #  6.69 0.44
+U11461      2         307,309           3110	  200 300      # 11.78 0.84    RFI at 3300
+U11578      2         312               4570      75  100      # 16.72 1.06
+U11627      2         316,318           4840      75  200      #  3.45 0.28  
+U11992      2         322               3570      100 150      # 10.15 0.73
+
+# 13 here, 11 used in hi_survey
+
+# U8503   6.37 K.km/s = 3.20 mJy.km/s/   (3.77 by Pedro, 3.7 by Literature)
+# U11461 has strong RFI
+# 0.54 -> 0.27
+# U8091 - why not in sample, and why is U10629 is not in sample
+
+# copy rectangle:   C-x r M-w   paste:   C-x r y
+
