@@ -45,7 +45,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
-version     = "13-mar-2026"                                     # version ID
+version     = "14-mar-2026"                                     # version ID
 
 # CLI defaults
 smooth    = 3
@@ -62,9 +62,9 @@ my_help = f"""
    Compressed 2015 data should be in data/AGBT15B_287_??.fits (39 files).
 
    Examples
+      ./edge_hi.py --mode  4 U8503
       ./edge_hi.py --mode 15 NGC3815
       ./edge_hi.py --mode 25 UGC10972
-      ./edge_hi.py --mode 26 UGC11578
 
    """
 
@@ -91,6 +91,7 @@ p.add_argument('--gps',     action="store_true",               help='attempt GPS
 p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
 p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
 p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
+p.add_argument('--flux',    action="store_true",               help='Use Flux(Jy) instead of Ta(K)')
 
 
 
@@ -117,6 +118,14 @@ Qgps    = args.gps
 Qcog    = args.cog
 Qshow   = args.show
 Qchan   = args.chan
+Qflux   = args.flux
+
+if Qflux:
+    print("Warning: working in Jy with assumed 0.008 zenith opacity")
+    unit = "mJy"
+else:
+    unit = "mK"
+
 
 if avechan is None:
     avechan = []
@@ -356,7 +365,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     
     mode=0 or 15    2015 ON-OFF-ON getsigref style  (final ON is sometimes missing)
     mode=1 or 25    2025 ON-OFF    getps style
-    mode=2 or 26   
+    mode=2 or  4   
     """
     print(f"Working on {gal} {sessions} {scans} {vlsr} {dv} {dw}")
 
@@ -366,8 +375,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         print("number of sessions and scans not the same")
         return None
 
-    flux = {"zenith_opacity": 0.008, "units": "flux"}
-    flux = {}
+    if Qflux:
+        flux = {"smoothref": smoothref, "zenith_opacity": 0.008, "units": "flux"}
+    else:
+        flux = {"smoothref": smoothref}
 
     sp = []                                      # accumulate spectra in this list for later averaging
     if mode == 1:    # 2025 data
@@ -390,11 +401,11 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     else:
                         sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
-            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, smoothref=smoothref).timeaverage()
-            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, smoothref=smoothref).timeaverage()
+            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, **flux).timeaverage()
+            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, **flux).timeaverage()
             sp.append(sp0)
             sp.append(sp1)
-    if mode == 2:    # 2026 data
+    if mode == 2:    # 2004 data
         for i in range(ns1):
             sdf1 = sdf[sessions[i]]
             if Qwater:
@@ -414,8 +425,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     else:
                         sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
-            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, smoothref=smoothref, *flux).timeaverage()
-            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, smoothref=smoothref, *flux).timeaverage()
+            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, t_sys=25.84, **flux).timeaverage()
+            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, t_sys=30.49, **flux).timeaverage()
             sp.append(sp0)
             sp.append(sp1)
     elif mode == 0:    # 2015 data
@@ -442,12 +453,12 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 for pl in [0,1]:
                     #  we will try/except since sessions are not a multiple of 3 scans
                     try:
-                        sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothref=smoothref).timeaverage()
+                        sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl, **flux).timeaverage()
                         sp.append(sp1)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
                     try:
-                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, smoothref=smoothref).timeaverage()
+                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, **flux).timeaverage()
                         sp.append(sp2)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
@@ -509,11 +520,11 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     spb0 = sps[vmin*kms:gmin*kms]
     spb1 = sps[gmax*kms:vmax*kms]
 
-    rms0_0 = (spb0.stats()['rms']).to("mK")
-    rms1_0 = (spb1.stats()['rms']).to("mK")
+    rms0_0 = (spb0.stats()['rms']).to(unit)
+    rms1_0 = (spb1.stats()['rms']).to(unit)
                     
-    rms0_1 = (spb0.stats(roll=1)['rms']).to("mK")
-    rms1_1 = (spb1.stats(roll=1)['rms']).to("mK")
+    rms0_1 = (spb0.stats(roll=1)['rms']).to(unit)
+    rms1_1 = (spb1.stats(roll=1)['rms']).to(unit)
 
     ad1 = spb0.normalness()  # baseline left
     ad2 = spb1.normalness()  # baseline right
@@ -531,8 +542,11 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     Qb = max(rms0_0, rms0_1, rms1_0, rms1_1) / min(rms0_0, rms0_1, rms1_0, rms1_1)
 
     print(f'Anderson-Darling normalness test: {ad1:.2f}  {ad2:.2f} {ad3:.2} {ad0:.3}      Qb {Qb:.2f}')
-                    
-    dflux = rms.to("K")*deltav*np.sqrt(ngal)
+
+    if Qflux:
+        dflux = rms*deltav*np.sqrt(ngal)
+    else:
+        dflux = rms.to("K")*deltav*np.sqrt(ngal)
 
     pars = {}
     pars['Qb'] = Qb
@@ -566,7 +580,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     # busyfit
     if Qbusy:
-        busyfit(sps, gal, rms.to("K").value)
+        if Qflux:
+            busyfit(sps, gal, rms.value)
+        else:
+            busyfit(sps, gal, rms.to("K").value)
 
     print(f"{gal:.15s} Flux: {flux.value:.2f} +/- {dflux:.2f}  {flux2:.2f}  w95 {w95:.1f} rms {rms:.2f} Qb {Qb:.2f} Qa {Qa:.2f} nchan {ngal}")
 
@@ -588,7 +605,7 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
     #vel = sp.with_velocity_convention('optical').axis_velocity().value
     print("Velocity axis:",vel[0],vel[-1])
     ch  = np.arange(len(vel))
-    sflux = sp.flux.to("mK").value
+    sflux = sp.flux.to(unit).value
     #fig=plt.figure(figsize=(8,4))
     fig,ax1 = plt.subplots()
     Qb = pars["Qb"]
@@ -603,11 +620,11 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         if spbl is not None:
             # need to find the slice on sp.spectral_axis
             # sp.spectral_axis.to(kms)[0] to [-1]
-            bl = spbl._baseline_model(sp.spectral_axis).to("mK")
+            bl = spbl._baseline_model(sp.spectral_axis).to(unit)
             plt.plot(vel,bl,color='red',label='subtracted')
         else:
             print("PJT: sp - no offset plot of baseline done")
-            bl = sp._baseline_model(sp.spectral_axis).to("mK")
+            bl = sp._baseline_model(sp.spectral_axis).to(unit)
             # don't plot, it's offset
         bl._vel = vel
     else:
@@ -619,7 +636,7 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         #print(f"VEL:  {spbl._vel[0]} .. {spbl._vel[-1]}")
         plt.plot(spbl._vel,spbl,color='red',label=f"baseline_{blorder}")
     print("PARS:",pars)
-    rms = pars["rms"].to("mK").value
+    rms = pars["rms"].to(unit).value
     flux = pars["flux"]
     dflux = pars["dflux"]
     boxes = [vlsr-dv-dw,-rms,vlsr-dv,+rms,  vlsr+dv,-rms,vlsr+dv+dw,+rms]
@@ -634,7 +651,7 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         xb[3] = boxes[i0+0]; yb[3] = boxes[i0+3]
         xb[4] = boxes[i0+0]; yb[4] = boxes[i0+1]
         if i==0:
-            ax1.plot(xb,yb, color='black', label=f'rms={rms:.1f} mK  Qb={Qb:.2f}')
+            ax1.plot(xb,yb, color='black', label=f'rms={rms:.1f} {unit} Qb={Qb:.2f}')
         else:
             ax1.plot(xb,yb, color='black')
     if Qbusy:
@@ -654,8 +671,8 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         ax1.plot([vel_cog,vel_cog],[rms,3*rms],color='red',label=f'vel_cog={vel_cog:.1f} km/s')    
     #
     plt.text
-    plt.xlabel("Velocity (km/s)")
-    plt.ylabel("Intensity (mK)")
+    plt.xlabel(f"Velocity (km/s)")
+    plt.ylabel(f"Intensity ({unit})")
     plt.title(f'{gal} {project}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
     plt.legend()
     plt.savefig(f"{gal}_{label}.png")
@@ -689,8 +706,8 @@ if __name__ == "__main__":
     elif mode==1 or mode==25:
         gals = get_gals("gals25.pars")
         mode=1
-    elif mode==2 or mode==26:
-        gals = get_gals("gals26.pars")
+    elif mode==2 or mode==4:
+        gals = get_gals("gals04.pars")
         mode=2
 
     if Qshow:
