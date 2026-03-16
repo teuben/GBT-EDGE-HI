@@ -543,8 +543,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     print(f'Anderson-Darling normalness test: {ad1:.2f}  {ad2:.2f} {ad3:.2} {ad0:.3}      Qb {Qb:.2f}')
 
-    if Qflux:
-        dflux = rms*deltav*np.sqrt(ngal)
+    if Qflux: 
+        dflux = rms.to("Jy")*deltav*np.sqrt(ngal)
     else:
         dflux = rms.to("K")*deltav*np.sqrt(ngal)
 
