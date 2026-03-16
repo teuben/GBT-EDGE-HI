@@ -820,8 +820,9 @@ if __name__ == "__main__":
         dysh_plots.append(sss)
         sss.savefig(f'{gal}_dysh.png')
         #plt.show()
-        # @todo    do this in velocity space
-        sps.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
+        # convert spectrum to one in barycentric velocities
+        sps1 = sps.with_frame("icrs").with_spectral_axis_unit("km/s")
+        sps1.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
         bl = spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth", spbl = None)
         spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", spbl = bl, Qchan=Qchan) 
         if not Qbatch:
