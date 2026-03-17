@@ -9,7 +9,8 @@ Utomo, Dyas	GBT/15B-287	HI Follow-up Observations of the EDGE-CALIFA Survey	125.
 
 
 The followup project code is **AGBT25A_474**, where 43 galaxies were observed. Only one
-case had overlap with the 2015 data, NGC2918.
+case had overlap with the 2015 data, NGC2918, but this galaxy doesn't seem to have much,
+if any, signal, plus there is a GPS nearby in some of the data.
 
 Old observing scripts at GBO:
 
@@ -18,6 +19,20 @@ Old observing scripts at GBO:
 
 these have been recorded in our `15B` directory.  An example to reduce these for NGC 2805
 are in the `examples/` directory
+
+## Procedure
+
+The python based `dysh` package is used here for reduction. The gals15.pars  and gals25.pars text files
+are used to set basic parameters: which session, which scans, the v0 (center of galaxy window),
+dv (half width of galaxy) and dw (width of each half of the baseline on either side. A
+resulting spectrum with width 2.dv + 2.dw is then extracted, plotted, baseline subtracted
+and written to a text file.
+
+The ON-OFF-ON in 2015 is processed with getsigref(), the ON-OFF in 2025 with getps().
+
+Since some galaxies appear in multiple sessions, co-adding needs to be in a common velocity
+frame (we choose "icrs" or solar system barycenter) and opacity corrected Jy. A flux in Jy.km/s
+is computed 
 
 ## Installation
 
