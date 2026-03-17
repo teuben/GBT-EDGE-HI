@@ -365,7 +365,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     
     mode=0 or 15    2015 ON-OFF-ON getsigref style  (final ON is sometimes missing)
     mode=1 or 25    2025 ON-OFF    getps style
-    mode=2 or  4   
+    mode=2 or  4    2004 ON-OFF    getps without noise diode
     """
     print(f"Working on {gal} {sessions} {scans} {vlsr} {dv} {dw}")
 
@@ -401,10 +401,36 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     else:
                         sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
-            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, **flux).timeaverage()
-            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, **flux).timeaverage()
-            sp.append(sp0)
-            sp.append(sp1)
+            print(f"Session {sessions[i]}  Scan {scans[i]}")
+            if True:
+                # combine all scans
+                sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, **flux).timeaverage()
+                sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, **flux).timeaverage()
+                sp.append(sp0)
+                sp.append(sp1)
+            else:
+                # needed if very high spectral resolution is used
+                for s in scans[i]:
+                    sp0 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=0, **flux).timeaverage()
+                    sp1 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=1, **flux).timeaverage()
+                    sp.append(sp0)
+                    sp.append(sp1)
+        if True:
+            # align spectra: it is important align_to() comes before set_frame()
+            for i,sp_i in enumerate(sp):
+                sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
+                print(f"KM/S[0] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
+                if i == 0:
+                    sp_i.set_frame("icrs")
+                else:
+                    sp[i] = sp_i.align_to(sp[0])
+                    sp[i].set_frame("icrs")
+                sp_kms = sp[i].with_spectral_axis_unit("km/s").spectral_axis[0].value
+                print(f"KM/S[1] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
+        for i,sp_i in enumerate(sp):
+            sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
+            print(f"KM/S[2]_aligned {i} = {sp_kms}  {sp_i.nchan} {id(sp_i)}  {id(sp[i])} {sp_i.velocity_frame}")
+            
     if mode == 2:    # 2004 data
         for i in range(ns1):
             sdf1 = sdf[sessions[i]]
@@ -427,8 +453,14 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, t_sys=25.84, **flux).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, t_sys=30.49, **flux).timeaverage()
-            sp.append(sp0)
-            sp.append(sp1)
+            sp_kms = sp0.with_spectral_axis_unit("km/s").spectral_axis[0].value
+            print(f"KM/S[0] = {sp_kms}")
+            if True:
+                sp.append(sp0.average(sp1))
+            else:
+                sp.append(sp0)
+                sp.append(sp1)
+
     elif mode == 0:    # 2015 data
         for i in range(ns1):
             sdf1 = sdf[sessions[i]]  # check
@@ -462,6 +494,12 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                         sp.append(sp2)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
+                #sp_kms = sp1.with_spectral_axis_unit("km/s").spectral_axis[0].value
+                #print(f"KM/S[0] = {sp_kms}")
+            for sp_i in sp:
+                sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
+                print(f"=KM/S[0] = {sp_kms}")                
+                
                 
     if len(sp) == 0:
         print("Did not find any scans")
@@ -497,6 +535,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     if smooth > 0:
         sps = spn.smooth("box",smooth)
+        sps.set_frame("icrs")
         if blorder >= 0:
             sps.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
             print("Baseline model 1 excl:",sps.baseline_model)
