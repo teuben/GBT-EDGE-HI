@@ -1,7 +1,12 @@
 #! /usr/bin/env python
 #               dysh      (issue 946)
 #
-# dysh pipeline for GBT-EDGE-HI 
+# dysh pipeline for GBT-EDGE-HI
+#    - 2015 data are ON-OFF-ON and use getsigref
+#    - 2025 data are ON-OFF and use getps
+#    - a velocity frame (default "icrs") is selected for aligning spectra
+#    - zenith opacity 0.008 is assumed; default conversion is to Jy
+#
 #
 # Usage patterns:
 #    ./edge_hi.py --mode 25 --batch --water
@@ -120,10 +125,12 @@ Qshow   = args.show
 Qchan   = args.chan
 Qflux   = args.flux
 
+zenith_opacity = 0.008
 if Qflux:
-    print("Warning: working in Jy with assumed 0.008 zenith opacity")
+    print(f"Warning: working in Jy with assumed {zenith_opacity} zenith opacity")
     unit = "mJy"
 else:
+    print(f"Warning: working in K; co-adding spectra not perfect in flux and velocity")
     unit = "mK"
 
 Qalign = False        # 15.91 (0.22)
@@ -131,6 +138,7 @@ Qalign = True         #
 #frame     = 'lsrk'   # 15.82  4673
 #frame     = 'itrs'   # 15.74  4659.5
 frame     = 'icrs'   # 15.66   4653.2
+
 
 
 if avechan is None:
@@ -382,7 +390,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         return None
 
     if Qflux:
-        flux = {"smoothref": smoothref, "zenith_opacity": 0.008, "units": "flux"}
+        flux = {"smoothref": smoothref, "zenith_opacity": zenith_opacity, "units": "flux"}
     else:
         flux = {"smoothref": smoothref}
 
@@ -415,7 +423,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sp.append(sp0)
                 sp.append(sp1)
             else:
-                # needed if very high spectral resolution is used
+                # each scan separate; may be needed if very high spectral resolution is used
                 for s in scans[i]:
                     sp0 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=0, **flux).timeaverage()
                     sp1 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=1, **flux).timeaverage()
