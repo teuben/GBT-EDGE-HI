@@ -126,13 +126,19 @@ if Qflux:
 else:
     unit = "mK"
 
+Qalign = False        # 15.91 (0.22)
+Qalign = True         #
+#frame     = 'lsrk'   # 15.82  4673
+#frame     = 'itrs'   # 15.74  4659.5
+frame     = 'icrs'   # 15.66   4653.2
+
 
 if avechan is None:
     avechan = []
 else:
     avechan = [int(num) for num in avechan.split(',')]    # can have 1 or 3 numbers
 
-dysh_plots = []          # accumulate plots dysh makes
+dysh_plots = []          # accumulate plots dysh makes, so we can quit them
 rf_hi = 1420405751.786   # HI line restfreq in Hz
 
 print(args)
@@ -415,16 +421,16 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     sp1 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=1, **flux).timeaverage()
                     sp.append(sp0)
                     sp.append(sp1)
-        if True:
+        if Qalign:
             # align spectra: it is important align_to() comes before set_frame()
             for i,sp_i in enumerate(sp):
                 sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
                 print(f"KM/S[0] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
                 if i == 0:
-                    sp_i.set_frame("icrs")
+                    sp_i.set_frame(frame)
                 else:
                     sp[i] = sp_i.align_to(sp[0])
-                    sp[i].set_frame("icrs")
+                    sp[i].set_frame(frame)
                 sp_kms = sp[i].with_spectral_axis_unit("km/s").spectral_axis[0].value
                 print(f"KM/S[1] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
         for i,sp_i in enumerate(sp):
@@ -535,7 +541,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
 
     if smooth > 0:
         sps = spn.smooth("box",smooth)
-        sps.set_frame("icrs")
+        sps.set_frame(frame)  # see issue 1057
         if blorder >= 0:
             sps.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
             print("Baseline model 1 excl:",sps.baseline_model)
@@ -859,8 +865,8 @@ if __name__ == "__main__":
         dysh_plots.append(sss)
         sss.savefig(f'{gal}_dysh.png')
         #plt.show()
-        # convert spectrum to one in barycentric velocities
-        sps1 = sps.with_frame("icrs").with_spectral_axis_unit("km/s")
+        # convert spectrum to one with velocities
+        sps1 = sps.with_spectral_axis_unit("km/s")
         sps1.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
         bl = spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth", spbl = None)
         spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", spbl = bl, Qchan=Qchan) 
