@@ -85,6 +85,7 @@ p.add_argument('--nsigma',  type = float, default = nsigma,    help=f'nsigma [{n
 p.add_argument('--v0',      type = float, default = None,      help=f'Override vlsr as center of galaxy [pars table entry]')
 p.add_argument('--dv',      type = float, default = None,      help=f'Override dv for half signal portion  [pars table entry]')
 p.add_argument('--dw',      type = float, default = None,      help=f'Override dw for each half baseline [pars table entry]')
+p.add_argument('--flags',   type = str,   default = None,      help=f'Flagging file with session,channel pairs')
 p.add_argument('--avechan',               default = None,      help=f'Number of channels to average in waterfall fits file [skip]')
 p.add_argument('--plot',                  default = ptype,     help=f'Default plotting type [{ptype}]')
 p.add_argument('--water',   action="store_true",               help='make waterfall plot')
@@ -111,6 +112,7 @@ nsigma  = args.nsigma
 vlsr    = args.v0
 dv      = args.dv
 dw      = args.dw
+flags   = args.flags
 avechan = args.avechan
 ptype   = args.plot
 my_gals = args.gal
@@ -192,6 +194,28 @@ def get_gals(filename = "gals15.pars", debug=True):
             print(k, gals[k])
         print(f"Found {len(gals)} objects")
     return gals
+
+def set_flags(sdf, flags = None):
+    """ for a given sdfits file, apply flags
+    """
+    print('SDF sessions',sdf.keys())
+    if flags is None:
+        return
+    fp = open(flags)
+    for line in fp.readlines():
+        if line[0] == '#': continue
+        w = line.split()
+        #  w[0] session     w[1] scan    w[2] channel(s)
+        session = int(w[0])
+        scan    = int(w[1])
+        channel = [int(num) for num in w[2].split(',')]
+        print("FLAGGING:",scan,session,channel)
+        if session in sdf.keys():
+            sdf[session].flag(scan=scan,channel=channel)
+        else:
+            print(f"Skipping flagging {session}, not in {sdf.keys()}")
+    fp.close()
+    
 
 def get_pars(sdf, session, debug=True):
     """ get the pars from an sdf summary, do some sanity checks
@@ -528,7 +552,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     gmax = vlsr+dv
 
     sp = sp[0].average(sp[1:])    # average all scans
-    patch_nan(sp)
+    if True:
+        patch_nan(sp)
 
     sp.set_convention("optical")   # 2015 data was in radio convention, 2025 was ok
 
@@ -804,6 +829,7 @@ if __name__ == "__main__":
             sdf[session]["RESTFREQ"] = rf_hi             # should really use sp.rest_value = 1.4... * u.Hz
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
+        set_flags(sdf, flags)
 
     elif mode==1:
         # @todo   if galaxy given, only load what we need
