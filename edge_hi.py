@@ -50,7 +50,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
-version     = "14-mar-2026"                                     # version ID
+version     = "17-mar-2026"                                     # version ID
 
 # CLI defaults
 smooth    = 3
@@ -880,6 +880,7 @@ if __name__ == "__main__":
         spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", spbl = bl, Qchan=Qchan) 
         if not Qbatch:
             plt.show()
+        print("SPS QAC checksum:",sps.stats(qac=True))
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
