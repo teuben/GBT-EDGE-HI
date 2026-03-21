@@ -1,6 +1,6 @@
 # GBT-EDGE-HI
 
-HI survey of EDGE galaxies.   Started with **AGBT15B_287**, where 113 galaxies were
+HI survey of EDGE galaxies using the GBT.   Started with **AGBT15B_287**, where 113 galaxies were
 observed in a modified PositionSwitch using ON-OFF-ON and a corresponding getsigref
 procedure. The original GBTIDL procedure can be done with `edge.pro`.
 
@@ -47,6 +47,11 @@ Normally the command
 ```
 
 will get you an interactive session.
+
+### dyshp
+
+There is also an alternative install that Peter used while developing dysh:
+https://github.com/teuben/dyshp
 
 
 ## Example
