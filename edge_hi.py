@@ -37,6 +37,7 @@ import os
 import sys
 import argparse
 import numpy as np
+from astropy.stats import mad_std
 import astropy.units as u
 kms = u.km/u.s
 from scipy.stats import anderson
@@ -50,7 +51,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
 sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
-version     = "17-mar-2026"                                     # version ID
+version     = "24-mar-2026"                                     # version ID
 
 # CLI defaults
 smooth    = 3
@@ -86,18 +87,21 @@ p.add_argument('--v0',      type = float, default = None,      help=f'Override v
 p.add_argument('--dv',      type = float, default = None,      help=f'Override dv for half signal portion  [pars table entry]')
 p.add_argument('--dw',      type = float, default = None,      help=f'Override dw for each half baseline [pars table entry]')
 p.add_argument('--flags',   type = str,   default = None,      help=f'Flagging file with session,channel pairs')
+p.add_argument('--frame',   type = str,   default = 'icrs',    help=f'Velocity frame: itrs, gcrs, hcrs, icrs, lsrk, lsrd [icrs]')
 p.add_argument('--avechan',               default = None,      help=f'Number of channels to average in waterfall fits file [skip]')
 p.add_argument('--plot',                  default = ptype,     help=f'Default plotting type [{ptype}]')
 p.add_argument('--water',   action="store_true",               help='make waterfall plot')
 p.add_argument('--full',    action="store_true",               help='Use full A/B/C data for mode=0')
 p.add_argument('--batch',   action="store_true",               help='Batch mode, no interactive plots')
 p.add_argument('--busy',    action="store_true",               help='add the busyfit (needs an extra install)')
+p.add_argument('--nan',     action="store_false",              help='do not patch NaNs')
 p.add_argument('--spike',   action="store_true",               help='attempt spike removal')
 p.add_argument('--gps',     action="store_true",               help='attempt GPS flagging')
 p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
 p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
 p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
 p.add_argument('--flux',    action="store_true",               help='Use Flux(Jy) instead of Ta(K)')
+p.add_argument('--align',   action="store_false",              help='Do not align along frame')
 
 
 
@@ -113,6 +117,7 @@ vlsr    = args.v0
 dv      = args.dv
 dw      = args.dw
 flags   = args.flags
+frame   = args.frame
 avechan = args.avechan
 ptype   = args.plot
 my_gals = args.gal
@@ -120,12 +125,14 @@ Qwater  = args.water
 Qfull   = args.full
 Qbatch  = args.batch
 Qbusy   = args.busy
+Qnan    = args.nan
 Qspike  = args.spike
 Qgps    = args.gps
 Qcog    = args.cog
 Qshow   = args.show
 Qchan   = args.chan
 Qflux   = args.flux
+Qalign  = args.align
 
 zenith_opacity = 0.008
 if Qflux:
@@ -135,12 +142,11 @@ else:
     print(f"Warning: working in K; co-adding spectra not perfect in flux and velocity")
     unit = "mK"
 
-Qalign = False        # 15.91 (0.22)
-Qalign = True         #
+#Qalign = False        # 15.91 (0.22)
+#Qalign = True         #
 #frame     = 'lsrk'   # 15.82  4673
 #frame     = 'itrs'   # 15.74  4659.5
-frame     = 'icrs'   # 15.66   4653.2
-
+#frame     = 'icrs'   # 15.66   4653.2
 
 
 if avechan is None:
@@ -209,7 +215,7 @@ def set_flags(sdf, flags = None):
         session = int(w[0])
         scan    = int(w[1])
         channel = [int(num) for num in w[2].split(',')]
-        print("FLAGGING:",scan,session,channel)
+        print("FLAGGING:",session,scan,channel)
         if session in sdf.keys():
             sdf[session].flag(scan=scan,channel=channel)
         else:
@@ -552,7 +558,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     gmax = vlsr+dv
 
     sp = sp[0].average(sp[1:])    # average all scans
-    if True:
+    if Qnan:
         patch_nan(sp)
 
     sp.set_convention("optical")   # 2015 data was in radio convention, 2025 was ok
@@ -573,7 +579,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         patch_spike3(spn, n0, n1, nsigma*rms.value)
 
     if smooth > 0:
-        sps = spn.smooth("box",smooth)
+        sps = spn.smooth("box",smooth, nan_treatment='interpolate')
         sps.set_frame(frame)  # see issue 1057
         if blorder >= 0:
             sps.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
@@ -604,14 +610,19 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     rms0_1 = (spb0.stats(roll=1)['rms']).to(unit)
     rms1_1 = (spb1.stats(roll=1)['rms']).to(unit)
 
+    rms0_2 = mad_std(spb0.flux.to(unit))
+    rms1_2 = mad_std(spb1.flux.to(unit))
+
     ad1 = spb0.normalness()  # baseline left
     ad2 = spb1.normalness()  # baseline right
     ad3 = spg.normalness()   # galaxy (possibly smoothed)
     ad0 = spn.normalness()   # whole interval
 
-    print(f'rms0: {rms0_0:.1f} {rms0_1:.1f} left')
-    print(f'rms1: {rms1_0:.1f} {rms1_1:.1f} right')
+    print(f'RMS:    roll=0    roll=1     mad_std')
+    print(f'rms0: {rms0_0:.1f} {rms0_1:.1f} {rms0_2:.1f} left')
+    print(f'rms1: {rms1_0:.1f} {rms1_1:.1f} {rms1_2:.1f} right')
 
+    # has no meaning if flux was used
     rad1 = spb0.radiometer()
     rad2 = spb1.radiometer()
     print(f'radiometer: {rad1} {rad2}')
@@ -749,7 +760,7 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         ax1.plot([vel_cog,vel_cog],[rms,3*rms],color='red',label=f'vel_cog={vel_cog:.1f} km/s')    
     #
     plt.text
-    plt.xlabel(f"Velocity (km/s)")
+    plt.xlabel(f"Velocity {frame} (km/s)")
     plt.ylabel(f"Intensity ({unit})")
     plt.title(f'{gal} {project}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
     plt.legend()
