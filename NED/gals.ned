@@ -1,3 +1,7 @@
+# Ancillary spectra (usually from Arecibo)
+# Note the --table flag for edge_hi.py needs only the vel and flux column!!!!
+#
+#
 # gal   ned_url
 NGC3815 https://ned.ipac.caltech.edu/spc1/2018/2018ApJ...861...49H/03/UGC_06654:S:HI:hgk2018.txt
 NGC3815 https://ned.ipac.caltech.edu/spc1/1985/1985ApJS...59..161L/UGC_06654:S:HI:lhs1985.txt
