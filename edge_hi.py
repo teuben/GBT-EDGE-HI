@@ -31,6 +31,7 @@
 # 1618.99user 3627.52system 1:35:15elapsed    91%CPU   - 2015 data
 #
 #  NGC2918 is duplicated in both campaigns, but complicated with VLSR in the GPS RFI band
+#          plus it seems to have no or little emission
 #
 
 import os
@@ -50,8 +51,9 @@ from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
+refcodes    = ['edge2015',    'edge2025',    'survey2004']      # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
-version     = "24-mar-2026"                                     # version ID
+version     = "2-apr-2026"                                      # version ID
 
 # CLI defaults
 smooth    = 3
@@ -60,6 +62,7 @@ mode      = 25
 blorder   = 5
 nsigma    = 5
 ptype     = 'png'
+frame     = 'icrs'
 
 my_help = f"""
    This is the EDGE-HI pipeline, version {version}
@@ -86,8 +89,10 @@ p.add_argument('--nsigma',  type = float, default = nsigma,    help=f'nsigma [{n
 p.add_argument('--v0',      type = float, default = None,      help=f'Override vlsr as center of galaxy [pars table entry]')
 p.add_argument('--dv',      type = float, default = None,      help=f'Override dv for half signal portion  [pars table entry]')
 p.add_argument('--dw',      type = float, default = None,      help=f'Override dw for each half baseline [pars table entry]')
+p.add_argument('--table',   type = str,   default = None,      help=f'Optionally read in spectrum to overlay')
 p.add_argument('--flags',   type = str,   default = None,      help=f'Flagging file with session,channel pairs')
-p.add_argument('--frame',   type = str,   default = 'icrs',    help=f'Velocity frame: itrs, gcrs, hcrs, icrs, lsrk, lsrd [icrs]')
+p.add_argument('--frame',   type = str,   default = frame,     help=f'Velocity frame: itrs, gcrs, hcrs, icrs, lsrk, lsrd [{frame}]')
+p.add_argument('--align',   action="store_false",              help='Do not align along choosen frame')
 p.add_argument('--avechan',               default = None,      help=f'Number of channels to average in waterfall fits file [skip]')
 p.add_argument('--plot',                  default = ptype,     help=f'Default plotting type [{ptype}]')
 p.add_argument('--water',   action="store_true",               help='make waterfall plot')
@@ -101,11 +106,12 @@ p.add_argument('--cog',     action="store_false",              help='use vel_cog
 p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
 p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
 p.add_argument('--flux',    action="store_true",               help='Use Flux(Jy) instead of Ta(K)')
-p.add_argument('--align',   action="store_false",              help='Do not align along frame')
+p.add_argument('--all',     action="store_true",               help='Run all galaxies (--batch recommended)')
 
 
 
 args = p.parse_args()
+print('ARGS',args)
 
 mode    = args.mode
 smooth  = args.smooth
@@ -116,6 +122,7 @@ nsigma  = args.nsigma
 vlsr    = args.v0
 dv      = args.dv
 dw      = args.dw
+table   = args.table
 flags   = args.flags
 frame   = args.frame
 avechan = args.avechan
@@ -133,6 +140,7 @@ Qshow   = args.show
 Qchan   = args.chan
 Qflux   = args.flux
 Qalign  = args.align
+Qall    = args.all
 
 zenith_opacity = 0.008
 if Qflux:
@@ -141,12 +149,16 @@ if Qflux:
 else:
     print(f"Warning: working in K; co-adding spectra not perfect in flux and velocity")
     unit = "mK"
+flux = dflux = mad_rms = 0.0
+
 
 #Qalign = False        # 15.91 (0.22)
 #Qalign = True         #
 #frame     = 'lsrk'   # 15.82  4673
 #frame     = 'itrs'   # 15.74  4659.5
 #frame     = 'icrs'   # 15.66   4653.2
+
+print("TABLE",table)
 
 
 if avechan is None:
@@ -256,6 +268,18 @@ def get_pars(sdf, session, debug=True):
         if debug:
             print(gal,session,scans,vlsr,dv,dw)
 
+def get_spectrum(file):
+    """ read a spectrum from an ascii table
+    Column 1:  v (km/s)
+    Column 2:  intensity (units better match)
+    no other columns!
+    """
+    print(f"Reading spectrum from {file}")
+    (vel,sp) = np.loadtxt(file).T
+    print(vel)
+    print(sp)
+    return (vel,sp)
+
 def patch_nan(sp):
     """   These are normally vegas spurs, could we just ignore them?
           Here we interpolate accross them
@@ -270,6 +294,13 @@ def patch_nan(sp):
         sp.mask[idx] = False
         print(f"Patching a NaN at {idx} to ", sp.mask[idx], sp.data[idx])
 
+def test_spikes(data, nrms=5):
+    d = data[1:] - data[:-1]
+    std = mad_std(d, ignore_nan=True)
+    print("TEST_SPIKES:",std)
+    clip = nrms * std
+    idx = np.where(abs(d) > clip)
+    print(idx)
 
 # deprecated
 def patch_spike(sp, clip=None):
@@ -411,6 +442,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     mode=1 or 25    2025 ON-OFF    getps style
     mode=2 or  4    2004 ON-OFF    getps without noise diode
     """
+    global flux, dflux, mad_rms
     print(f"Working on {gal} {sessions} {scans} {vlsr} {dv} {dw}")
 
     ns1 = len(sessions)
@@ -420,9 +452,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         return None
 
     if Qflux:
-        flux = {"smoothref": smoothref, "zenith_opacity": zenith_opacity, "units": "flux"}
+        aflux = {"smoothref": smoothref, "zenith_opacity": zenith_opacity, "units": "flux"}
     else:
-        flux = {"smoothref": smoothref}
+        aflux = {"smoothref": smoothref}
 
     sp = []                                      # accumulate spectra in this list for later averaging
     if mode == 1:    # 2025 data
@@ -447,16 +479,19 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 #plt.show()
             print(f"Session {sessions[i]}  Scan {scans[i]}")
             if True:
+                # test for spikes
+                tp0 = sdf[sessions[i]].gettp(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
+                test_spikes(tp0.flux.value)
                 # combine all scans
-                sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, **flux).timeaverage()
-                sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, **flux).timeaverage()
+                sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, **aflux).timeaverage()
+                sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, **aflux).timeaverage()
                 sp.append(sp0)
                 sp.append(sp1)
             else:
                 # each scan separate; may be needed if very high spectral resolution is used
                 for s in scans[i]:
-                    sp0 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=0, **flux).timeaverage()
-                    sp1 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=1, **flux).timeaverage()
+                    sp0 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=0, **aflux).timeaverage()
+                    sp1 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=1, **aflux).timeaverage()
                     sp.append(sp0)
                     sp.append(sp1)
         if Qalign:
@@ -495,8 +530,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     else:
                         sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
                 #plt.show()
-            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, t_sys=25.84, **flux).timeaverage()
-            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, t_sys=30.49, **flux).timeaverage()
+            sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, t_sys=25.84, **aflux).timeaverage()
+            sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, t_sys=30.49, **aflux).timeaverage()
             sp_kms = sp0.with_spectral_axis_unit("km/s").spectral_axis[0].value
             print(f"KM/S[0] = {sp_kms}")
             if True:
@@ -528,13 +563,18 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
             for s in scans[i]:
                 for pl in [0,1]:
                     #  we will try/except since sessions are not a multiple of 3 scans
+                    #  but we need s, s+1 and s+2
+                    # test spikes
+                    tp1 = sdf1.gettp(scan=s, fdnum=0, ifnum=1, plnum=pl).timeaverage()
+                    test_spikes(tp1.flux.value)
+                    
                     try:
-                        sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl, **flux).timeaverage()
+                        sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl, **aflux).timeaverage()
                         sp.append(sp1)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
                     try:
-                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, **flux).timeaverage()
+                        sp2 = sdf1.getsigref(scan=s+2,ref=s+1,fdnum=0,ifnum=1,plnum=pl, **aflux).timeaverage()
                         sp.append(sp2)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
@@ -599,7 +639,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     flux = sumflux * deltav
     vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux
     vlsr3 = np.nansum(sps.flux * sps.velocity) / np.nansum(sps.flux)
-    print(f"VEL: vlsr={vlsr}  vlsr2={vlsr2}  vlsr3={vlsr3}")
+    print(f"VEL: v0={vlsr}  vlsr2={vlsr2}  vlsr3={vlsr3}")
 
     spb0 = sps[vmin*kms:gmin*kms]
     spb1 = sps[gmax*kms:vmax*kms]
@@ -610,8 +650,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     rms0_1 = (spb0.stats(roll=1)['rms']).to(unit)
     rms1_1 = (spb1.stats(roll=1)['rms']).to(unit)
 
-    rms0_2 = mad_std(spb0.flux.to(unit))
-    rms1_2 = mad_std(spb1.flux.to(unit))
+    rms0_2 = mad_std(spb0.flux.to(unit), ignore_nan=True)
+    rms1_2 = mad_std(spb1.flux.to(unit), ignore_nan=True)
+    mad_rms = max(rms0_2,rms1_2)
 
     ad1 = spb0.normalness()  # baseline left
     ad2 = spb1.normalness()  # baseline right
@@ -679,12 +720,13 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     return sp, sps, pars
     # end_of_edge2
 
-def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = None, Qchan = False):
+def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = None, Qchan = False, table=None):
     """   a more dedicated EDGE plotter, hardcoded units in km/s and mK
           uses matplotlib
 
           spbl:   optional sp with baseline solution to plot
           Qchan:  simpler plot with just channel numbers
+          table:  optional spectrum to overlay
     """
     import matplotlib.pyplot as plt    # not needed here anymore
 
@@ -752,8 +794,13 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
             plt.plot(vel,busyfit,label="busyfit", color="red")
         except:
             print("Some failure in busyfit plotting")
+    # optional table overlay
+    print("TABLE",table)
+    if table is not None:
+        (tvel, tint) = get_spectrum(table)
+        ax1.plot(tvel,tint,color='red',linestyle='dashed',label=table)
     # draw a vlsr line in green
-    ax1.plot([vlsr,vlsr],[-rms,+rms],color='green',label=f'vlsr={vlsr} km/s')
+    ax1.plot([vlsr,vlsr],[-rms,+rms],color='green',label=f'v0={vlsr} km/s')
     # draw the cog() 'vel' in red, as long as it's not 0
     vel_cog = pars['vel_cog']
     if vel_cog != 0.0:
@@ -812,7 +859,7 @@ if __name__ == "__main__":
     project = projects[mode]
 
     sdf = {}
-    if mode==0:
+    if mode == 0:
         print("2015 data")
         if ss is None:
             try_sessions = []
@@ -842,7 +889,7 @@ if __name__ == "__main__":
             print('FLAGS',sdf[session].final_flags)
         set_flags(sdf, flags)
 
-    elif mode==1:
+    elif mode == 1:
         # @todo   if galaxy given, only load what we need
         print("2025 data")
         if ss is None:
@@ -864,7 +911,7 @@ if __name__ == "__main__":
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
 
-    elif mode==2:
+    elif mode == 2:
         print("2016 hi_survey data", my_gals)
         if ss is None:
             try_sessions = []
@@ -893,6 +940,36 @@ if __name__ == "__main__":
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
 
+    elif mode == 99:
+        # work in progress
+        print("getPS style", my_gals)
+        if ss is None:
+            try_sessions = []
+            for g in my_gals:
+                sessions = gals[g][0]
+                for s in sessions:
+                    try_sessions.append(s)
+            try_sessions = list(set(try_sessions))                    
+            print("PJT try_sessions mode=0:",try_sessions)
+
+        else:
+            try_sessions = [ss]
+        for i in try_sessions:
+            session = i
+            if Qfull:
+                filename = f'AGBT04A_008_{session:02}'
+                print("Opening",filename)
+                sdf[session] = GBTOffline(filename)
+            else:
+                #filename = f'{project}/{project}_{session:02}.B.fits'
+                #filename = f'data/{project}_{session:02}.B.fits'
+                filename = f'{project}_{session:02}.raw.acs.fits'
+                print(f"# === {filename}")
+                sdf[session] = GBTOffline(filename)     # flag_vegas=False, skipflags=True)
+            sdf[session]["RESTFREQ"] = rf_hi             # should really use sp.rest_value = 1.4... * u.Hz
+            sdf[session].summary()
+            print('FLAGS',sdf[session].final_flags)
+            
     ngal = len(my_gals)
     for (gal,i) in zip(my_gals,range(ngal)):
         print(f"{gal}  {i+1}/{ngal}")
@@ -912,14 +989,32 @@ if __name__ == "__main__":
         #plt.show()
         # convert spectrum to one with velocities
         sps1 = sps.with_spectral_axis_unit("km/s")
-        sps1.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True) 
-        bl = spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth", spbl = None)
-        spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", spbl = bl, Qchan=Qchan) 
+        sps1.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True)
+        # zoomed version
+        bl = spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth", spbl = None, table=table)
+        # full spectrum
+        spectrum_plot(sp,  gal, project, vlsr, dv, dw, pars, "wide", spbl = bl, Qchan=Qchan)
         if not Qbatch:
             plt.show()
         print("SPS QAC checksum:",sps.stats(qac=True))
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
+
+        Name = gal
+        Refcode = refcodes[mode]
+        Vsys = vlsr
+        Deltav = (sps.velocity[1]-sps.velocity[0]).value
+        Robust_rms = mad_rms.value
+        RefInt = 0.0
+        RefUnc = 0.0
+        SigInt = flux.value
+        SigUnc = dflux.value
+        SigVmin = vlsr - dv
+        SigVmax = vlsr + dv
+        BadFlag = False
+        print("Name,Refcode,Vsys,Deltav,Robust_rms,RefInt,RefUnc,SigInt,SigUnc,SigVmin,SigVmax,BadFlag")
+        print(f"{Name},{Refcode},{Vsys},{Deltav:.2f},{Robust_rms:.2f},{RefInt},{RefUnc},{SigInt:.2f},{SigUnc:.2f},{SigVmin},{SigVmax},{BadFlag} EDGE_PYDB")
+
 
     if not Qbatch:
         if len(dysh_plots) > 0:
