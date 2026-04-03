@@ -44,6 +44,7 @@ kms = u.km/u.s
 from scipy.stats import anderson
 from scipy.signal import medfilt
 
+import dysh
 from dysh.util.files import dysh_data
 from dysh.fits.sdfitsload import SDFITSLoad
 from dysh.fits.gbtfitsload import GBTFITSLoad
@@ -53,7 +54,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
 refcodes    = ['edge2015',    'edge2025',    'survey2004']      # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
-version     = "2-apr-2026"                                      # version ID
+version     = "3-apr-2026"                                      # version ID
 
 # CLI defaults
 smooth    = 3
@@ -107,11 +108,11 @@ p.add_argument('--show',    action="store_true",               help='only show g
 p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
 p.add_argument('--flux',    action="store_true",               help='Use Flux(Jy) instead of Ta(K)')
 p.add_argument('--all',     action="store_true",               help='Run all galaxies (--batch recommended)')
+p.add_argument('--debug',   action="store_true",               help='Debug logging in dysh')
 
 
 
 args = p.parse_args()
-print('ARGS',args)
 
 mode    = args.mode
 smooth  = args.smooth
@@ -141,6 +142,11 @@ Qchan   = args.chan
 Qflux   = args.flux
 Qalign  = args.align
 Qall    = args.all
+Qdebug  = args.debug
+
+if Qdebug:
+    print('ARGS',args)
+    dysh.log.init_logging(1)
 
 zenith_opacity = 0.008
 if Qflux:
@@ -466,6 +472,12 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     scans_tp.append(s)
                     scans_tp.append(s+1)
                 print("waterfall",sessions[i],scans_tp)
+                if True:
+                    sdf1.write('junk.fits',scan=scans_tp,fdnum=0,plnum=0,ifnum=0, overwrite=True)
+                    sdf2 = GBTFITSLoad('junk.fits')
+                    specs2 = sdf2.rawspectra(0,0)
+                    std2 = np.std(specs2, axis=1).data
+                    np.savetxt(f'{gal}_water_{sessions[i]}.tab', std2)
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=0)
                 sss = sb1.plot(vmax=1e10)
                 dysh_plots.append(sss)
@@ -601,6 +613,12 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     if Qnan:
         patch_nan(sp)
 
+    # hack
+    if False:
+        sp.mask[8072] = True # with default zoom
+        sp.mask[8073] = True # with default zoom- worst
+        sp.mask[8074] = True # with default zoom
+
     sp.set_convention("optical")   # 2015 data was in radio convention, 2025 was ok
 
     #  if you haven't ensured the restfreq is correct, do it here
@@ -619,7 +637,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         patch_spike3(spn, n0, n1, nsigma*rms.value)
 
     if smooth > 0:
-        sps = spn.smooth("box",smooth, nan_treatment='interpolate')
+        sps = spn.smooth("box",smooth, nan_treatment='interpolate', preserve_nan = False) # see issue 1067
         sps.set_frame(frame)  # see issue 1057
         if blorder >= 0:
             sps.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
@@ -883,7 +901,8 @@ if __name__ == "__main__":
                 #filename = f'data/{project}_{session:02}.B.fits'
                 filename = f'data/{project}_{session:02}.fits'
                 print(f"# === {filename}")
-                sdf[session] = GBTFITSLoad(filename)     # flag_vegas=False, skipflags=True)
+                #sdf[session] = GBTFITSLoad(filename, skipflags=False)     # flag_vegas=False, skipflags=True)
+                sdf[session] = GBTFITSLoad(filename)
             sdf[session]["RESTFREQ"] = rf_hi             # should really use sp.rest_value = 1.4... * u.Hz
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
