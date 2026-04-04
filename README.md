@@ -69,6 +69,11 @@ There is also an alternative install that Peter used while developing dysh:
 https://github.com/teuben/dyshp
 
 
+## Running pipeline
+
+Example 2025 : 441.13user 57.48system 6:42.17elapsed 123%CPU 
+
+
 ## Example
 
 Make sure your data is in the `$SDFITS_DATA` directory (or use /home/sdfits).
@@ -106,6 +111,8 @@ Maryland. Unfortunately, the GBT falls within the GPS signal's
 footprint, so it may be a frequent occurrence in our data. The GPS L3 intermsignal
 has a center frequency of 1381.05 MHz, or around 8300 km/s.
 
+See also flagging.md
+
 ## Comparing with GTBIDL
 
 ```
@@ -135,6 +142,17 @@ has a center frequency of 1381.05 MHz, or around 8300 km/s.
    -> 41.7 min
 
 2.2sec vs. 0.90 sec vs. 1.50 sec
+
+## Surveys
+
+* Original CALIFA was 939 galaxies, of which ~600 were eventually
+observed with 0.005 < z < 0.03.  DR3 has 667 entries.
+
+* CO(1-0)
+
+* CO(2-1)
+
+* HI-GBT
    
 ## GBT links
 
