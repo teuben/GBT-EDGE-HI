@@ -54,7 +54,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
 refcodes    = ['edge2015',    'edge2025',    'survey2004']      # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
-version     = "3-apr-2026"                                      # version ID
+version     = "4-apr-2026"                                      # version ID
 
 # CLI defaults
 smooth    = 3
@@ -143,6 +143,7 @@ Qflux   = args.flux
 Qalign  = args.align
 Qall    = args.all
 Qdebug  = args.debug
+Qtest   = False          # need --test
 
 if Qdebug:
     print('ARGS',args)
@@ -491,9 +492,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 #plt.show()
             print(f"Session {sessions[i]}  Scan {scans[i]}")
             if True:
-                # test for spikes
-                tp0 = sdf[sessions[i]].gettp(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
-                test_spikes(tp0.flux.value)
+                if Qtest:
+                    # test for spikes
+                    tp0 = sdf[sessions[i]].gettp(scan=scans[i], fdnum=0, ifnum=0, plnum=0).timeaverage()
+                    test_spikes(tp0.flux.value)
                 # combine all scans
                 sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, **aflux).timeaverage()
                 sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, **aflux).timeaverage()
@@ -562,6 +564,19 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     scans_tp.append(s)
                     scans_tp.append(s+1)
                     scans_tp.append(s+2)
+                if True:
+                    sdf1.write('junk.fits',scan=scans_tp,fdnum=0,plnum=0,ifnum=1, overwrite=True)
+                    sdf2 = GBTFITSLoad('junk.fits')
+                    f = sdf2.getspec(0).frequency.value   # topocentric
+                    print("PJT",f.min(),f.max())
+                    idx1 = np.abs(f-1.380).argmin()
+                    idx2 = np.abs(f-1.382).argmin()
+                    if idx1 > idx2:
+                        idx1,idx2 = idx2,idx1
+                    print("PJT",idx1,idx2)
+                    specs2 = sdf2.rawspectra(0,0)[:,idx1:idx2]
+                    std2 = np.std(specs2, axis=1).data
+                    np.savetxt(f'{gal}_water_{sessions[i]}.tab', std2)
                 sb1 = sdf1.gettp(scan=scans_tp,fdnum=0,plnum=0,ifnum=1)
                 sss = sb1.plot(vmax=1e10)
                 dysh_plots.append(sss)
@@ -576,9 +591,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 for pl in [0,1]:
                     #  we will try/except since sessions are not a multiple of 3 scans
                     #  but we need s, s+1 and s+2
-                    # test spikes
-                    tp1 = sdf1.gettp(scan=s, fdnum=0, ifnum=1, plnum=pl).timeaverage()
-                    test_spikes(tp1.flux.value)
+                    if Qtest:
+                        # test spikes
+                        tp1 = sdf1.gettp(scan=s, fdnum=0, ifnum=1, plnum=pl).timeaverage()
+                        test_spikes(tp1.flux.value)
                     
                     try:
                         sp1 = sdf1.getsigref(scan=s,ref=s+1,fdnum=0,ifnum=1,plnum=pl, **aflux).timeaverage()
@@ -869,6 +885,9 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if my_gals is None:
+        if not Qall:
+            print("Need --all to run pipeline for all galaxies")
+            sys.exit(0)
         my_gals = gals.keys()
     else:
         # only one galaxy
@@ -991,11 +1010,17 @@ if __name__ == "__main__":
             
     ngal = len(my_gals)
     for (gal,i) in zip(my_gals,range(ngal)):
+        print("\n=====================================")
         print(f"{gal}  {i+1}/{ngal}")
         sessions, scans, vlsr1, dv1, dw1 = gals[gal]
-        if vlsr is None:  vlsr = vlsr1
-        if dv   is None:  dv   = dv1
-        if dw   is None:  dw   = dw1
+        if Qall:
+             vlsr = vlsr1
+             dv = dv1
+             dw = dw1
+        else:
+            if vlsr is None:  vlsr = vlsr1
+            if dv   is None:  dv   = dv1
+            if dw   is None:  dw   = dw1
         print("SESSIONS:",sessions)
         if ss is not None and not ss in sessions:
             continue
