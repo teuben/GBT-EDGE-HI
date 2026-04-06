@@ -18,6 +18,7 @@
 #
 # Bugs @todo
 #    - do we need plt.show() ???   there's a plt.ion() in dysh somewhere
+#    - set the frame can cause spike at n*8192
 #
 #  -- 2025 data:
 #  CPU info (based on OMP_NUM_THREADS=1)
@@ -53,8 +54,8 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
 refcodes    = ['edge2015',    'edge2025',    'survey2004']      # for CSV output
-sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
-version     = "5-apr-2026"                                      # version ID
+sdfits_data = "/data2/teuben/sdfits/"                           # default, override with $SDFITS_DATA
+version     = "6-apr-2026"                                      # version ID
 
 # CLI defaults
 smooth    = 3
@@ -64,6 +65,7 @@ blorder   = 5
 nsigma    = 5
 ptype     = 'png'
 frame     = 'icrs'
+frame     = None
 
 my_help = f"""
    This is the EDGE-HI pipeline, version {version}
@@ -156,7 +158,7 @@ if Qflux:
 else:
     print(f"Warning: working in K; co-adding spectra not perfect in flux and velocity")
     unit = "mK"
-flux = dflux = mad_rms = 0.0
+flux = dflux = flux6 = mad_rms = 0.0
 
 
 if avechan is None:
@@ -167,7 +169,8 @@ else:
 dysh_plots = []          # accumulate plots dysh makes, so we can quit them
 rf_hi = 1420405751.786   # HI line restfreq in Hz
 
-print(args)
+if Qdebug:
+    print(args)
 
 if Qbatch:
     print("MATPLOTLIB agg batch mode")
@@ -191,13 +194,17 @@ def get_gals(filename = "gals15.pars", debug=True):
     for line in fp.readlines():
         if line[0] == '#': continue
         w = line.split()
-        if len(w) < 6:  continue
+        if len(w) < 3: continue        
         gal = w[0]
+        if gal not in gals and len(w) < 6: continue
         session = int(w[1])
         scans = [int(x) for x in w[2].split(',')]
-        vlsr = float(w[3])
-        dv = float(w[4])
-        dw = float(w[5])
+        if gal in gals:
+            vlsr = dv = dw = None
+        else:
+            vlsr = float(w[3])
+            dv = float(w[4])
+            dw = float(w[5])
         if gal not in gals:
             gals[gal] = ([session],[scans],vlsr,dv,dw)
         else:
@@ -274,23 +281,23 @@ def get_spectrum(file):
     """
     print(f"Reading spectrum from {file}")
     (vel,sp) = np.loadtxt(file).T
-    print(vel)
-    print(sp)
+    print('Vel :',vel[0],'...',vel[-1])
+    print('Flux:',sp[0],'...',sp[-1],' Peak:',sp.max())
     return (vel,sp)
 
 def patch_nan(sp):
     """   These are normally vegas spurs, could we just ignore them?
-          Here we interpolate accross them
+          Here we interpolate accross them. Disable with --nan
     """
     print("NAN STATS",sp.stats())
-    print("8192-b: ",sp.data[8191],sp.data[8192],sp.data[8193])
+    print("8191..3: ",sp.data[8191],sp.data[8192],sp.data[8193])
     idx_nan = np.where(np.isnan(sp.flux))[0]
     nidx = len(idx_nan)
     for idx in idx_nan:
         if idx==0: continue
         sp._data[idx] = 0.5*(sp._data[idx-1] + sp._data[idx+1])
         sp.mask[idx] = False
-        print(f"Patching a NaN at {idx} to ", sp.mask[idx], sp.data[idx])
+        print(f"Patching a NaN at {idx} to ", sp.data[idx])
 
 def test_spikes(data, nrms=5):
     d = data[1:] - data[:-1]
@@ -373,6 +380,7 @@ def patch_spike2(sp, n0, n1, clip):
                     last = True                
             print(f"Patch_Spike2 single spike on {clip}: {npatch1} ")
             print(p)
+            
 # under development       
 def patch_spike3(sp, n0, n1, clip):
     """ based on NEMO's tabclip with clip== option
@@ -440,7 +448,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     mode=1 or 25    2025 ON-OFF    getps style
     mode=2 or  4    2004 ON-OFF    getps without noise diode
     """
-    global flux, dflux, mad_rms
+    global flux, dflux, flux6, mad_rms
     print(f"Working on {gal} {sessions} {scans} {vlsr} {dv} {dw}")
 
     ns1 = len(sessions)
@@ -522,8 +530,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, t_sys=25.84, **aflux).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, t_sys=30.49, **aflux).timeaverage()
-            sp_kms = sp0.with_spectral_axis_unit("km/s").spectral_axis[0].value
-            print(f"KM/S[0] = {sp_kms}")
+
             if True:
                 sp.append(sp0.average(sp1))
             else:
@@ -582,28 +589,27 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                         sp.append(sp2)
                     except:
                         print(f"Skipping missing scan {s+2} pol {pl}")
-                #sp_kms = sp1.with_spectral_axis_unit("km/s").spectral_axis[0].value
-                #print(f"KM/S[0] = {sp_kms}")
-            for sp_i in sp:
-                sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
-                print(f"=KM/S[0] = {sp_kms}")
-
 
     if Qalign:
         # align spectra: it is important align_to() comes before set_frame()
+        # also print velocity axis in middle of spectrum
         for i,sp_i in enumerate(sp):
-            sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
-            print(f"KM/S[0] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
+            sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[sp_i.nchan//2].value
+            print(f"KM/S[0 ] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
             if i == 0:
-                sp_i.set_frame(frame)
+                if frame is not None:
+                    sp_i.set_frame(frame)
             else:
                 sp[i] = sp_i.align_to(sp[0])
-                sp[i].set_frame(frame)
-            sp_kms = sp[i].with_spectral_axis_unit("km/s").spectral_axis[0].value
-            print(f"KM/S[1] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
+                if frame is not None:
+                    sp[i].set_frame(frame)
+            sp_kms = sp[i].with_spectral_axis_unit("km/s").spectral_axis[sp_i.nchan//2].value
+            print(f"KM/S[1a] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
     for i,sp_i in enumerate(sp):
-        sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
-        print(f"KM/S[2]_aligned {i} = {sp_kms}  {sp_i.nchan} {id(sp_i)}  {id(sp[i])} {sp_i.velocity_frame}")
+        if frame is not None:
+            sp[i].set_frame(frame)   # set (again), in case no align was done
+        sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[sp_i.nchan//2].value
+        print(f"KM/S[2 ] {i} = {sp_kms}  {sp_i.nchan} {id(sp_i)}  {id(sp[i])} {sp_i.velocity_frame}")
 
                 
     if len(sp) == 0:
@@ -617,16 +623,12 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     vmax = vlsr+dv+dw
     gmin = vlsr-dv
     gmax = vlsr+dv
+    gmin6 = vlsr-600
+    gmax6 = vlsr+600
 
     sp = sp[0].average(sp[1:])    # average all scans
     if Qnan:
         patch_nan(sp)
-
-    # hack
-    if False:
-        sp.mask[8072] = True # with default zoom
-        sp.mask[8073] = True # with default zoom- worst
-        sp.mask[8074] = True # with default zoom
 
     sp.set_convention("optical")   # 2015 data was in radio convention, 2025 was ok
 
@@ -646,19 +648,22 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         patch_spike3(spn, n0, n1, nsigma*rms.value)
 
     if smooth > 0:
-        sps = spn.smooth("box",smooth, nan_treatment='interpolate', preserve_nan = False) # see issue 1067
-        sps.set_frame(frame)  # see issue 1057
+        # issue 1067:  smoothing changes the input spectrum
+        sps = spn.smooth("box",smooth, nan_treatment='interpolate', preserve_nan = False)
+        if frame is not None:
+            sps.set_frame(frame)  # see issue 1057   "smooth() returns a spectrum in itrs frame"
         if blorder >= 0:
             sps.baseline(blorder,exclude=(gmin*kms,gmax*kms),remove=True)
             print("Baseline model 1 excl:",sps.baseline_model)
     else:
         sps = spn
+        if frame is not None:
+            sps.set_frame(frame)   # make sure it's set, in case --align was used
         if blorder >= 0:
             sps.baseline(blorder,include=[(vmin*kms,gmin*kms),(gmax*kms,vmax*kms)],remove=True)            
             print("Baseline model 2 incl:",sps.baseline_model)
 
-
-    #   flux a simple sum between gmin and gmax
+    #   flux : simple sum between gmin and gmax
     spg = sps[gmin*kms:gmax*kms]
     ngal = len(spg.flux)
     sumflux = np.nansum(spg.flux)
@@ -667,6 +672,10 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux
     vlsr3 = np.nansum(sps.flux * sps.velocity) / np.nansum(sps.flux)
     print(f"VEL: v0={vlsr}  vlsr2={vlsr2}  vlsr3={vlsr3}")
+
+    spg6 = sps[gmin6*kms:gmax6*kms]
+    flux6 = np.nansum(spg6.flux) * deltav
+    print(f"FLUX6 = {flux6}")
 
     spb0 = sps[vmin*kms:gmin*kms]
     spb1 = sps[gmax*kms:vmax*kms]
@@ -822,8 +831,8 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         except:
             print("Some failure in busyfit plotting")
     # optional table overlay
-    print("TABLE",table)
     if table is not None:
+        print("TABLE",table)
         (tvel, tint) = get_spectrum(table)
         ax1.plot(tvel,tint,color='red',linestyle='dashed',label=table)
     # draw a vlsr line in green
@@ -834,13 +843,14 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
         ax1.plot([vel_cog,vel_cog],[rms,3*rms],color='red',label=f'vel_cog={vel_cog:.1f} km/s')    
     #
     plt.text
-    plt.xlabel(f"Velocity {frame} (km/s)")
+    plt.xlabel(f"Velocity {sp.velocity_frame} (km/s)")     # grab the frame it has
     plt.ylabel(f"Intensity ({unit})")
     plt.title(f'{gal} {project}  Flux: {flux.value:.2f} +/- {dflux:.2f}')
     plt.legend()
     plt.savefig(f"{gal}_{label}.png")
     #plt.show()
     return bl
+    # <end> spectrum_plot
     
 # deprecate
 def g_test(sp, size=10):
@@ -1042,15 +1052,15 @@ if __name__ == "__main__":
         Vsys = vlsr
         Deltav = (sps.velocity[1]-sps.velocity[0]).value
         Robust_rms = mad_rms.value
-        RefInt = 0.0
-        RefUnc = 0.0
+        RefInt = flux6.value
+        RefUnc = dflux.value
         SigInt = flux.value
         SigUnc = dflux.value
         SigVmin = vlsr - dv
         SigVmax = vlsr + dv
         BadFlag = False
         print("Name,Refcode,Vsys,Deltav,Robust_rms,RefInt,RefUnc,SigInt,SigUnc,SigVmin,SigVmax,BadFlag")
-        print(f"{Name},{Refcode},{Vsys},{Deltav:.2f},{Robust_rms:.2f},{RefInt},{RefUnc},{SigInt:.2f},{SigUnc:.2f},{SigVmin},{SigVmax},{BadFlag} EDGE_PYDB")
+        print(f"{Name},{Refcode},{Vsys},{Deltav:.2f},{Robust_rms:.2f},{RefInt:.2f},{RefUnc:.2f},{SigInt:.2f},{SigUnc:.2f},{SigVmin},{SigVmax},{BadFlag} EDGE_PYDB")
 
 
     if not Qbatch:
