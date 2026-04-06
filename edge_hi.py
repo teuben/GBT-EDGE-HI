@@ -54,7 +54,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
 refcodes    = ['edge2015',    'edge2025',    'survey2004']      # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                           # default, unless given via $SDFITS_DATA
-version     = "4-apr-2026"                                      # version ID
+version     = "5-apr-2026"                                      # version ID
 
 # CLI defaults
 smooth    = 3
@@ -157,15 +157,6 @@ else:
     print(f"Warning: working in K; co-adding spectra not perfect in flux and velocity")
     unit = "mK"
 flux = dflux = mad_rms = 0.0
-
-
-#Qalign = False        # 15.91 (0.22)
-#Qalign = True         #
-#frame     = 'lsrk'   # 15.82  4673
-#frame     = 'itrs'   # 15.74  4659.5
-#frame     = 'icrs'   # 15.66   4653.2
-
-print("TABLE",table)
 
 
 if avechan is None:
@@ -508,21 +499,6 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     sp1 = sdf[sessions[i]].getps(scan=s, fdnum=0, ifnum=0, plnum=1, **aflux).timeaverage()
                     sp.append(sp0)
                     sp.append(sp1)
-        if Qalign:
-            # align spectra: it is important align_to() comes before set_frame()
-            for i,sp_i in enumerate(sp):
-                sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
-                print(f"KM/S[0] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
-                if i == 0:
-                    sp_i.set_frame(frame)
-                else:
-                    sp[i] = sp_i.align_to(sp[0])
-                    sp[i].set_frame(frame)
-                sp_kms = sp[i].with_spectral_axis_unit("km/s").spectral_axis[0].value
-                print(f"KM/S[1] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
-        for i,sp_i in enumerate(sp):
-            sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
-            print(f"KM/S[2]_aligned {i} = {sp_kms}  {sp_i.nchan} {id(sp_i)}  {id(sp[i])} {sp_i.velocity_frame}")
             
     if mode == 2:    # 2004 data
         for i in range(ns1):
@@ -610,8 +586,25 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 #print(f"KM/S[0] = {sp_kms}")
             for sp_i in sp:
                 sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
-                print(f"=KM/S[0] = {sp_kms}")                
-                
+                print(f"=KM/S[0] = {sp_kms}")
+
+
+    if Qalign:
+        # align spectra: it is important align_to() comes before set_frame()
+        for i,sp_i in enumerate(sp):
+            sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
+            print(f"KM/S[0] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
+            if i == 0:
+                sp_i.set_frame(frame)
+            else:
+                sp[i] = sp_i.align_to(sp[0])
+                sp[i].set_frame(frame)
+            sp_kms = sp[i].with_spectral_axis_unit("km/s").spectral_axis[0].value
+            print(f"KM/S[1] {i} = {sp_kms}  {sp_i.nchan}  {id(sp_i)}  {id(sp[i])}")
+    for i,sp_i in enumerate(sp):
+        sp_kms = sp_i.with_spectral_axis_unit("km/s").spectral_axis[0].value
+        print(f"KM/S[2]_aligned {i} = {sp_kms}  {sp_i.nchan} {id(sp_i)}  {id(sp[i])} {sp_i.velocity_frame}")
+
                 
     if len(sp) == 0:
         print("Did not find any scans")
