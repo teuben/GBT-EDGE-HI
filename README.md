@@ -1,6 +1,6 @@
 # GBT-EDGE-HI
 
-HI survey of EDGE galaxies.   Started with **AGBT15B_287**, where 113 galaxies were
+HI survey of EDGE galaxies using the GBT.   Started with **AGBT15B_287**, where 113 galaxies were
 observed in a modified PositionSwitch using ON-OFF-ON and a corresponding getsigref
 procedure. The original GBTIDL procedure can be done with `edge.pro`.
 
@@ -9,7 +9,8 @@ Utomo, Dyas	GBT/15B-287	HI Follow-up Observations of the EDGE-CALIFA Survey	125.
 
 
 The followup project code is **AGBT25A_474**, where 43 galaxies were observed. Only one
-case had overlap with the 2015 data, NGC2918.
+case had overlap with the 2015 data, NGC2918, but this galaxy doesn't seem to have much,
+if any, signal, plus there is a GPS nearby in some of the data.
 
 Old observing scripts at GBO:
 
@@ -18,6 +19,20 @@ Old observing scripts at GBO:
 
 these have been recorded in our `15B` directory.  An example to reduce these for NGC 2805
 are in the `examples/` directory
+
+## Procedure
+
+The python based `dysh` package is used here for reduction. The gals15.pars  and gals25.pars text files
+are used to set basic parameters: which session, which scans, the v0 (center of galaxy window),
+dv (half width of galaxy) and dw (width of each half of the baseline on either side. A
+resulting spectrum with width 2.dv + 2.dw is then extracted, plotted, baseline subtracted
+and written to a text file.
+
+The ON-OFF-ON in 2015 is processed with getsigref(), the ON-OFF in 2025 with getps().
+
+Since some galaxies appear in multiple sessions, co-adding needs to be in a common velocity
+frame (we choose "icrs" or solar system barycenter) and opacity corrected Jy. A flux in Jy.km/s
+is computed 
 
 ## Installation
 
@@ -47,6 +62,16 @@ Normally the command
 ```
 
 will get you an interactive session.
+
+### dyshp
+
+There is also an alternative install that Peter used while developing dysh:
+https://github.com/teuben/dyshp
+
+
+## Running pipeline
+
+Example 2025 : 441.13user 57.48system 6:42.17elapsed 123%CPU 
 
 
 ## Example
@@ -86,6 +111,8 @@ Maryland. Unfortunately, the GBT falls within the GPS signal's
 footprint, so it may be a frequent occurrence in our data. The GPS L3 intermsignal
 has a center frequency of 1381.05 MHz, or around 8300 km/s.
 
+See also flagging.md
+
 ## Comparing with GTBIDL
 
 ```
@@ -115,6 +142,17 @@ has a center frequency of 1381.05 MHz, or around 8300 km/s.
    -> 41.7 min
 
 2.2sec vs. 0.90 sec vs. 1.50 sec
+
+## Surveys
+
+* Original CALIFA was 939 galaxies, of which ~600 were eventually
+observed with 0.005 < z < 0.03.  DR3 has 667 entries.
+
+* CO(1-0)
+
+* CO(2-1)
+
+* HI-GBT
    
 ## GBT links
 
