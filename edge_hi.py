@@ -55,7 +55,7 @@ from dysh.fits.gbtfitsload import GBTOffline
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
 refcodes    = ['edge2015',    'edge2025',    'survey2004']      # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                           # default, override with $SDFITS_DATA
-version     = "6-apr-2026"                                      # version ID
+version     = "7-apr-2026"                                      # version ID
 
 # CLI defaults
 smooth    = 3
@@ -768,6 +768,8 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
 
     print("SPECTRUM_PLOT =============================================")
 
+    drawstyle = { 'drawstyle': 'steps-mid'}
+
     vel = sp.axis_velocity().value
     #vel = sp.with_velocity_convention('optical').axis_velocity().value
     print("Velocity axis:",vel[0],vel[-1])
@@ -778,10 +780,10 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
     Qb = pars["Qb"]
     w95 = pars["w95"]
     if Qchan:
-        plt.plot(ch, sflux,label=f'w95 {w95:.1f}')
+        plt.plot(ch, sflux,label=f'w95 {w95:.1f}',**drawstyle)
         return
     else:
-        plt.plot(vel,sflux,label=f'w95 {w95:.1f}')
+        plt.plot(vel,sflux,label=f'w95 {w95:.1f}',**drawstyle)
     if sp.subtracted:
         print(f"Showing baseline fit with {len(vel)} channels")
         if spbl is not None:
