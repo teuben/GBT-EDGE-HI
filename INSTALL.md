@@ -71,21 +71,23 @@ Examples for `release-1.1` (April 2026)
 | lma / AMD EPYC 7302  | 24.75u 5.94s 0:37.90e 80%CPU | 12.26u 2.07s 0:21.72e 66%CPU | 7.71u 0.65s 0:09.22e 90%CPU |
 | d76 / iU7 155H       | 17.38u 4.11s 0:21.52e 99%CPU |  8.45u 1.48s 0:09.97e 99%CPU | 5.13u 0.39s 0:05.71e 96%CPU |
 
-## 4. Issues
+## 4. Examples and some remaining issues
 
 Some commands and exposing dysh issues
 
-1. Default 2025 data with flux scaling to Jy.km/s
+1. Default 2025 data with flux scaling to Jy.km/s, but showing channels instead of km/s.
 
       ./edge_hi.py UGC10972 --flux --chan
 
    this shows a negative spike right in the middle of the galaxy signal. Zooming in Figure 2 shows this is channel
    16393, i.e. the one but last channel in the 2nd "bank" of 8k channels.
 
-2. Turns out the alignment (needed to stack doppler shifted spectra) is the culprit. The following command doesn't show
+   Turns out the alignment (needed to stack doppler shifted spectra) is the culprit. The following command doesn't show
    this spike
    
       ./edge_hi.py UGC10972 --flux --chan --align
+
+   [solved - to.align() defaults to an fft method, it needs to be interpolate]
 
 3. Smoothing the reference can introduce spikes too:
 
@@ -94,7 +96,8 @@ Some commands and exposing dysh issues
    Since Figure 1 is smoothed (default by 3 channels), you can't use it. Zoom into Figure 1, or use --smooth 0 to get
    Figure 1 in raw channels. Either way, it shows that smoothref introduces quite a few spikes.
 
-   Smoothref also introduces a lot of new NaN's near the board boundaries, so the smooth is not using
+   Smoothref also introduces a lot of new NaN's near the board boundaries, so the smooth is not using the nan treatment
+   we use in our script.
 
 4. The 2015 (older ACS) data have true spikes in the raw TP data. But because often that channel is one off between the
    ON and OFF, the resulting spectrum has a alternating +/- spike. See for example
@@ -106,3 +109,16 @@ Some commands and exposing dysh issues
    For this case the following channels have TP spikes:  5819,5820,8992,8993,9094,9095,9096,9199,9200,8073
 
    It should be noted some of the spikes have an actual structure, which makes spike detection harder.
+
+5. Waterfall plots can be useful, but the --water flag doesn't allow you to play qith the color stretch. With the
+   --avechan a fits file is produced for each session. For example for the UGC10972 case
+
+      ./edge_hi.py UGC10972 --water --avechan 1,15400,17400
+
+   which in this case produces a fits file `UGC10972_water_1.fits` of dimension 360 (integrations) x 2000 (channels).
+
+
+6. Example of running the whole pipeline
+
+      ./edge_hi.py ---all --batch --mode 25 --flux --frame icrs > edge_hi.log
+      grep EDGE_PYDB edge_hi.log | awk '{print $1}'
