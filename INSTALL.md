@@ -19,7 +19,7 @@ The basic outline of the pipeline is as follows
 2. calibrate (default in flux mode) so they can be co-added 
 3. align data and set frame (in that order!) so they can be co-added
 4. co-add and average spectra
-5. optionall patch the NaN's (at multiples of 8192)
+5. optionally patch the NaN's (multiples of 0-based 8192)
 6. Grab spectrum using the --dv and --dw: from vlsr-dv-dw to  vlsr+dv+dw
 7. Smooth spectrum (allow it to average over NaN's)
 7. Fit and subtract baseline in the two dw portions
@@ -87,7 +87,7 @@ Some commands and exposing dysh issues
    
       ./edge_hi.py UGC10972 --flux --chan --align
 
-   [solved - to.align() defaults to an fft method, it needs to be interpolate]
+   [solved - to.align() defaults to an 'fft' method, it needs to be 'interpolate']
 
 3. Smoothing the reference can introduce spikes too:
 
@@ -122,3 +122,5 @@ Some commands and exposing dysh issues
 
       ./edge_hi.py ---all --batch --mode 25 --flux --frame icrs > edge_hi.log
       grep EDGE_PYDB edge_hi.log | awk '{print $1}'
+
+   To run the whole pipeline takes 10-20 mins. Especially the 2015 pipeline needs a lot of memory.
