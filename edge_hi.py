@@ -166,7 +166,7 @@ if avechan is None:
 else:
     avechan = [int(num) for num in avechan.split(',')]    # can have 1 or 3 numbers
 
-dysh_plots = []          # accumulate plots dysh makes, so we can quit them
+dysh_plots = []          # accumulate plots dysh makes, so we can quit them properly
 rf_hi = 1420405751.786   # HI line restfreq in Hz
 
 if Qdebug:
@@ -185,9 +185,9 @@ def get_gals(filename = "gals15.pars", debug=True):
     gal       name
     session   1,2,...
     scans     comma separated list of the ON's
-    vlsr      km/s
-    dv        half the width (km/s)
-    dw        width of each baseline section (km/s)
+    vlsr      center of emission (km/s)              [optional after 1st pass]
+    dv        half the width (km/s)                  [optional after 1st pass]
+    dw        width of each baseline section (km/s)  [optional after 1st pass]
     """
     fp = open(filename)
     gals = {}
@@ -219,7 +219,7 @@ def get_gals(filename = "gals15.pars", debug=True):
     return gals
 
 def set_flags(sdf, flags = None):
-    """ for a given sdfits file, apply flags
+    """ for a given sdfits file, apply flags - a hack
     """
     print('SDF sessions',sdf.keys())
     if flags is None:
@@ -288,6 +288,9 @@ def get_spectrum(file):
 def patch_nan(sp):
     """   These are normally vegas spurs, could we just ignore them?
           Here we interpolate accross them. Disable with --nan
+          Both the 2015 and 2025 data have NaN's in
+          0-based channels [1,2,3]*8192
+          
     """
     print("NAN STATS",sp.stats())
     print("8191..3: ",sp.data[8191],sp.data[8192],sp.data[8193])
@@ -300,6 +303,8 @@ def patch_nan(sp):
         print(f"Patching a NaN at {idx} to ", sp.data[idx])
 
 def test_spikes(data, nrms=5):
+    """  report spiky things
+    """
     d = data[1:] - data[:-1]
     std = mad_std(d, ignore_nan=True)
     print("TEST_SPIKES:",std)
@@ -641,7 +646,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     if Qspike:
         spb0 = spn[vmin*kms:gmin*kms]
         spb1 = spn[gmax*kms:vmax*kms]
-        rms = min(spb0.stats(roll=2)["rms"], spb1.stats(roll=2)["rms"])
+        rms = min(spb0.stats(roll=2)["rms"], spb1.stats(roll=2)["rms"])   # @todo try mad_rms
         n0 = len(spb0.data)
         n1 = len(spb1.data)
         #patch_spike2(spn, n0, n1, 5*rms.value)
@@ -669,8 +674,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     sumflux = np.nansum(spg.flux)
     deltav = abs(spg.velocity[0]-spg.velocity[1])
     flux = sumflux * deltav
-    vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux
-    vlsr3 = np.nansum(sps.flux * sps.velocity) / np.nansum(sps.flux)
+    vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux              # @todo  these are wrong 2x
+    vlsr3 = np.nansum(sps.flux * sps.velocity) / np.nansum(sps.flux)  # @todo  these are wrong 2x
     print(f"VEL: v0={vlsr}  vlsr2={vlsr2}  vlsr3={vlsr3}")
 
     spg6 = sps[gmin6*kms:gmax6*kms]
@@ -710,15 +715,15 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     print(f'Anderson-Darling normalness test: {ad1:.2f}  {ad2:.2f} {ad3:.2} {ad0:.3}      Qb {Qb:.2f}')
 
     if Qflux: 
-        dflux = rms.to("Jy")*deltav*np.sqrt(ngal)
+        dflux = mad_rms.to("Jy")*deltav*np.sqrt(ngal)
     else:
-        dflux = rms.to("K")*deltav*np.sqrt(ngal)
+        dflux = mad_rms.to("K")*deltav*np.sqrt(ngal)
 
     pars = {}
     pars['Qb'] = Qb
     pars['flux'] = flux
     pars['dflux'] = dflux
-    pars['rms'] = rms
+    pars['rms'] = mad_rms    # better than rms, since it's subject to spikes
     pars['vlsr2'] = vlsr2
     
     # https://dysh.readthedocs.io/en/latest/explanations/cog/index.html
@@ -911,9 +916,9 @@ if __name__ == "__main__":
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))                    
             print("PJT try_sessions mode=0:",try_sessions)
-
         else:
             try_sessions = [ss]
+
         for i in try_sessions:
             session = i
             if Qfull:
@@ -965,9 +970,9 @@ if __name__ == "__main__":
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))                    
             print("PJT try_sessions mode=0:",try_sessions)
-
         else:
             try_sessions = [ss]
+
         for i in try_sessions:
             session = i
             if Qfull:
@@ -995,9 +1000,9 @@ if __name__ == "__main__":
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))                    
             print("PJT try_sessions mode=0:",try_sessions)
-
         else:
             try_sessions = [ss]
+
         for i in try_sessions:
             session = i
             if Qfull:
@@ -1050,6 +1055,7 @@ if __name__ == "__main__":
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
+        # stuff for the EDGE_PYDB output csv
         Name = gal
         Refcode = refcodes[mode]
         Vsys = vlsr
