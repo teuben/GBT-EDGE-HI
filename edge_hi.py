@@ -485,9 +485,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
                 if len(avechan) > 0:
                     if len(avechan) > 1:
-                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:], overwrite=True)
                     else:
-                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], overwrite=True)
                 #plt.show()
             print(f"Session {sessions[i]}  Scan {scans[i]}")
             if True:
@@ -524,9 +524,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
                 if len(avechan) > 0:
                     if len(avechan) > 1:
-                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:], overwrite=True)
                     else:
-                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], overwrite=True)
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, t_sys=25.84, **aflux).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, t_sys=30.49, **aflux).timeaverage()
@@ -600,7 +600,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 if frame is not None:
                     sp_i.set_frame(frame)
             else:
-                sp[i] = sp_i.align_to(sp[0])
+                sp[i] = sp_i.align_to(sp[0], method="interpolate")   # issue : fft method can cause spikes at 16384
                 if frame is not None:
                     sp[i].set_frame(frame)
             sp_kms = sp[i].with_spectral_axis_unit("km/s").spectral_axis[sp_i.nchan//2].value
