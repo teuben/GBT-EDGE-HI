@@ -924,7 +924,8 @@ if __name__ == "__main__":
                 filename = f'data/{project}_{session:02}.fits'
                 print(f"# === {filename}")
                 #sdf[session] = GBTFITSLoad(filename, skipflags=False)     # flag_vegas=False, skipflags=True)
-                sdf[session] = GBTFITSLoad(filename)
+                #sdf[session] = GBTFITSLoad(filename)
+                sdf[session] = GBTOffline(filename)
             sdf[session]["RESTFREQ"] = rf_hi             # should really use sp.rest_value = 1.4... * u.Hz
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
