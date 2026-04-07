@@ -35,4 +35,9 @@ and
       5.94user 0.63system 0:06.68elapsed 98%CPU
 
 
+Examples:
 
+| machine/CPU  |   bench0  | bench1 |
+| ------------ | --------- | ------ |
+|   P14s  | 25.02user 2.39system 0:27.54elapsed 99%CPU | 5.81user 0.62system 0:06.56elapsed 98%CPU  |
+|   lma   | 24.75user 5.94system 0:37.90elapsed 80%CPU | 12.26user 2.07system 0:21.72elapsed 66%CPU |
