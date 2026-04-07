@@ -1,10 +1,29 @@
 # Installing GBT-EDGE-HI
 
+## 0. Source code
+
+Is on github.  git@github.com:teuben/GBT-EDGE-HI
+
+## Running 
+
 The edge_hi.py script is all we have now. Type
 
       ./edge_hi.py -h
 
 to get help. Makefile has benchark examples. See below.
+
+
+The basic outline of the pipeline is as follows
+
+1. grab the sessions and scans needed to co-add spectra for a given object (see the galsXX.pars file)
+2. calibrate (default in flux mode) so they can be co-added 
+3. align data and set frame (in that order!) so they can be co-added
+4. co-add and average spectra
+5. optionall patch the NaN's (at multiples of 8192)
+6. Grab spectrum using the --dv and --dw: from vlsr-dv-dw to  vlsr+dv+dw
+7. Smooth spectrum (allow it to average over NaN's)
+7. Fit and subtract baseline in the two dw portions
+
 
 ##  1. Add dysh to your environment
 
@@ -12,18 +31,18 @@ Covered in other places.
 
 ##  2. Get benchmark data
 
-1. Grab `sdfits_edge.tar`, untar it. It will create an "sdfits" directory
-and thus mimics the /home/sdfits at GBO.
+Grab `sdfits_edge.tar`, untar it. It will create an "sdfits" directory
+and thus mimics the /home/sdfits at GBO. See /lma1/teuben/GBTRawdata/sdfits_edge.tar
 
-Note, the 2015 data are stored differently as a "sdfits/data" subdirectory with
-only one of the 3 original IF's. (ifnum=1). The full data can be used if made
-availabkle, and need the --full flag.
+Note, the 2015 data are stored differently in the "sdfits/data" subdirectory with
+only one of the 3 original IF's. (ifnum=1). The full data can be used if the --full flag
+is used.
 
-2. set the SDFITS_DATA environment variable to the just created "sdfits" directory
+Set the SDFITS_DATA environment variable to the just created "sdfits" directory
 
 ##  3. Run benchmarks
 
-The Makefile has the recipe for a good 2015 and 2025 dataset.
+The Makefile has the recipes for a good 2015 and 2025 dataset.
 
 Bench0 runs a 2015 dataset, which has the ON-OFF-ON triplets and uses `getsigref`
 
@@ -68,7 +87,7 @@ Some commands and exposing dysh issues
    
       ./edge_hi.py UGC10972 --flux --chan --align
 
-3. Smoothing the reference can introduce spikes:
+3. Smoothing the reference can introduce spikes too:
 
       ./edge_hi.py UGC10972 --flux --chan --align --smoothref 4
 
@@ -83,3 +102,7 @@ Some commands and exposing dysh issues
       ./edge_hi.py --mode 15 NGC3815 --flux --chan --smooth 0
 
    where again --smooth 0  is needed to see the spikes in Figure 1.
+
+   For this case the following channels have TP spikes:  5819,5820,8992,8993,9094,9095,9096,9199,9200,8073
+
+   It should be noted some of the spikes have an actual structure, which makes spike detection harder.
