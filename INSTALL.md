@@ -67,9 +67,10 @@ Examples for `release-1.1` (April 2026)
 
 | machine/CPU  |   bench0  | bench1 | bench2 |
 | ------------ | --------- | ------ | ------ |
-| P14s / AMD 370       | 25.02u 2.39s 0:27.54e 99%CPU | 5.81u 0.62s 0:06.56e 98%CPU  | - |
+| P14s / AMD 370       | 25.02u 2.39s 0:27.54e 99%CPU |  5.81u 0.62s 0:06.56e 98%CPU | - |
 | lma / AMD EPYC 7302  | 24.75u 5.94s 0:37.90e 80%CPU | 12.26u 2.07s 0:21.72e 66%CPU | 7.71u 0.65s 0:09.22e 90%CPU |
 | d76 / iU7 155H       | 17.38u 4.11s 0:21.52e 99%CPU |  8.45u 1.48s 0:09.97e 99%CPU | 5.13u 0.39s 0:05.71e 96%CPU |
+| i7-9750H             | 66.09u 4.00s 1:10.21e 99%CPU | 12.38u 0.97s 0:13.40e 99%CPU | - |
 
 ## 4. Examples and some remaining issues
 
@@ -124,3 +125,12 @@ Some commands and exposing dysh issues
       grep EDGE_PYDB edge_hi.log | awk '{print $1}'
 
    To run the whole pipeline takes 10-20 mins. Especially the 2015 pipeline needs a lot of memory.
+
+7. To deal with spikes in the 2015 data
+
+       ./edge_hi.py --mode 15 NGC3815 --flags 01.flags --smooth 11 --nan --flux
+
+    flags are [5819, 5820, 8992, 8993, 9094, 9095, 9096, 9199, 9200, 8073, 11238, 11239, 9082, 9083, 9751, 9752]
+    --nan needed to allow smooth to go over it
+
+    This is very labor intensive to find the spikes in the TP spectra
