@@ -29,6 +29,11 @@ summary:
 edge_pydb:
 	git clone $(URL5)
 
+## csv:     create the good looking CVS
+csv:
+	@awk '{print $$1}' edge_hi.log | ./latest_by_key.sh
+
+
 ## bench0:    benchmark NGC3815 from 2015 data
 bench0:
 	$(ONT) $(TIME) ./edge_hi.py --mode 0 --flux NGC3815 --batch
