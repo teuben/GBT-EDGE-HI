@@ -52,10 +52,12 @@ from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
-projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
-refcodes    = ['edge2015',    'edge2025',    'survey2004']      # for CSV output
-sdfits_data = "/data2/teuben/sdfits/"                           # default, override with $SDFITS_DATA
-version     = "7-apr-2026"                                      # version ID
+from IPython import embed
+
+projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008', '-']  # mode=0 or 1 (if more, the index into this array)
+refcodes    = ['edge2015',    'edge2025',    'survey2004',  '-']  # for CSV output
+sdfits_data = "/data2/teuben/sdfits/"                             # default, override with $SDFITS_DATA
+version     = "8-apr-2026"                                        # version ID
 
 # CLI defaults
 smooth    = 3
@@ -110,6 +112,7 @@ p.add_argument('--show',    action="store_true",               help='only show g
 p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
 p.add_argument('--flux',    action="store_true",               help='Use Flux(Jy) instead of Ta(K)')
 p.add_argument('--all',     action="store_true",               help='Run all galaxies (--batch recommended)')
+p.add_argument('--test',    action="store_true",               help='Add some extra tests')
 p.add_argument('--debug',   action="store_true",               help='Debug logging in dysh')
 
 
@@ -145,7 +148,7 @@ Qflux   = args.flux
 Qalign  = args.align
 Qall    = args.all
 Qdebug  = args.debug
-Qtest   = False          # need --test
+Qtest   = args.test
 
 if Qdebug:
     print('ARGS',args)
@@ -231,6 +234,7 @@ def set_flags(sdf, flags = None):
         #  w[0] session     w[1] scan    w[2] channel(s)
         session = int(w[0])
         scan    = int(w[1])
+        # FLAGGING: 1 10 [5819, 5820, 8992, 8993, 9094, 9095, 9096, 9200, 8073]
         channel = [int(num) for num in w[2].split(',')]
         print("FLAGGING:",session,scan,channel)
         if session in sdf.keys():
@@ -289,16 +293,19 @@ def patch_nan(sp):
     """   These are normally vegas spurs, could we just ignore them?
           Here we interpolate accross them. Disable with --nan
           Both the 2015 and 2025 data have NaN's in
-          0-based channels [1,2,3]*8192
+          0-based channels [0,1,2,3]*8192, i.e. the first channel
+          of the 4 "banks".
           
     """
-    print("NAN STATS",sp.stats())
-    print("8191..3: ",sp.data[8191],sp.data[8192],sp.data[8193])
+    print("PATCH_NAN STATS",sp.stats())
     idx_nan = np.where(np.isnan(sp.flux))[0]
     nidx = len(idx_nan)
+    print("IDX nan",idx_nan)
     for idx in idx_nan:
-        if idx==0: continue
-        sp._data[idx] = 0.5*(sp._data[idx-1] + sp._data[idx+1])
+        if idx==0:
+            sp._data[0] = sp._data[1]
+        else:
+            sp._data[idx] = 0.5*(sp._data[idx-1] + sp._data[idx+1])
         sp.mask[idx] = False
         print(f"Patching a NaN at {idx} to ", sp.data[idx])
 
@@ -668,6 +675,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
             sps.baseline(blorder,include=[(vmin*kms,gmin*kms),(gmax*kms,vmax*kms)],remove=True)            
             print("Baseline model 2 incl:",sps.baseline_model)
 
+    #   @todo :  try another patch_spike3?
+
     #   flux : simple sum between gmin and gmax
     spg = sps[gmin*kms:gmax*kms]
     ngal = len(spg.flux)
@@ -890,6 +899,11 @@ if __name__ == "__main__":
         gals = get_gals("gals04.pars")
         mode=2
 
+    # alternatively, mode points to the pars file already
+    if False and os.path.exists(mode):
+        gals = get_gals(mode)
+        mode = 3 
+
     if Qshow:
         print(f"Found {len(gals)} galaxies in {projects[mode]}")
         sys.exit(0)
@@ -1069,7 +1083,10 @@ if __name__ == "__main__":
         SigVmax = vlsr + dv
         BadFlag = False
         print("Name,Refcode,Vsys,Deltav,Robust_rms,RefInt,RefUnc,SigInt,SigUnc,SigVmin,SigVmax,BadFlag")
-        print(f"{Name},{Refcode},{Vsys},{Deltav:.2f},{Robust_rms:.2f},{RefInt:.2f},{RefUnc:.2f},{SigInt:.2f},{SigUnc:.2f},{SigVmin},{SigVmax},{BadFlag} EDGE_PYDB")
+        msg = f"{Name},{Refcode},{Vsys},{Deltav:.2f},{Robust_rms:.2f},{RefInt:.2f},{RefUnc:.2f},{SigInt:.2f},{SigUnc:.2f},{SigVmin},{SigVmax},{BadFlag}"
+        print(f"{msg} EDGE_PYDB")
+        with open("edge_hi.log","a") as f:
+            f.write(f"{msg}\n")
 
 
     if not Qbatch:
