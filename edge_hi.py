@@ -1084,9 +1084,10 @@ if __name__ == "__main__":
         BadFlag = False
         print("Name,Refcode,Vsys,Deltav,Robust_rms,RefInt,RefUnc,SigInt,SigUnc,SigVmin,SigVmax,BadFlag")
         msg = f"{Name},{Refcode},{Vsys},{Deltav:.2f},{Robust_rms:.2f},{RefInt:.2f},{RefUnc:.2f},{SigInt:.2f},{SigUnc:.2f},{SigVmin},{SigVmax},{BadFlag}"
-        print(f"{msg} EDGE_PYDB")
+        cmd = " ".join(sys.argv[1:])
+        print(f"{msg} {cmd} EDGE_PYDB")
         with open("edge_hi.log","a") as f:
-            f.write(f"{msg}\n")
+            f.write(f"{msg}  {cmd}\n")
 
 
     if not Qbatch:
