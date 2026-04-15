@@ -9,6 +9,7 @@
 6. edge_hiflux , 161 entries                              [table8]
    edge2025 , 43 entries                                  [table8a]
 
+See also https://pages.astro.umd.edu/~bolatto/EDGE/
 
 ## CALIFA_HI_sample_archive.csv :   923 entries (extended CALIFA sample)
 
@@ -39,7 +40,12 @@ No data, just pdf files....
 
     ls | sed s/_all_hi_spectra.pdf// | sort > /tmp/hiedge_all_spectra.tab
 
+## iEDGE (643 entries)
 
+Large table, has 158 columns summarizing all properties of the Califa sample. About 1.1MB.
+see https://zenodo.org/records/15822433
+
+https://zenodo.org/records/15822433/files/iedge_v1.ecsv?download=1
 
 #  Summary Tables
 
@@ -163,6 +169,12 @@ No data, just pdf files....
      tabplot table_26_flux.tab  1 2 0 16 0 16 layout=diag.layout xlab=FAST ylab=Arecibo
      # at low flux, arecibo is higher, at high flux, arecibo is lower
      # breakeven around 4 Jy.km/s
+     tabmath table_26_flux.tab - 'log(%1),log(%2)' all |\
+        tabplot -  1 2 -1 3 -1 3 layout=diag.layout xlab=FAST ylab=Arecibo point=2,0.1 headline="log(FLux Jy.km/s)"
+
+     tabdist table2.tab table6.tab 2,3 2,3 1 1  radec=t dmin=100 | tabcols - 18 | sort -n > table_26_distance.tab
+     tabhist table_26_distance.tab bins=80 xmin=0 xmax=80 gauss=f residual=f maxcount=200
+     -> ~185 true spot-on matches. After this the 2-pt corr comes in
 
      # comparing W50
      tabcols table_26.tab 5,13 | tabplot - 1 2 0 800 0 800
