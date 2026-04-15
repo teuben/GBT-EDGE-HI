@@ -72,7 +72,19 @@ Examples for `release-1.1` (April 2026)
 | d76 / iU7 155H       | 17.38u 4.11s 0:21.52e 99%CPU |  8.45u 1.48s 0:09.97e 99%CPU | 5.13u 0.39s 0:05.71e 96%CPU |
 | i7-9750H             | 66.09u 4.00s 1:10.21e 99%CPU | 12.38u 0.97s 0:13.40e 99%CPU | - |
 
-## 4. Examples and some remaining issues
+## 4. BusyFit
+
+There is an option to use BusyFIt, using the --busyfit option.  Here is an example of install on an Ubuntu system:
+
+```
+  sudo apt install libgsl-dev
+  git clone https://gitlab.com/SoFiA-Admin/BusyFit
+  cd BusyFit/
+  ./compile.sh
+  cp busyfit ~/bin
+```
+
+## 5. Examples and some remaining issues
 
 Some commands and exposing dysh issues
 
