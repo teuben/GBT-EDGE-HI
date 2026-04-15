@@ -145,19 +145,23 @@ https://zenodo.org/records/15822433/files/iedge_v1.ecsv?download=1
 ## CALIFA w/ FAST
 
      tabdist table5y.tab table2.tab 2,3 2,3 1 1  radec=t dmin=10
-     22/562
+     22/562  at 10"
+     142     at 60"
 
      tabdist table5n.tab table2.tab 2,3 2,3 1 1  radec=t dmin=10
-     11/361
+     11/361  at 10"
+     42         60"
 
 ## CALIFA W/ Arecibo
 
      tabdist table5y.tab table6.tab 2,3 2,3 1 1  radec=t dmin=10
-     84/562
-
-
+     84/562  at 10"
+     274        60"
+     
      tabdist table5n.tab table6.tab 2,3 2,3 1 1  radec=t dmin=10
-     4/361
+     4/361   at 10"
+     20         60"
+     
 
 ## FAST w/ Arecibo
 
