@@ -11,6 +11,10 @@
 
 See also https://pages.astro.umd.edu/~bolatto/EDGE/
 
+AMUSING: https://amusing-muse.github.io/
+
+https://skyserver.sdss.org/dr19/VisualTools/navi?ra=41.291443&dec=-4.710761
+
 ## CALIFA_HI_sample_archive.csv :   923 entries (extended CALIFA sample)
 
 CALIFA_name,    RA,              DEC,             Vlsr,             Final_QS,Final_NA,Final_flag_QS,Final_flag_NA,Archive_HI?
@@ -36,7 +40,7 @@ AGCNr,Name,RAdeg_HI,DECdeg_HI,RAdeg_OC,DECdeg_OC,Vhelio,W50,sigW,W20,HIflux,sigf
 
 ## Veselina/hiedge_all_spectra : 568 entries
 
-No data, just pdf files....
+No data, just pdf files.... are these roughly the 561 "Y" entries from CALIFA_HI_sample_archive.csv?
 
     ls | sed s/_all_hi_spectra.pdf// | sort > /tmp/hiedge_all_spectra.tab
 
@@ -145,19 +149,23 @@ https://zenodo.org/records/15822433/files/iedge_v1.ecsv?download=1
 ## CALIFA w/ FAST
 
      tabdist table5y.tab table2.tab 2,3 2,3 1 1  radec=t dmin=10
-     22/562
+     22/562  at 10"
+     142     at 60"
 
      tabdist table5n.tab table2.tab 2,3 2,3 1 1  radec=t dmin=10
-     11/361
+     11/361  at 10"
+     42         60"
 
 ## CALIFA W/ Arecibo
 
      tabdist table5y.tab table6.tab 2,3 2,3 1 1  radec=t dmin=10
-     84/562
-
-
+     84/562  at 10"
+     274        60"
+     
      tabdist table5n.tab table6.tab 2,3 2,3 1 1  radec=t dmin=10
-     4/361
+     4/361   at 10"
+     20         60"
+     
 
 ## FAST w/ Arecibo
 
