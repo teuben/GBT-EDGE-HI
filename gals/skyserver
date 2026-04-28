@@ -1,0 +1,17 @@
+#! /usr/bin/bash
+#
+
+# e.g. 41.291443 -4.710761
+# NGC0001  1.81603449430832 27.7082601438207
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 ra dec"
+    echo "e.g. for NGC0001  use: 1.81603449430832 27.7082601438207"  
+    exit 1
+fi
+
+
+url=$(printf "https://skyserver.sdss.org/dr19/VisualTools/navi?ra=%s&dec=%s"  $1 $2)
+echo $url
+xdg-open $url
+
