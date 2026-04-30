@@ -6,12 +6,19 @@
 
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 ra dec"
-    echo "e.g. for NGC0001  use: 1.81603449430832 27.7082601438207"  
+    echo "e.g. for NGC0001  use: 1.81603449430832 27.7082601438207"
+    echo "See also https://cseligman.com/text/atlas.htm"
     exit 1
 fi
 
 
 url=$(printf "https://skyserver.sdss.org/dr19/VisualTools/navi?ra=%s&dec=%s"  $1 $2)
 echo $url
-xdg-open $url
+
+if [ $(uname -s) = "Linux" ]; then
+   xdg-open $url
+else
+   open $url
+fi
+   
 
