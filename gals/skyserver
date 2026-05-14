@@ -11,6 +11,9 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
+# alternative:
+# https://blackpearl.blackgem.org/regalade.php?cat=regalade&query=1.812+27.708
+# https://blackpearl.blackgem.org/regalade.php?cat=sdss&query=1.812+27.708
 
 url=$(printf "https://skyserver.sdss.org/dr19/VisualTools/navi?ra=%s&dec=%s"  $1 $2)
 echo $url
