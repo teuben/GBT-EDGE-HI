@@ -12,6 +12,7 @@
 See also https://pages.astro.umd.edu/~bolatto/EDGE/
 
 AMUSING: https://amusing-muse.github.io/
+amusing_sample_char.csv -  621 entries
 
 https://skyserver.sdss.org/dr19/VisualTools/navi?ra=41.291443&dec=-4.710761
 
@@ -182,11 +183,19 @@ https://zenodo.org/records/15822433/files/iedge_v1.ecsv?download=1
 
      tabdist table2.tab table6.tab 2,3 2,3 1 1  radec=t dmin=100 | tabcols - 18 | sort -n > table_26_distance.tab
      tabhist table_26_distance.tab bins=80 xmin=0 xmax=80 gauss=f residual=f maxcount=200
-     -> ~185 true spot-on matches. After this the 2-pt corr comes in
+
+-> ~185 true spot-on matches. After this the 2-pt corr comes in
 
      # comparing W50
      tabcols table_26.tab 5,13 | tabplot - 1 2 0 800 0 800
      # large fraction with spread
+
+## Manga
+
+Has 10220 galaxies processed with Pipe3D.
+
+https://data.sdss.org/sas/dr17/env/MANGA_PIPE3D/v3_1_1/3.1.1/SDSS17Pipe3D_v3_1_1.fits
+
 
 
 ## cmp
@@ -202,3 +211,6 @@ https://zenodo.org/records/15822433/files/iedge_v1.ecsv?download=1
      KUG0210-078
      UGC00386
      UGC10799
+
+## new campaign
+
