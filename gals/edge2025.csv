@@ -1,0 +1,64 @@
+# %ECSV 0.9
+# ---
+# datatype:
+# - {name: Name, datatype: string, description: Galaxy Name}
+# - {name: Refcode, datatype: string, description: Ref Code for spectrum}
+# - {name: Vsys, unit: km / s, datatype: float32, description: 'Vsys from LEDA, optical barycentric'}
+# - {name: Deltav, unit: km / s, datatype: float32, description: Velocity channel width}
+# - {name: Robust_rms, unit: mJy, datatype: float32, description: rms noise from mad_std over noise region}
+# - {name: RefInt, unit: Jy km / s, datatype: float32, description: integrated HI flux over fixed window of +/- 600.0}
+# - {name: RefUnc, unit: Jy km / s, datatype: float32, description: uncertainty in RefInt}
+# - {name: SigInt, unit: Jy km / s, datatype: float32, description: integrated HI flux over get_signal_range window}
+# - {name: SigUnc, unit: Jy km / s, datatype: float32, description: uncertainty in SigInt}
+# - {name: SigVmin, unit: km / s, datatype: float32, description: signal start from get_signal_range}
+# - {name: SigVmax, unit: km / s, datatype: float32, description: signal end from get_signal_range}
+# - {name: BadFlag, datatype: bool, description: True for poor signal}
+# delimiter: ','
+# meta: !!omap
+# - {comments: Integrated HI fluxes from a combination of NED and GBT spectra}
+# - {date: '2023-06-18'}
+# schema: astropy-2.0
+Name,Refcode,Vsys,Deltav,Robust_rms,RefInt,RefUnc,SigInt,SigUnc,SigVmin,SigVmax,BadFlag
+UGC10972,edge2025,4652.0,3.71,2.52,0.0,0.0,8.00,0.11,4402.0,4902.0,False
+NGC6154,edge2025,5966.0,3.75,2.24,0.0,0.0,4.90,0.07,5841.0,6091.0,False
+NGC5480,edge2025,1906.0,3.64,2.84,0.0,0.0,7.18,0.10,1656.0,2156.0,False
+NGC5633,edge2025,2326.0,3.66,2.44,0.0,0.0,9.11,0.10,2126.0,2526.0,False
+UGC09476,edge2025,3271.0,3.68,3.07,0.0,0.0,6.69,0.09,3121.0,3421.0,False
+UGC08733,edge2025,2321.0,3.66,3.70,0.0,0.0,17.15,0.11,2186.0,2456.0,False
+VV488NED02,edge2025,4934.0,3.69,2.34,0.0,0.0,15.18,0.15,4434.0,5434.0,False
+NGC7047,edge2025,5787.0,3.73,2.82,0.0,0.0,1.86,0.11,5537.0,6037.0,False
+UGC11717,edge2025,6303.0,3.75,1.98,0.0,0.0,0.07,0.08,6103.0,6503.0,False
+UGC11792,edge2025,4812.0,3.72,2.63,0.0,0.0,3.32,0.10,4612.0,5012.0,False
+NGC7025,edge2025,4968.0,3.70,2.62,0.0,0.0,2.55,0.13,4618.0,5318.0,False
+NGC7550,edge2025,5078.0,3.71,2.47,0.0,0.0,-0.66,0.11,4778.0,5378.0,False
+MCG-01-01-012,edge2025,5765.0,3.73,2.63,0.0,0.0,3.41,0.12,5465.0,6065.0,False
+UGC12274,edge2025,7656.0,3.76,3.95,0.0,0.0,0.57,0.21,7256.0,8056.0,False
+NGC7194,edge2025,8146.0,3.77,2.89,0.0,0.0,8.71,0.21,7446.0,8846.0,False
+NGC0681,edge2025,1748.0,3.63,2.45,0.0,0.0,17.82,0.13,1448.0,2048.0,False
+NGC0991,edge2025,1532.0,3.65,2.83,0.0,0.0,18.16,0.06,1457.0,1607.0,False
+NGC0787,edge2025,4770.0,3.71,3.03,0.0,0.0,3.18,0.12,4545.0,4995.0,False
+UGC01368,edge2025,7973.0,3.78,2.30,0.0,0.0,0.54,0.11,7673.0,8273.0,False
+NGC2595,edge2025,4326.0,3.70,2.45,0.0,0.0,13.27,0.10,4076.0,4576.0,False
+UGC04245,edge2025,5203.0,3.71,2.82,0.0,0.0,12.07,0.12,4903.0,5503.0,False
+NGC2554,edge2025,4129.0,3.70,2.75,0.0,0.0,1.49,0.10,3929.0,4329.0,False
+UGC04455,edge2025,9272.0,3.82,3.07,0.0,0.0,3.09,0.13,9022.0,9522.0,False
+UGC04136,edge2025,6682.0,3.74,3.11,0.0,0.0,1.99,0.17,6282.0,7082.0,False
+IC2341,edge2025,5133.0,3.71,3.13,0.0,0.0,2.47,0.15,4833.0,5433.0,False
+IC0674,edge2025,7507.0,3.78,3.18,0.0,0.0,7.55,0.15,7207.0,7807.0,False
+UGC03960,edge2025,2256.0,3.64,2.54,0.0,0.0,0.92,0.11,1956.0,2556.0,False
+NGC3300,edge2025,3018.0,3.67,2.56,0.0,0.0,-0.28,0.10,2818.0,3218.0,False
+NGC2691,edge2025,4013.0,3.70,2.27,0.0,0.0,2.19,0.09,3813.0,4213.0,False
+NGC2918,edge2025,6756.0,3.76,2.76,0.0,0.0,0.01,0.11,6556.0,6956.0,False
+UGC09542,edge2025,5458.0,3.73,3.38,0.0,0.0,7.40,0.12,5258.0,5658.0,False
+NGC5934,edge2025,5563.0,3.71,2.58,0.0,0.0,5.06,0.14,5163.0,5963.0,False
+UGC08781,edge2025,7571.0,3.77,2.65,0.0,0.0,1.26,0.13,7221.0,7921.0,False
+IC4215,edge2025,3884.0,3.69,2.25,0.0,0.0,0.69,0.09,3684.0,4084.0,False
+UGC10905,edge2025,7843.0,3.77,2.73,0.0,0.0,1.59,0.13,7493.0,8193.0,False
+UGC09711,edge2025,8342.0,3.79,3.23,0.0,0.0,3.84,0.13,8042.0,8642.0,False
+UGC09629,edge2025,7823.0,3.79,2.32,0.0,0.0,-0.24,0.10,7623.0,8023.0,False
+UGC08234,edge2025,8109.0,3.78,52.35,0.0,0.0,63.28,0.68,7809.0,8409.0,False
+NGC6427,edge2025,3231.0,3.67,5.82,0.0,0.0,2.25,0.26,2931.0,3531.0,False
+MCG-01-52-012,edge2025,3859.0,3.68,3.00,0.0,0.0,-0.09,0.14,3559.0,4159.0,False
+UGC02229,edge2025,7304.0,3.76,3.43,0.0,0.0,1.26,0.15,7004.0,7604.0,False
+UGC00335NED02,edge2025,5491.0,3.72,3.08,0.0,0.0,0.36,0.13,5191.0,5791.0,False
+UGC02222,edge2025,4921.0,3.71,3.09,0.0,0.0,0.67,0.14,4621.0,5221.0,False
