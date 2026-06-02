@@ -4,6 +4,7 @@ TIME  = /usr/bin/time
 
 URL5  = https://github.com/tonywong94/edge_pydb
 URL6  = https://github.com/tonywong94/edge_hispec/
+URL7  = https://gitlab.com/SoFiA-Admin/BusyFit
 
 .PHONY : help
 
@@ -33,6 +34,10 @@ edge_pydb:
 ## edge_hispec: get the edge_hispec (private)
 edge_hispec:
 	git clone $(URL6)
+
+## BusyFit:     get the BusyFit repo
+BusyFit:
+	git clone $(URL7)
 
 ## csv:         create the good looking CVS
 csv:
