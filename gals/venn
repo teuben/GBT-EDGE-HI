@@ -1,0 +1,20 @@
+#! /usr/bin/env bash
+#
+# venn diagram stats
+
+t1=$1
+t2=$2
+
+tmp=tmp$$
+
+cat $t1 | tr '[:lower:]' '[:upper:]' | sort > $tmp.1
+cat $t2 | tr '[:lower:]' '[:upper:]' | sort > $tmp.2
+
+n1=$(comm -23 $tmp.1 $tmp.2 | wc -l)
+n2=$(comm -13 $tmp.1 $tmp.2 | wc -l)
+n3=$(comm -12 $tmp.1 $tmp.2 | wc -l)
+
+echo $n1 $n3 $n2
+
+rm -f $tmp.?
+
