@@ -52,10 +52,12 @@ from dysh.fits.gbtfitsload import GBTFITSLoad
 from dysh.fits.gbtfitsload import GBTOnline
 from dysh.fits.gbtfitsload import GBTOffline
 
-projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008']     # mode=0 or 1 (if more, the index into this array)
-refcodes    = ['edge2015',    'edge2025',    'survey2004']      # for CSV output
-sdfits_data = "/data2/teuben/sdfits/"                           # default, override with $SDFITS_DATA
-version     = "6-apr-2026"                                      # version ID
+from IPython import embed
+
+projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008', '-']  # mode=0 or 1 (if more, the index into this array)
+refcodes    = ['edge2015',    'edge2025',    'survey2004',  '-']  # for CSV output
+sdfits_data = "/data2/teuben/sdfits/"                             # default, override with $SDFITS_DATA
+version     = "8-apr-2026"                                        # version ID
 
 # CLI defaults
 smooth    = 3
@@ -110,6 +112,7 @@ p.add_argument('--show',    action="store_true",               help='only show g
 p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
 p.add_argument('--flux',    action="store_true",               help='Use Flux(Jy) instead of Ta(K)')
 p.add_argument('--all',     action="store_true",               help='Run all galaxies (--batch recommended)')
+p.add_argument('--test',    action="store_true",               help='Add some extra tests')
 p.add_argument('--debug',   action="store_true",               help='Debug logging in dysh')
 
 
@@ -145,7 +148,7 @@ Qflux   = args.flux
 Qalign  = args.align
 Qall    = args.all
 Qdebug  = args.debug
-Qtest   = False          # need --test
+Qtest   = args.test
 
 if Qdebug:
     print('ARGS',args)
@@ -166,7 +169,7 @@ if avechan is None:
 else:
     avechan = [int(num) for num in avechan.split(',')]    # can have 1 or 3 numbers
 
-dysh_plots = []          # accumulate plots dysh makes, so we can quit them
+dysh_plots = []          # accumulate plots dysh makes, so we can quit them properly
 rf_hi = 1420405751.786   # HI line restfreq in Hz
 
 if Qdebug:
@@ -185,9 +188,9 @@ def get_gals(filename = "gals15.pars", debug=True):
     gal       name
     session   1,2,...
     scans     comma separated list of the ON's
-    vlsr      km/s
-    dv        half the width (km/s)
-    dw        width of each baseline section (km/s)
+    vlsr      center of emission (km/s)              [optional after 1st pass]
+    dv        half the width (km/s)                  [optional after 1st pass]
+    dw        width of each baseline section (km/s)  [optional after 1st pass]
     """
     fp = open(filename)
     gals = {}
@@ -219,7 +222,7 @@ def get_gals(filename = "gals15.pars", debug=True):
     return gals
 
 def set_flags(sdf, flags = None):
-    """ for a given sdfits file, apply flags
+    """ for a given sdfits file, apply flags - a hack
     """
     print('SDF sessions',sdf.keys())
     if flags is None:
@@ -231,6 +234,7 @@ def set_flags(sdf, flags = None):
         #  w[0] session     w[1] scan    w[2] channel(s)
         session = int(w[0])
         scan    = int(w[1])
+        # FLAGGING: 1 10 [5819, 5820, 8992, 8993, 9094, 9095, 9096, 9200, 8073]
         channel = [int(num) for num in w[2].split(',')]
         print("FLAGGING:",session,scan,channel)
         if session in sdf.keys():
@@ -288,18 +292,26 @@ def get_spectrum(file):
 def patch_nan(sp):
     """   These are normally vegas spurs, could we just ignore them?
           Here we interpolate accross them. Disable with --nan
+          Both the 2015 and 2025 data have NaN's in
+          0-based channels [0,1,2,3]*8192, i.e. the first channel
+          of the 4 "banks".
+          
     """
-    print("NAN STATS",sp.stats())
-    print("8191..3: ",sp.data[8191],sp.data[8192],sp.data[8193])
+    print("PATCH_NAN STATS",sp.stats())
     idx_nan = np.where(np.isnan(sp.flux))[0]
     nidx = len(idx_nan)
+    print("IDX nan",idx_nan)
     for idx in idx_nan:
-        if idx==0: continue
-        sp._data[idx] = 0.5*(sp._data[idx-1] + sp._data[idx+1])
+        if idx==0:
+            sp._data[0] = sp._data[1]
+        else:
+            sp._data[idx] = 0.5*(sp._data[idx-1] + sp._data[idx+1])
         sp.mask[idx] = False
         print(f"Patching a NaN at {idx} to ", sp.data[idx])
 
 def test_spikes(data, nrms=5):
+    """  report spiky things
+    """
     d = data[1:] - data[:-1]
     std = mad_std(d, ignore_nan=True)
     print("TEST_SPIKES:",std)
@@ -485,9 +497,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
                 if len(avechan) > 0:
                     if len(avechan) > 1:
-                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:], overwrite=True)
                     else:
-                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], overwrite=True)
                 #plt.show()
             print(f"Session {sessions[i]}  Scan {scans[i]}")
             if True:
@@ -524,9 +536,9 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 sss.savefig(f'{gal}_water_{sessions[i]}.png')
                 if len(avechan) > 0:
                     if len(avechan) > 1:
-                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:])
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], avechan[1:], overwrite=True)
                     else:
-                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0])
+                        sss.write(f'{gal}_water_{sessions[i]}.fits', avechan[0], overwrite=True)
                 #plt.show()
             sp0 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=0, t_sys=25.84, **aflux).timeaverage()
             sp1 = sdf[sessions[i]].getps(scan=scans[i], fdnum=0, ifnum=0, plnum=1, t_sys=30.49, **aflux).timeaverage()
@@ -600,7 +612,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                 if frame is not None:
                     sp_i.set_frame(frame)
             else:
-                sp[i] = sp_i.align_to(sp[0])
+                sp[i] = sp_i.align_to(sp[0], method="interpolate")   # issue : fft method can cause spikes at 16384
                 if frame is not None:
                     sp[i].set_frame(frame)
             sp_kms = sp[i].with_spectral_axis_unit("km/s").spectral_axis[sp_i.nchan//2].value
@@ -641,7 +653,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     if Qspike:
         spb0 = spn[vmin*kms:gmin*kms]
         spb1 = spn[gmax*kms:vmax*kms]
-        rms = min(spb0.stats(roll=2)["rms"], spb1.stats(roll=2)["rms"])
+        rms = min(spb0.stats(roll=2)["rms"], spb1.stats(roll=2)["rms"])   # @todo try mad_rms
         n0 = len(spb0.data)
         n1 = len(spb1.data)
         #patch_spike2(spn, n0, n1, 5*rms.value)
@@ -663,14 +675,16 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
             sps.baseline(blorder,include=[(vmin*kms,gmin*kms),(gmax*kms,vmax*kms)],remove=True)            
             print("Baseline model 2 incl:",sps.baseline_model)
 
+    #   @todo :  try another patch_spike3?
+
     #   flux : simple sum between gmin and gmax
     spg = sps[gmin*kms:gmax*kms]
     ngal = len(spg.flux)
     sumflux = np.nansum(spg.flux)
     deltav = abs(spg.velocity[0]-spg.velocity[1])
     flux = sumflux * deltav
-    vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux
-    vlsr3 = np.nansum(sps.flux * sps.velocity) / np.nansum(sps.flux)
+    vlsr2 = np.nansum(spg.flux * spg.velocity) / sumflux              # @todo  these are wrong 2x
+    vlsr3 = np.nansum(sps.flux * sps.velocity) / np.nansum(sps.flux)  # @todo  these are wrong 2x
     print(f"VEL: v0={vlsr}  vlsr2={vlsr2}  vlsr3={vlsr3}")
 
     spg6 = sps[gmin6*kms:gmax6*kms]
@@ -710,15 +724,15 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     print(f'Anderson-Darling normalness test: {ad1:.2f}  {ad2:.2f} {ad3:.2} {ad0:.3}      Qb {Qb:.2f}')
 
     if Qflux: 
-        dflux = rms.to("Jy")*deltav*np.sqrt(ngal)
+        dflux = mad_rms.to("Jy")*deltav*np.sqrt(ngal)
     else:
-        dflux = rms.to("K")*deltav*np.sqrt(ngal)
+        dflux = mad_rms.to("K")*deltav*np.sqrt(ngal)
 
     pars = {}
     pars['Qb'] = Qb
     pars['flux'] = flux
     pars['dflux'] = dflux
-    pars['rms'] = rms
+    pars['rms'] = mad_rms    # better than rms, since it's subject to spikes
     pars['vlsr2'] = vlsr2
     
     # https://dysh.readthedocs.io/en/latest/explanations/cog/index.html
@@ -768,6 +782,8 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
 
     print("SPECTRUM_PLOT =============================================")
 
+    drawstyle = { 'drawstyle': 'steps-mid'}
+
     vel = sp.axis_velocity().value
     #vel = sp.with_velocity_convention('optical').axis_velocity().value
     print("Velocity axis:",vel[0],vel[-1])
@@ -778,10 +794,10 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
     Qb = pars["Qb"]
     w95 = pars["w95"]
     if Qchan:
-        plt.plot(ch, sflux,label=f'w95 {w95:.1f}')
+        plt.plot(ch, sflux,label=f'w95 {w95:.1f}',**drawstyle)
         return
     else:
-        plt.plot(vel,sflux,label=f'w95 {w95:.1f}')
+        plt.plot(vel,sflux,label=f'w95 {w95:.1f}',**drawstyle)
     if sp.subtracted:
         print(f"Showing baseline fit with {len(vel)} channels")
         if spbl is not None:
@@ -883,6 +899,11 @@ if __name__ == "__main__":
         gals = get_gals("gals04.pars")
         mode=2
 
+    # alternatively, mode points to the pars file already
+    if False and os.path.exists(mode):
+        gals = get_gals(mode)
+        mode = 3 
+
     if Qshow:
         print(f"Found {len(gals)} galaxies in {projects[mode]}")
         sys.exit(0)
@@ -909,9 +930,9 @@ if __name__ == "__main__":
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))                    
             print("PJT try_sessions mode=0:",try_sessions)
-
         else:
             try_sessions = [ss]
+
         for i in try_sessions:
             session = i
             if Qfull:
@@ -963,9 +984,9 @@ if __name__ == "__main__":
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))                    
             print("PJT try_sessions mode=0:",try_sessions)
-
         else:
             try_sessions = [ss]
+
         for i in try_sessions:
             session = i
             if Qfull:
@@ -993,9 +1014,9 @@ if __name__ == "__main__":
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))                    
             print("PJT try_sessions mode=0:",try_sessions)
-
         else:
             try_sessions = [ss]
+
         for i in try_sessions:
             session = i
             if Qfull:
@@ -1048,6 +1069,7 @@ if __name__ == "__main__":
         print("Channel spacing:",sps.velocity[1]-sps.velocity[0])
         print("-----------------------------------")
 
+        # stuff for the EDGE_PYDB output csv
         Name = gal
         Refcode = refcodes[mode]
         Vsys = vlsr
@@ -1061,7 +1083,11 @@ if __name__ == "__main__":
         SigVmax = vlsr + dv
         BadFlag = False
         print("Name,Refcode,Vsys,Deltav,Robust_rms,RefInt,RefUnc,SigInt,SigUnc,SigVmin,SigVmax,BadFlag")
-        print(f"{Name},{Refcode},{Vsys},{Deltav:.2f},{Robust_rms:.2f},{RefInt:.2f},{RefUnc:.2f},{SigInt:.2f},{SigUnc:.2f},{SigVmin},{SigVmax},{BadFlag} EDGE_PYDB")
+        msg = f"{Name},{Refcode},{Vsys},{Deltav:.2f},{Robust_rms:.2f},{RefInt:.2f},{RefUnc:.2f},{SigInt:.2f},{SigUnc:.2f},{SigVmin},{SigVmax},{BadFlag}"
+        cmd = " ".join(sys.argv[1:])
+        print(f"{msg} {cmd} EDGE_PYDB")
+        with open("edge_hi.log","a") as f:
+            f.write(f"{msg}  {cmd}\n")
 
 
     if not Qbatch:
