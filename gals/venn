@@ -13,8 +13,11 @@ cat $t2 | tr '[:lower:]' '[:upper:]' | sort > $tmp.2
 n1=$(comm -23 $tmp.1 $tmp.2 | wc -l)
 n2=$(comm -13 $tmp.1 $tmp.2 | wc -l)
 n3=$(comm -12 $tmp.1 $tmp.2 | wc -l)
+n01=$(cat $tmp.1 | wc -l)
+n02=$(cat $tmp.2 | wc -l)
+n=$(expr ${n1} + ${n2} + ${n3})
 
-echo $n1 $n3 $n2
+echo "$n01 $n1 $n3 $n2 $n02   $n"
 
 rm -f $tmp.?
 
