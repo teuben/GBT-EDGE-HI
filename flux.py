@@ -22,7 +22,7 @@ from dysh.coordinates import Observatory
 
 from IPython import embed
 
-version     = "3-jun-2026"                                        # version ID
+version     = "5-jun-2026"                                        # version ID
 
 #%%
 
@@ -45,6 +45,8 @@ my_help = f"""
    Warning, the CLI is still largely that of edge_hi.py and has
    no meaning here. Some of these are meant to be implemented for
    these arbitrary tabular spectra.
+
+   The = symbol in front of the help means the keyword has not been converted/used.
 
    """
 
