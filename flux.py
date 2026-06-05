@@ -15,7 +15,7 @@ from scipy.stats import anderson
 from scipy.signal import medfilt
 
 import dysh
-
+import pprint
 
 from dysh.spectra.spectrum import Spectrum
 from dysh.coordinates import Observatory
@@ -27,9 +27,10 @@ version     = "3-jun-2026"                                        # version ID
 #%%
 
 # CLI defaults
+xcol      = 1
+ycol      = 2
 smooth    = 3
 smoothref = 1
-mode      = 25
 blorder   = 5
 nsigma    = 5
 ptype     = 'png'
@@ -51,38 +52,38 @@ p = argparse.ArgumentParser(description=my_help, formatter_class=argparse.RawTex
 
 p.add_argument('tab',                     nargs='?',           help=f'Table')
 
-p.add_argument('--mode',    type = int,   default = mode,      help=f'0 or 15->2015 data   1 or 25->2025 data [{mode}]')
-p.add_argument('--smooth',  type = int,   default = smooth,    help=f'boxcar smooth size (channels), use 0 to use raw. [{smooth}]')
-p.add_argument('--order',   type = int,   default = blorder,   help=f'baseline order fit (use -1 to skip) [{blorder}]')
-p.add_argument('--nsigma',  type = float, default = nsigma,    help=f'nsigma [{nsigma}]')
-p.add_argument('--v0',      type = float, default = None,      help=f'Override vlsr as center of galaxy [pars table entry]')
-p.add_argument('--dv',      type = float, default = None,      help=f'Override dv for half signal portion  [pars table entry]')
-p.add_argument('--dw',      type = float, default = None,      help=f'Override dw for each half baseline [pars table entry]')
-p.add_argument('--table',   type = str,   default = None,      help=f'Optionally read in spectrum to overlay')
+p.add_argument('--xcol',    type = int,   default = xcol,      help=f'Column to represent spectral axis. [{xcol}]')
+p.add_argument('--ycol',    type = int,   default = ycol,      help=f'Column to represent flux. [{ycol}]')
 
-p.add_argument('--frame',   type = str,   default = frame,     help=f'Velocity frame: itrs, gcrs, hcrs, icrs, lsrk, lsrd [{frame}]')
-p.add_argument('--align',   action="store_false",              help='Do not align along choosen frame')
-p.add_argument('--avechan',               default = None,      help=f'Number of channels to average in waterfall fits file [skip]')
-p.add_argument('--plot',                  default = ptype,     help=f'Default plotting type [{ptype}]')
+p.add_argument('--smooth',  type = int,   default = smooth,    help=f'=boxcar smooth size (channels), use 0 to use raw. [{smooth}]')
+p.add_argument('--order',   type = int,   default = blorder,   help=f'=baseline order fit (use -1 to skip) [{blorder}]')
+p.add_argument('--nsigma',  type = float, default = nsigma,    help=f'=nsigma [{nsigma}]')
+p.add_argument('--v0',      type = float, default = None,      help=f'=Override vlsr as center of galaxy [pars table entry]')
+p.add_argument('--dv',      type = float, default = None,      help=f'=Override dv for half signal portion  [pars table entry]')
+p.add_argument('--dw',      type = float, default = None,      help=f'=Override dw for each half baseline [pars table entry]')
+p.add_argument('--table',   type = str,   default = None,      help=f'=Optionally read in spectrum to overlay')
 
-p.add_argument('--batch',   action="store_true",               help='Batch mode, no interactive plots')
-p.add_argument('--busy',    action="store_true",               help='add the busyfit (needs an extra install)')
-p.add_argument('--nan',     action="store_false",              help='do not patch NaNs')
-p.add_argument('--spike',   action="store_true",               help='attempt spike removal')
+p.add_argument('--frame',   type = str,   default = frame,     help=f'=Velocity frame: itrs, gcrs, hcrs, icrs, lsrk, lsrd [{frame}]')
+p.add_argument('--align',   action="store_false",              help=f'=Do not align along choosen frame')
+p.add_argument('--avechan',               default = None,      help=f'=Number of channels to average in waterfall fits file [skip]')
+p.add_argument('--plot',                  default = ptype,     help=f'=Default plotting type [{ptype}]')
 
-p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
-p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
-p.add_argument('--chan',    action="store_true",               help='show spectral axis in channels instead of km/s')
-p.add_argument('--flux',    action="store_true",               help='Use Flux(Jy) instead of Ta(K)')
-p.add_argument('--all',     action="store_true",               help='Run all galaxies (--batch recommended)')
-p.add_argument('--test',    action="store_true",               help='Add some extra tests')
+p.add_argument('--batch',   action="store_true",               help='=Batch mode, no interactive plots')
+p.add_argument('--busy',    action="store_true",               help='=add the busyfit (needs an extra install)')
+p.add_argument('--nan',     action="store_false",              help='=do not patch NaNs')
+p.add_argument('--spike',   action="store_true",               help='=attempt spike removal')
+
+p.add_argument('--cog',     action="store_false",              help='=use vel_cog instead of our vlsr')
+p.add_argument('--show',    action="store_true",               help='=only show galaxy session stats')
+p.add_argument('--chan',    action="store_true",               help='=show spectral axis in channels instead of km/s')
+p.add_argument('--flux',    action="store_true",               help='Use Flux(Jy) instead of Ta(K) as assumed from input table')
+p.add_argument('--all',     action="store_true",               help='=Run all galaxies (--batch recommended)')
 p.add_argument('--debug',   action="store_true",               help='Debug logging in dysh')
 
 
 
 args = p.parse_args()
 
-mode    = args.mode
 smooth  = args.smooth
 blorder = args.order
 nsigma  = args.nsigma
@@ -105,17 +106,16 @@ Qflux   = args.flux
 Qalign  = args.align
 Qall    = args.all
 Qdebug  = args.debug
-Qtest   = args.test
 
 if Qdebug:
     print('ARGS',args)
     dysh.log.init_logging(1)
 
 if Qflux:
-    print(f"Warning: working in Jy with assumed {zenith_opacity} zenith opacity")
+    print(f"Warning: assumed working in Jy")
     unit = "mJy"
 else:
-    print(f"Warning: working in K; co-adding spectra not perfect in flux and velocity")
+    print(f"Warning: assumed working in K")
     unit = "mK"
 flux = dflux = flux6 = mad_rms = 0.0
 
@@ -141,19 +141,6 @@ else:
 
 
     
-
-
-def get_spectrum(file):
-    """ read a spectrum from an ascii table
-    Column 1:  v (km/s)
-    Column 2:  intensity (units better match)
-    no other columns!
-    """
-    print(f"Reading spectrum from {file}")
-    (vel,sp) = np.loadtxt(file).T
-    print('Vel :',vel[0],'...',vel[-1])
-    print('Flux:',sp[0],'...',sp[-1],' Peak:',sp.max())
-    return (vel,sp)
 
 
 
@@ -257,68 +244,58 @@ def spectrum_plot(sp, gal, project, vlsr, dv, dw, pars, label="smooth", spbl = N
 
 #%%
 
-if __name__ == "__main__":
+def get_spectrum(file, xcol=1, ycol=2):
+    """ read a spectrum from an ascii table;
+    Column 1:  v (km/s)
+    Column 2:  intensity (units better match)
+    """
+    print(f"Reading spectrum from {file}")
+    # skip potentially bad columns, only read the specified ones'
+    data = np.loadtxt(file, usecols=(xcol-1,ycol-1)).T
+    vel = data[0]
+    sp = data[1]
+    print('Vel :',vel[0],'...',vel[-1], ' km/s (assumed)')
+    print('Flux:',sp[0],'...',sp[-1],' Peak:',sp.max())
+    return data
 
-    if "SDFITS_DATA" not in os.environ:
-        print(f"Setting SDFITS_DATA to {sdfits_data}")
-        os.environ["SDFITS_DATA"] = sdfits_data
-    print("SDFITS_DATA:", os.environ["SDFITS_DATA"])
-        
+
+#%%
+
+if __name__ == "__main__":
 
     if my_tab == None:
         my_tab = "test.tab"
-        
-    print("TABLE",my_tab)
 
-    # first read table to get number of lines
-    data = np.loadtxt(my_tab).T
-    print(data.shape)
+    data = get_spectrum(my_tab, xcol, ycol)
     nchan = len(data[0])
     print("NCHAN:",nchan)
 
     sp1 = Spectrum.fake_spectrum(nchan)
-    #print(sp1)
-    
-    if False:
-        v = sp1.velocity_axis_to(unit="km/s")
-        c = sp1.velocity_axis_to(unit="channel")
-    
-        # Warning: this is not the right way, it messed up the header
-        sp2 = sp1.with_spectral_axis_unit("km/s")
-        print(sp2)
-        # observer
-        # target
-        sp2._data = data[1]      # ok
-        #sp2._spectral_axis.value = data[0]   # no setter
-        sp2._spectral_axis = data[0] * u.km/u.s   # but this is ok
-    
-        #cog = sp2.cog()
-        #print(cog)
-    
-        #  proof that it works internally from an ecsv
-        sp3 = Spectrum.read("UGC10972.ecsv",format="ecsv")
-        sp3.cog()
     
 #%%
     
-    #  another way from basic Spectrum
-    flux = data[1] * u.K   # figure this out
-    sa = data[0] * u.km/u.s
-    vlsr = 1000.0       # value doesn't matter for cog()
+    sa = (data[xcol-1] + 1000) * u.km/u.s
+    if Qflux:
+        flux = data[ycol-1] * u.Jy 
+    else:
+        flux = data[ycol-1] * u.K  
+    if vlsr is None:
+        vlsr = 0.0       # value doesn't matter for cog()
+    print("VLSR:",vlsr)
     # borrow from fake_spectrum
     meta = sp1.meta
     crval1 = nchan//2     # because of non-linear, flux depends on crval1 (1%)
-    meta['CRVAL1'] = data[0][crval1]
+    meta['CRVAL1'] = data[xcol-1][crval1]
     meta['CRPIX1'] = 1.0
-    meta['CDELT1'] = data[0][crval1] - data[0][crval1-1]
-    meta['CTYPE1'] = 'VELO-LSR'
+    meta['CDELT1'] = data[xcol-1][crval1] - data[xcol-1][crval1-1]
+    meta['CTYPE1'] = 'VELO-HEL'
     meta['CUNIT1'] = 'km/s'
+    meta['VELOCITY'] = vlsr * 1000.0
+    
     sp4 = Spectrum.make_spectrum(data = flux,
                                  meta = meta,
                                  use_wcs = True,
                                  observer_location = Observatory["GBT"])
     print(sp4)
     cog = sp4.cog()
-    print(cog)
-                   
-
+    pprint.pprint(cog, width=1)
