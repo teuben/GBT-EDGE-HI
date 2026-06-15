@@ -19,6 +19,7 @@
 # Bugs @todo
 #    - do we need plt.show() ???   there's a plt.ion() in dysh somewhere
 #    - set the frame can cause spike at n*8192
+#    - have an option to load on demand on low memory machines
 #
 #  -- 2025 data:
 #  CPU info (based on OMP_NUM_THREADS=1)
@@ -57,7 +58,7 @@ from IPython import embed
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008', '-']  # mode=0 or 1 (if more, the index into this array)
 refcodes    = ['edge2015',    'edge2025',    'survey2004',  '-']  # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                             # default, override with $SDFITS_DATA
-version     = "8-apr-2026"                                        # version ID
+version     = "14-jun-2026"                                       # version ID
 
 # CLI defaults
 smooth    = 3
@@ -105,7 +106,7 @@ p.add_argument('--full',    action="store_true",               help='Use full A/
 p.add_argument('--batch',   action="store_true",               help='Batch mode, no interactive plots')
 p.add_argument('--busy',    action="store_true",               help='add the busyfit (needs an extra install)')
 p.add_argument('--nan',     action="store_false",              help='do not patch NaNs')
-p.add_argument('--spike',   action="store_true",               help='attempt spike removal')
+p.add_argument('--spike',   type = int,   default = 0,         help='attempt spike removal mode')
 p.add_argument('--gps',     action="store_true",               help='attempt GPS flagging')
 p.add_argument('--cog',     action="store_false",              help='use vel_cog instead of our vlsr')
 p.add_argument('--show',    action="store_true",               help='only show galaxy session stats')
@@ -139,7 +140,7 @@ Qfull   = args.full
 Qbatch  = args.batch
 Qbusy   = args.busy
 Qnan    = args.nan
-Qspike  = args.spike
+spike   = args.spike
 Qgps    = args.gps
 Qcog    = args.cog
 Qshow   = args.show
@@ -444,6 +445,21 @@ def patch_spike3(sp, n0, n1, clip):
         i = i + 1
     print(f"With clip={clip} n1={n1} n2={n2} n3={n3}")
 
+def patch_spike4(sp, n0, n1, clip):
+    """ rms*threshold clipping - taken from 2-despike+bin.py
+    """
+    npt = len(sp.data)
+    mask = np.isnan(sp.data)
+    idx = np.where(~mask, np.arange(mask.shape[0]),0)
+    np.maximum.accumulate(idx, out=idx)
+    yarr2 = sp.data[idx]
+    ydiff = np.ediff1d(yarr2, to_begin=np.nan)
+    bad = np.where(abs(ydiff) > clip)[0]
+    yarrflg = np.copy(sp.data)
+    yarrflg[bad] = np.nan
+    sp.data = yarrflg
+    print(f"With clip={clip} n0={n0} n1={n1}")
+
 
 def busyfit(sp, gal, rms):
     """
@@ -650,14 +666,21 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     print(f"Looking at {vlsr} from {vmin} to {vmax}")
     spn = sp[vmin*kms:vmax*kms]
 
-    if Qspike:
+    # pre-smooth spike removal
+    if spike > 0:
         spb0 = spn[vmin*kms:gmin*kms]
         spb1 = spn[gmax*kms:vmax*kms]
         rms = min(spb0.stats(roll=2)["rms"], spb1.stats(roll=2)["rms"])   # @todo try mad_rms
         n0 = len(spb0.data)
         n1 = len(spb1.data)
-        #patch_spike2(spn, n0, n1, 5*rms.value)
-        patch_spike3(spn, n0, n1, nsigma*rms.value)
+        if spike == 1:
+            patch_spike(spn, 5*rms.value)
+        elif spike == 2:
+            patch_spike2(spn, n0, n1, 5*rms.value)
+        elif spike == 3:
+            patch_spike3(spn, n0, n1, nsigma*rms.value)
+        elif spike == 4:
+            patch_spike4(spn, n0, n1, nsigma*rms.value)
 
     if smooth > 0:
         # issue 1067:  smoothing changes the input spectrum
@@ -1059,6 +1082,8 @@ if __name__ == "__main__":
         # convert spectrum to one with velocities
         sps1 = sps.with_spectral_axis_unit("km/s")
         sps1.write(f'{gal}.txt',format="ascii.commented_header",overwrite=True)
+        # test:  somehow we can't write sps1 in ecsv format
+        sps.write(f'{gal}.ecsv',format="ecsv",overwrite=True)
         # zoomed version
         bl = spectrum_plot(sps, gal, project, vlsr, dv, dw, pars, "smooth", spbl = None, table=table)
         # full spectrum
