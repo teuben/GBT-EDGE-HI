@@ -12,6 +12,8 @@ The followup project code is **AGBT25A_474**, where 43 galaxies were observed. O
 case had overlap with the 2015 data, NGC2918, but this galaxy doesn't seem to have much,
 if any, signal, plus there is a GPS nearby in some of the data.
 
+Another followup will be **GBT26A-644**, with up to 120 hours in Group A.
+
 Old observing scripts at GBO:
 
   * /home/astro-util/projects/15B287_operator
