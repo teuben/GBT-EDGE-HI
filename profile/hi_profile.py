@@ -31,6 +31,8 @@ n = 1
 rn = 3
 inc = 60
 sigma = 8
+nrad = 500
+nvel = 400
 
 p = argparse.ArgumentParser(description=my_help, formatter_class=argparse.RawTextHelpFormatter)
 
@@ -44,6 +46,9 @@ p.add_argument('--rn',    type = float, default = rn,    help=f'Scale length of 
 
 p.add_argument('--inc',   type = float, default = inc,   help=f'Inclination [{inc}]')
 p.add_argument('--sigma', type = float, default = sigma, help=f'Velocity dispersion [{sigma}]')
+p.add_argument('--nrad',  type = int,   default = nrad,  help=f'Number of radii [{nrad}]')
+p.add_argument('--nvel',  type = int,   default = nvel,  help=f'Number of velocities [{nvel}]')
+p.add_argument('--cog',   action="store_true",           help=f'Run Curve of Growth')
 
 
 def hi_profile(v_array, R, Sigma, Vrot, inc_deg, vsys=0.0, sigma_v=8.0):
@@ -110,9 +115,14 @@ if __name__ == "__main__":
     n = args.n
     rn = args.rn
     rmax = args.rmax
+    nrad = args.nrad
+    nvel = args.nvel
+    Qcog = args.cog
+    model_out = -1
+    model_in  = -1
     
     # --- Define rotation curve and surface brightness profile ---
-    R = np.linspace(0, rmax, 500)                   # kpc
+    R = np.linspace(0, rmax, nrad)                   # kpc
     x = R/rn
     y = R/rm
     if n < 0:
@@ -127,7 +137,7 @@ if __name__ == "__main__":
     sigma_v = args.sigma     # km/s velocity dispersion
     vsys    = 1000.0   # km/s
     
-    v_arr = np.linspace(700, 1300, 400)
+    v_arr = np.linspace(700, 1300, nvel)
     S = hi_profile(v_arr, R, Sigma, Vrot, inc_deg=inc_deg, vsys=vsys, sigma_v=sigma_v)
 
     # --- Plot ---
@@ -156,4 +166,10 @@ if __name__ == "__main__":
 
     np.savetxt("hi_profile.tab", np.column_stack([v_arr, S]),
                header="velocity(km/s)  flux(arb)", fmt="%.4f")
+    np.savetxt("hi_profile_0.tab", np.column_stack([R, Sigma, Vrot]),
+               header="Radius Density Velocity", fmt="%.4f")
+
+    if Qcog:
+        # needs NEMO
+        os.system("tabcog hi_profile.tab")
 
