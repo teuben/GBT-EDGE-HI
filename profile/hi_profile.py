@@ -31,8 +31,8 @@ n = 1
 rn = 3
 inc = 60
 sigma = 8
-nrad = 500
-nvel = 400
+nrad = 100
+nvel = 200
 
 p = argparse.ArgumentParser(description=my_help, formatter_class=argparse.RawTextHelpFormatter)
 
@@ -135,9 +135,10 @@ if __name__ == "__main__":
 
     inc_deg = args.inc    # degrees
     sigma_v = args.sigma     # km/s velocity dispersion
-    vsys    = 1000.0   # km/s
+    vsys    = 0.0   # km/s
     
-    v_arr = np.linspace(700, 1300, nvel)
+    #v_arr = np.linspace(700, 1300, nvel)
+    v_arr = np.linspace(-300, 300, nvel)
     S = hi_profile(v_arr, R, Sigma, Vrot, inc_deg=inc_deg, vsys=vsys, sigma_v=sigma_v)
 
     # --- Plot ---
@@ -149,6 +150,7 @@ if __name__ == "__main__":
     axes[0].set_title(f"Rotation Curve  (rn={rn} n={n})")
 
     axes[1].plot(R, Sigma)
+    #axes[1].set_ylim([0,1])
     axes[1].set_xlabel("R (kpc)")
     axes[1].set_ylabel("Surface Brightness (arb.)")
     axes[1].set_title(f"Surface Brightness (rm={rm} m={m})")
@@ -157,16 +159,22 @@ if __name__ == "__main__":
     axes[2].axvline(vsys, color='gray', linestyle='--', label='v$_{sys}$')
     axes[2].set_xlabel("v (km/s)")
     axes[2].set_ylabel("S (arb.)")
-    axes[2].set_title(f"Global HI Profile  (i={inc_deg}°, σ$_v$={sigma_v} km/s)")
+    axes[2].set_title(f"Global HI Profile  (i={inc_deg}°, $\\sigma_v$={sigma_v} km/s)")
     axes[2].legend()
 
     plt.tight_layout()
     plt.savefig("hi_profile.png", dpi=150)
     plt.show()
 
-    np.savetxt("hi_profile.tab", np.column_stack([v_arr, S]),
+    vmask = np.where(v_arr >= 0)
+
+    np.savetxt("hi_profile_sv.tab", np.column_stack([v_arr, S]),
                header="velocity(km/s)  flux(arb)", fmt="%.4f")
-    np.savetxt("hi_profile_0.tab", np.column_stack([R, Sigma, Vrot]),
+    
+    np.savetxt("hi_profile_sv0.tab", np.column_stack([v_arr[vmask], S[vmask]]),
+               header="velocity(km/s)  flux(arb)", fmt="%.4f")
+    
+    np.savetxt("hi_profile_rdv.tab", np.column_stack([R, Sigma, Vrot]),
                header="Radius Density Velocity", fmt="%.4f")
 
     if Qcog:
