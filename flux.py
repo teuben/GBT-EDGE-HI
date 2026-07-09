@@ -22,7 +22,7 @@ from dysh.coordinates import Observatory
 
 from IPython import embed
 
-version     = "5-jun-2026"                                        # version ID
+version     = "9-jul-2026"                                        # version ID
 
 #%%
 
@@ -99,6 +99,8 @@ frame   = args.frame
 avechan = args.avechan
 ptype   = args.plot
 my_tab  = args.tab
+xcol    = args.xcol
+ycol    = args.ycol
 Qalfa   = args.alfa
 Qbatch  = args.batch
 Qbusy   = args.busy
@@ -259,6 +261,7 @@ def get_spectrum(file, xcol=1, ycol=2):
     data = np.loadtxt(file, usecols=(xcol-1,ycol-1)).T
     vel = data[0]
     sp = data[1]
+    print(data.shape)
     print('Vel :',vel[0],'...',vel[-1], ' km/s (assumed)')
     print('Flux:',sp[0],'...',sp[-1],' Peak:',sp.max())
     return data
@@ -281,26 +284,26 @@ if __name__ == "__main__":
 
     data = get_spectrum(my_tab, xcol, ycol)
     nchan = len(data[0])
-    print("NCHAN:",nchan)
+    print("NCHAN:",nchan,xcol,ycol)
 
     sp1 = Spectrum.fake_spectrum(nchan)
     
 #%%
     
-    sa = (data[xcol-1] + 1000) * u.km/u.s
+    sa = (data[0] + 1000) * u.km/u.s
     if Qflux:
-        flux = data[ycol-1] * u.Jy 
+        flux = data[1] * u.Jy 
     else:
-        flux = data[ycol-1] * u.K  
+        flux = data[1] * u.K  
     if vlsr is None:
         vlsr = 0.0       # value doesn't matter for cog()
     print("VLSR:",vlsr)
     # borrow from fake_spectrum
     meta = sp1.meta
     crval1 = nchan//2     # because of non-linear, flux depends on crval1 (1%)
-    meta['CRVAL1'] = data[xcol-1][crval1]
+    meta['CRVAL1'] = data[0][crval1]
     meta['CRPIX1'] = 1.0
-    meta['CDELT1'] = data[xcol-1][crval1] - data[xcol-1][crval1-1]
+    meta['CDELT1'] = data[0][crval1] - data[0][crval1-1]
     meta['CTYPE1'] = 'VELO-HEL'
     meta['CUNIT1'] = 'km/s'
     meta['VELOCITY'] = vlsr * 1000.0
@@ -312,3 +315,4 @@ if __name__ == "__main__":
     print(sp4)
     cog = sp4.cog()
     pprint.pprint(cog, width=1)
+    #sp4.plot()
