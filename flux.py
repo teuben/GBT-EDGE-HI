@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 #               dysh      (issue 946)
 #
-# Import an ascii table into dysh, and compute flux using COoG method
+# Import an ascii table into dysh, and compute flux using CoG method
 #
 
 import os
@@ -65,6 +65,8 @@ p.add_argument('--dv',      type = float, default = None,      help=f'=Override 
 p.add_argument('--dw',      type = float, default = None,      help=f'=Override dw for each half baseline [pars table entry]')
 p.add_argument('--table',   type = str,   default = None,      help=f'=Optionally read in spectrum to overlay')
 
+p.add_argument('--alfa',    action="store_true",               help=f'=Use the ALFALFA loader for specutils')
+
 p.add_argument('--frame',   type = str,   default = frame,     help=f'=Velocity frame: itrs, gcrs, hcrs, icrs, lsrk, lsrd [{frame}]')
 p.add_argument('--align',   action="store_false",              help=f'=Do not align along choosen frame')
 p.add_argument('--avechan',               default = None,      help=f'=Number of channels to average in waterfall fits file [skip]')
@@ -97,6 +99,7 @@ frame   = args.frame
 avechan = args.avechan
 ptype   = args.plot
 my_tab  = args.tab
+Qalfa   = args.alfa
 Qbatch  = args.batch
 Qbusy   = args.busy
 Qnan    = args.nan
@@ -267,6 +270,14 @@ if __name__ == "__main__":
 
     if my_tab == None:
         my_tab = "test.tab"
+
+    if Qalfa:
+        print("Loading from alfa")
+        s = Spectrum.read(my_tab,format='alfa')
+        pprint.pprint(s, width=1)        
+        cog = s.cog()
+        pprint.pprint(cog, width=1)
+        sys.exit(0)
 
     data = get_spectrum(my_tab, xcol, ycol)
     nchan = len(data[0])
