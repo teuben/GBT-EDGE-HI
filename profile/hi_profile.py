@@ -6,7 +6,9 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
-my_help = """
+my_version = "27-jul-2026"
+
+my_help = f"""
 hi_profile.py - Derive a global HI profile from radial surface brightness and rotation curve.
 
 
@@ -20,6 +22,8 @@ The global profile (flux per velocity channel) is:
     S(v) ~ integral [ Sigma(R) * R / sqrt( (V(R)*sin(i))^2 - (v-vsys)^2 ) ] dR
 
 integrated over all R where |v - vsys| <= V(R)*sin(i).
+
+Version: {my_version}
 """
 
 # CLI defaults
@@ -322,6 +326,23 @@ if __name__ == "__main__":
     v_arr = np.linspace(-300, 300, nvel)
     S = hi_profile(v_arr, R, Sigma, Vrot, inc_deg=inc_deg, vsys=vsys, sigma_v=sigma_v)
 
+
+    # output
+    vmask = np.where(v_arr >= 0)
+
+    np.savetxt("hi_profile_sv.tab", np.column_stack([v_arr, S]),
+               header="velocity(km/s)  flux(arb)", fmt="%.4f")
+    
+    np.savetxt("hi_profile_sv0.tab", np.column_stack([v_arr[vmask], S[vmask]]),
+               header="velocity(km/s)  flux(arb)", fmt="%.4f")
+    
+    np.savetxt("hi_profile_rdv.tab", np.column_stack([R, Sigma, Vrot]),
+               header="Radius Density Velocity", fmt="%.4f")
+
+    np.savetxt("hi_profile_rv.tab", np.column_stack([R, Vrot]),
+               header="Radius Velocity", fmt="%.4f")
+    
+
     # --- Plot ---
     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
 
@@ -346,20 +367,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig("hi_profile.png", dpi=150)
     plt.show()
-
-    vmask = np.where(v_arr >= 0)
-
-    np.savetxt("hi_profile_sv.tab", np.column_stack([v_arr, S]),
-               header="velocity(km/s)  flux(arb)", fmt="%.4f")
-    
-    np.savetxt("hi_profile_sv0.tab", np.column_stack([v_arr[vmask], S[vmask]]),
-               header="velocity(km/s)  flux(arb)", fmt="%.4f")
-    
-    np.savetxt("hi_profile_rdv.tab", np.column_stack([R, Sigma, Vrot]),
-               header="Radius Density Velocity", fmt="%.4f")
-
-    np.savetxt("hi_profile_rv.tab", np.column_stack([R, Vrot]),
-               header="Radius Velocity", fmt="%.4f")
 
     if Qcog:
         # needs NEMO
