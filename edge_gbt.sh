@@ -10,7 +10,7 @@
 #  1.04user 0.20system 0:01.24elapsed 100%CPU    slow (new) diskspectrum
 
 _script=edge_gbt.sh
-_version=30-jun-2026
+_version=17-jul-2026
 _pars=nemopars.rc
 _date=$(date +%Y-%m-%dT%H:%M:%S)
 
@@ -41,6 +41,8 @@ sigma=0                # random motion in plane  (km/s)                   #> SCA
 
 noise=0                # add optional noise to cube                       #> ENTRY
 vlsr=0                 # optional VLSR if non-zero                        #> ENTRY
+
+busy=0                 # do a busyfit                                     #> CHECK 0,1
 
 debug=-1               # add debugging                                    #> SCALE -1:9:1
 
@@ -196,7 +198,7 @@ fi
 # export to FITS, in decent units
 # this way the input spatial scale is in arcsec and km/s
 # SKIP for production
-# ccdfits $run.31 $run.fits radecvel=t scale=1/3600.0,1/3600.0,1.0 crval=$crval restfreq=$restfreq
+ccdfits $run.31 $run.fits radecvel=t scale=1/3600.0,1/3600.0,1.0 crval=$crval restfreq=$restfreq
 
 
 echo "PLOT: $plot"
@@ -208,6 +210,12 @@ if [[ "$plot" == *"profile"* ]]; then
 fi
 if [[ "$plot" == *"density"* ]]; then    
     tabplot $run.shell 1 4 line=1,1  ymin=0 headline="Surface Density" yapp=2/xs
+fi
+
+if [[ "$busy" == "1" ]]; then
+     busyfit -c 1 2 $run.spec -o $run -noplot
+     tabmath ${run}_output_spectrum.txt - %2-%3 |\
+	 tabplot - 1 2,3,4 color=2,3,4 line=1,1 headline="busyfunction fit" yapp=4/xs
 fi
 
 nemo_stamp end
