@@ -285,6 +285,8 @@ if __name__ == "__main__":
     data = get_spectrum(my_tab, xcol, ycol)
     nchan = len(data[0])
     print("NCHAN:",nchan,xcol,ycol)
+    dvel = data[0][nchan//2]-data[0][nchan//2-1]
+    print("dVEL:",dvel,data[0][nchan//2])
 
     sp1 = Spectrum.fake_spectrum(nchan)
     
