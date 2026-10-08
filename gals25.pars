@@ -73,7 +73,7 @@ UGC04136      3  48,50,56             6682 400 1500    # 52,54 bad      - weak
 #IC2341        3  62,64,66             5133 300 1200    # 58,60 bad, single peak at wrong vel    (67 also needs masking)
 #IC2341        3  62,64,66             5200 270 1200    # 58,60 bad, single peak at wrong vel    (67 also needs masking)
 IC2341w        3  62,64,66             5280 350 1200    # 58,60 bad, single peak at wrong vel    (67 also needs masking)
-IC2341        3  62,64,66             5320 50 500        # 58,60 bad, single peak at wrong vel    (67 also needs masking)
+IC2341        3  62,64,66             5300   75  400    # 58,60 bad, single peak at wrong vel    (67 also needs masking)
 #   is LEDA 142820 (Sc) 125.967681 21.418699    5095 polluting the GBT beam with broad low emission ? d=2.7 arcmin
 #      IC2341           125.922615 21.4348704   5133
 #                       125.922654 21.434865	
