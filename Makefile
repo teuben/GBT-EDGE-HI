@@ -1,6 +1,10 @@
 
 ONT   = OMP_NUM_THREADS=1
 TIME  = /usr/bin/time
+SDIR  = /home/sdfits
+PID   = AGBT26A_644
+SEQ   = 01
+-include SEQ
 
 URL5  = https://github.com/tonywong94/edge_pydb
 URL6  = https://github.com/tonywong94/edge_hispec/
@@ -22,10 +26,19 @@ new:
 new2:
 	tabrows gals.pars | sort > gals.pars2
 
-SEQ = 99
 ## summary:     make summarylogs file, needs SEQ=
 summary:
-	./mk_summary.py $(SEQ) > summarylogs/AGBT25A_474_$(SEQ).summary
+	./mk_summary.py $(SEQ) > summarylogs/$(PID)_$(SEQ).summary
+
+REM = teuben@lma.astro.umd.edu:/n/lma1/teuben/
+## rsync:        rsync to REM=$REM and SEQ=$SEQ
+rsync:
+	@echo rsync to REM=$(REM) and SEQ=$(SEQ)
+	du -sh $(SDIR)/$(PID)_$(SEQ)
+	@echo rawdata SEQ=$(SEQ)
+	-rsync -ahv --bwlimit=8000 $(SDIR)/$(PID)_$(SEQ) $(REM)/GBTRawdata
+
+
 
 ## edge_pydb:   get the edge_pydb
 edge_pydb:
