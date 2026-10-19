@@ -1,0 +1,15 @@
+# table of galaxy parameters of AGBT25A_474
+
+# NOTE: this does not include masking of sub-integrations inside the bad scans
+
+[AGBT26A_644]
+
+# session 1:  Oct 19, 2026
+
+# galaxy  session    scans           vlsr  dv   dw      # comments
+
+
+NGC0155       1    8,10,12              6185   200  600    # try
+#NGC0155       1      10,12              6185   200  600    # try
+
+#UGC00029
