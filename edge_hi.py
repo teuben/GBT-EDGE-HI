@@ -55,10 +55,10 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 from IPython import embed
 
-projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT04A_008', '-']  # mode=0 or 1 (if more, the index into this array)
-refcodes    = ['edge2015',    'edge2025',    'survey2004',  '-']  # for CSV output
+projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT26A_644', 'AGBT04A_008', '-']  # mode=0 or 1 (if more, the index into this array)
+refcodes    = ['edge2015',    'edge2025',    'edge2026',    'survey2004',  '-']  # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                             # default, override with $SDFITS_DATA
-version     = "14-jun-2026"                                       # version ID
+version     = "18-oct-2026"                                       # version ID
 
 # CLI defaults
 smooth    = 3
@@ -474,7 +474,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     
     mode=0 or 15    2015 ON-OFF-ON getsigref style  (final ON is sometimes missing)
     mode=1 or 25    2025 ON-OFF    getps style
-    mode=2 or  4    2004 ON-OFF    getps without noise diode
+    mode=2 or 26    2026 ON-OFF    getps style
+    mode=3 or  4    2004 ON-OFF    getps without noise diode
     """
     global flux, dflux, flux6, mad_rms
     print(f"Working on {gal} {sessions} {scans} {vlsr} {dv} {dw}")
@@ -491,7 +492,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
         aflux = {"smoothref": smoothref}
 
     sp = []                                      # accumulate spectra in this list for later averaging
-    if mode == 1:    # 2025 data
+    if mode == 1 or mode == 2:    # 2025 data (or 2026 ???)
         for i in range(ns1):
             sdf1 = sdf[sessions[i]]
             if Qwater:
@@ -536,7 +537,7 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
                     sp.append(sp0)
                     sp.append(sp1)
             
-    if mode == 2:    # 2004 data
+    if mode == 3:    # 2004 data
         for i in range(ns1):
             sdf1 = sdf[sessions[i]]
             if Qwater:
@@ -918,9 +919,12 @@ if __name__ == "__main__":
     elif mode==1 or mode==25:
         gals = get_gals("gals25.pars")
         mode=1
-    elif mode==2 or mode==4:
-        gals = get_gals("gals04.pars")
+    elif mode==2 or mode==25:
+        gals = get_gals("gals26.pars")
         mode=2
+    elif mode==3 or mode==4:
+        gals = get_gals("gals04.pars")
+        mode=3
 
     # alternatively, mode points to the pars file already
     if False and os.path.exists(mode):
@@ -975,7 +979,7 @@ if __name__ == "__main__":
             print('FLAGS',sdf[session].final_flags)
         set_flags(sdf, flags)
 
-    elif mode == 1:
+    elif mode == 1 or mode == 2:
         # @todo   if galaxy given, only load what we need
         print("2025 data")
         if ss is None:
@@ -997,7 +1001,7 @@ if __name__ == "__main__":
             sdf[session].summary()
             print('FLAGS',sdf[session].final_flags)
 
-    elif mode == 2:
+    elif mode == 3:
         print("2016 hi_survey data", my_gals)
         if ss is None:
             try_sessions = []
