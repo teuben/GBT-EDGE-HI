@@ -9,7 +9,12 @@
 # galaxy  session    scans           vlsr  dv   dw      # comments
 
 
-NGC0155       1    8,10,12              6185   200  600    # try
-#NGC0155       1      10,12              6185   200  600    # try
+NGC0155       1    8,10,12              6080   200  600    # trial one; only 3 worked, some software issues. more to come
 
 #UGC00029
+
+
+# session 2:  Oct 22, 2026
+
+
+# session 3:  Oct 23, 2026
