@@ -6,6 +6,11 @@ URL5  = https://github.com/tonywong94/edge_pydb
 URL6  = https://github.com/tonywong94/edge_hispec/
 URL7  = https://gitlab.com/SoFiA-Admin/BusyFit
 
+PID  = AGBT26A_644
+WDIR = /users/rmaddale/Weather/ArchiveCoeffs
+SDIR = /home/sdfits
+
+
 .PHONY : help
 
 ## help:        This Help
@@ -26,6 +31,20 @@ SEQ = 99
 ## summary:     make summarylogs file, needs SEQ=
 summary:
 	./mk_summary.py $(SEQ) > summarylogs/AGBT25A_474_$(SEQ).summary
+
+## astrid:   make astridlogs for SEQ=$SEQ
+astrid:
+	(cd astridlogs; getastridlog $(PID)_$(SEQ))
+	@echo git add           astridlogs/$(PID)_$(SEQ)_log.txt
+	@echo git commit -m new astridlogs/$(PID)_$(SEQ)_log.txt
+
+REM = teuben@lma.astro.umd.edu:/n/lma1/teuben/
+## rsync:    rsync to REM=$REM and SEQ=$SEQ
+rsync:
+	@echo rsync to REM=$(REM) and SEQ=$(SEQ)
+	du -sh $(SDIR)/$(PID)_$(SEQ)
+	@echo rawdata SEQ=$(SEQ)
+	-rsync -ahv --bwlimit=8000 $(SDIR)/$(PID)_$(SEQ) $(REM)/GBTRawdata
 
 ## edge_pydb:   get the edge_pydb
 edge_pydb:
