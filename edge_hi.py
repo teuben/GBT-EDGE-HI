@@ -55,10 +55,10 @@ from dysh.fits.gbtfitsload import GBTOffline
 
 from IPython import embed
 
-projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT26A_644', 'AGBT04A_008', '-']  # mode=0 or 1 (if more, the index into this array)
+projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT26A_644', 'AGBT04A_008', '-']  # mode is the index into this array
 refcodes    = ['edge2015',    'edge2025',    'edge2026',    'survey2004',  '-']  # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                             # default, override with $SDFITS_DATA
-version     = "18-oct-2026"                                       # version ID
+version     = "22-oct-2026"                                       # version ID
 
 # CLI defaults
 smooth    = 3
@@ -80,6 +80,7 @@ my_help = f"""
       ./edge_hi.py --mode  4 U8503
       ./edge_hi.py --mode 15 NGC3815
       ./edge_hi.py --mode 25 UGC10972
+      ./edge_hi.py --mode 2  <TBD>
 
    """
 
@@ -919,12 +920,15 @@ if __name__ == "__main__":
     elif mode==1 or mode==25:
         gals = get_gals("gals25.pars")
         mode=1
-    elif mode==2 or mode==25:
+    elif mode==2 or mode==26:
         gals = get_gals("gals26.pars")
         mode=2
     elif mode==3 or mode==4:
         gals = get_gals("gals04.pars")
         mode=3
+    else:
+        print(f"Illegal mode={mode}")
+        sys.exit(0)
 
     # alternatively, mode points to the pars file already
     if False and os.path.exists(mode):
@@ -989,7 +993,7 @@ if __name__ == "__main__":
                 for s in sessions:
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))
-            print("PJT try_sessions mode=1:",try_sessions)
+            print(f"PJT try_sessions mode={mode}:",try_sessions)
         else:
             try_sessions = [ss]
             
@@ -1040,7 +1044,7 @@ if __name__ == "__main__":
                 for s in sessions:
                     try_sessions.append(s)
             try_sessions = list(set(try_sessions))                    
-            print("PJT try_sessions mode=0:",try_sessions)
+            print(f"PJT try_sessions mode={mode}:",try_sessions)
         else:
             try_sessions = [ss]
 
