@@ -4,11 +4,20 @@
 # e.g. 41.291443 -4.710761
 # NGC0001  1.81603449430832 27.7082601438207
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -lt 1 ]; then
     echo "Usage: $0 ra dec"
     echo "e.g. for NGC0001  use: 1.81603449430832 27.7082601438207"
     echo "See also https://cseligman.com/text/atlas.htm"
     exit 1
+fi
+
+if [ "$#" -eq 2 ]; then
+    ra=$1
+    dec=$2
+elif [ "$#" -eq 1 ]; then
+    ra=$(cut -d',' -f1 <<< "$1")
+    dec=$(cut -d',' -f2 <<< "$1")
+    echo ra=$ra dec=$dec
 fi
 
 # alternative:

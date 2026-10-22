@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 #               dysh      (issue 946)
 #
-# Import an ascii table into dysh, and compute flux using COoG method
+# Import an ascii table into dysh, and compute flux using CoG method
 #
 
 import os
@@ -22,7 +22,7 @@ from dysh.coordinates import Observatory
 
 from IPython import embed
 
-version     = "5-jun-2026"                                        # version ID
+version     = "9-jul-2026"                                        # version ID
 
 #%%
 
@@ -65,6 +65,8 @@ p.add_argument('--dv',      type = float, default = None,      help=f'=Override 
 p.add_argument('--dw',      type = float, default = None,      help=f'=Override dw for each half baseline [pars table entry]')
 p.add_argument('--table',   type = str,   default = None,      help=f'=Optionally read in spectrum to overlay')
 
+p.add_argument('--alfa',    action="store_true",               help=f'=Use the ALFALFA loader for specutils')
+
 p.add_argument('--frame',   type = str,   default = frame,     help=f'=Velocity frame: itrs, gcrs, hcrs, icrs, lsrk, lsrd [{frame}]')
 p.add_argument('--align',   action="store_false",              help=f'=Do not align along choosen frame')
 p.add_argument('--avechan',               default = None,      help=f'=Number of channels to average in waterfall fits file [skip]')
@@ -97,6 +99,9 @@ frame   = args.frame
 avechan = args.avechan
 ptype   = args.plot
 my_tab  = args.tab
+xcol    = args.xcol
+ycol    = args.ycol
+Qalfa   = args.alfa
 Qbatch  = args.batch
 Qbusy   = args.busy
 Qnan    = args.nan
@@ -256,6 +261,7 @@ def get_spectrum(file, xcol=1, ycol=2):
     data = np.loadtxt(file, usecols=(xcol-1,ycol-1)).T
     vel = data[0]
     sp = data[1]
+    print(data.shape)
     print('Vel :',vel[0],'...',vel[-1], ' km/s (assumed)')
     print('Flux:',sp[0],'...',sp[-1],' Peak:',sp.max())
     return data
@@ -268,28 +274,38 @@ if __name__ == "__main__":
     if my_tab == None:
         my_tab = "test.tab"
 
+    if Qalfa:
+        print("Loading from alfa")
+        s = Spectrum.read(my_tab,format='alfa')
+        pprint.pprint(s, width=1)        
+        cog = s.cog()
+        pprint.pprint(cog, width=1)
+        sys.exit(0)
+
     data = get_spectrum(my_tab, xcol, ycol)
     nchan = len(data[0])
-    print("NCHAN:",nchan)
+    print("NCHAN:",nchan,xcol,ycol)
+    dvel = data[0][nchan//2]-data[0][nchan//2-1]
+    print("dVEL:",dvel,data[0][nchan//2])
 
     sp1 = Spectrum.fake_spectrum(nchan)
     
 #%%
     
-    sa = (data[xcol-1] + 1000) * u.km/u.s
+    sa = (data[0] + 1000) * u.km/u.s
     if Qflux:
-        flux = data[ycol-1] * u.Jy 
+        flux = data[1] * u.Jy 
     else:
-        flux = data[ycol-1] * u.K  
+        flux = data[1] * u.K  
     if vlsr is None:
         vlsr = 0.0       # value doesn't matter for cog()
     print("VLSR:",vlsr)
     # borrow from fake_spectrum
     meta = sp1.meta
     crval1 = nchan//2     # because of non-linear, flux depends on crval1 (1%)
-    meta['CRVAL1'] = data[xcol-1][crval1]
+    meta['CRVAL1'] = data[0][crval1]
     meta['CRPIX1'] = 1.0
-    meta['CDELT1'] = data[xcol-1][crval1] - data[xcol-1][crval1-1]
+    meta['CDELT1'] = data[0][crval1] - data[0][crval1-1]
     meta['CTYPE1'] = 'VELO-HEL'
     meta['CUNIT1'] = 'km/s'
     meta['VELOCITY'] = vlsr * 1000.0
@@ -301,3 +317,4 @@ if __name__ == "__main__":
     print(sp4)
     cog = sp4.cog()
     pprint.pprint(cog, width=1)
+    #sp4.plot()
