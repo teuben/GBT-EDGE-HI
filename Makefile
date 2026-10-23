@@ -35,6 +35,15 @@ new2:
 summary:
 	./mk_summary.py $(SEQ) > summarylogs/$(PID)_$(SEQ).summary
 
+## sdfits:	 show sessions in /home/sdfits for this project
+sdfits:
+	@ls -dl /home/sdfits/$(PID)_*
+
+## sdfits2:  show filesize in selected SEQ
+sdfits2:
+	@ls -l /home/sdfits/$(PID)_$(SEQ)
+
+
 REM = teuben@lma.astro.umd.edu:/n/lma1/teuben/
 ## rsync:        rsync to REM=$REM and SEQ=$SEQ
 rsync:
@@ -44,20 +53,12 @@ rsync:
 	-rsync -ahv --bwlimit=8000 $(SDIR)/$(PID)_$(SEQ) $(REM)/GBTRawdata
 
 
-
 ## astrid:   make astridlogs for SEQ=$SEQ
 astrid:
 	(cd astridlogs; getastridlog $(PID)_$(SEQ))
 	@echo git add           astridlogs/$(PID)_$(SEQ)_log.txt
 	@echo git commit -m new astridlogs/$(PID)_$(SEQ)_log.txt
 
-REM = teuben@lma.astro.umd.edu:/n/lma1/teuben/
-## rsync:    rsync to REM=$REM and SEQ=$SEQ
-rsync:
-	@echo rsync to REM=$(REM) and SEQ=$(SEQ)
-	du -sh $(SDIR)/$(PID)_$(SEQ)
-	@echo rawdata SEQ=$(SEQ)
-	-rsync -ahv --bwlimit=8000 $(SDIR)/$(PID)_$(SEQ) $(REM)/GBTRawdata
 
 ## edge_pydb:   get the edge_pydb
 edge_pydb:
