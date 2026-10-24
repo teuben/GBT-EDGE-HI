@@ -15,6 +15,22 @@ NGC0155       1    8,10,12              6080   200  600    # trial one; only 3 w
 
 
 # session 2:  Oct 22, 2026
+#  only 3c84....  astrid restart, so we continue with session 3
 
 
-# session 3:  Oct 23, 2026
+# session 3:  Oct 22, 2026
+
+
+
+UGC11228       3     8,10               5714   200 600
+
+
+# session 4:  Oct 23, 2026
+
+NGC6762         4     8,10,12,14,16                2863  200 600  # nothing
+NGC6945         4     18,20,22,24,26               3660  200 600  # nothing
+#NGC6978        4     28,30,32,34,36               5915  200 600   # nothing
+NGC6978         4     28,30,32,34,36               6000  200 600    # good one
+UGC11680NED02   4     38,40,42,44,46               7765  200 600    # odd baseline, might be signal
+UGC11694        4     48,50,52,54,56               5100  450 1200    # weak
+NGC7236         4     58,60                        7786  250 600     # good (short last off)  7800   flux factor 2 lower if dv=200 -> 250
