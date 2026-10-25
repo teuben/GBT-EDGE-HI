@@ -1,13 +1,14 @@
-# table of galaxy parameters of AGBT25A_474
+# table of galaxy parameters of AGBT26A_644
 
 # NOTE: this does not include masking of sub-integrations inside the bad scans
 
 [AGBT26A_644]
 
-# session 1:  Oct 19, 2026
-
 # galaxy  session    scans           vlsr  dv   dw      # comments
 
+
+# session 1:  Oct 19, 2026
+# impromptu because ARGUS was incommunicado
 
 NGC0155       1    8,10,12              6080   200  600    # trial one; only 3 worked, some software issues. more to come ; no signal yet
 
@@ -23,6 +24,7 @@ UGC11228       3      8,10                         5714  200 600  # nothing
 
 
 # session 4:  Oct 23, 2026
+# Oct 23 17:30 | Oct 23 21:30 | 18:17 |  3.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 04
 #   everything fine now
 
 NGC6762         4     8,10,12,14,16                2863  200 600  # nothing
