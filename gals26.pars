@@ -1,20 +1,66 @@
-# table of galaxy parameters of AGBT25A_474
+# table of galaxy parameters of AGBT26A_644
 
 # NOTE: this does not include masking of sub-integrations inside the bad scans
 
 [AGBT26A_644]
 
-# session 1:  Oct 19, 2026
-
 # galaxy  session    scans           vlsr  dv   dw      # comments
 
 
-NGC0155       1    8,10,12              6080   200  600    # trial one; only 3 worked, some software issues. more to come
+# session 1:  Oct 19, 2026
+# impromptu because ARGUS was incommunicado
 
-#UGC00029
+NGC0155        1    8,10,12                        6080   200  600    #  nothing
 
 
 # session 2:  Oct 22, 2026
+#  only 3c84....  astrid restart, so we continue with session 3
 
 
-# session 3:  Oct 23, 2026
+# session 3:  Oct 22, 2026
+#  more issues with DBC/rcp; astrid hanging
+
+UGC11228        3      8,10                        5714  200 600      # nothing
+
+
+# session 4:  Oct 23, 2026
+# Oct 23 17:30 | Oct 23 21:30 | 18:17 |  3.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 04
+#   everything fine now
+
+NGC6762         4     8,10,12,14,16                2863  200 600     # nothing
+NGC6945         4     18,20,22,24,26               3660  200 600     # nothing
+NGC6978         4     28,30,32,34,36               6000  200 800    # good one  5915; possible companion; 2.9 Jy.km/s
+UGC11680NED02   4     38,40,42,44,46               7765  200 600    # odd baseline, might be signal
+UGC11694        4     48,50,52,54,56               5100  450 1200    # good                              3.8 Jy.km/s
+NGC7236         4     58,60                        7786  250 600     # weak - could be bad baseline
+
+
+# session 5:  Oct 24, 2026
+# Oct 24 12:00 | Oct 24 16:00 | 12:50 |  5.25 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
+# Oct 24 17:15 | Oct 24 21:15 | 18:06 |  4.25 | Bolatto   | L         | VEGAS   | GBT26A-644 - 04
+
+NGC4149         5     8,10,12,14,16                2959   200 600     # weak or nothing
+IC3065          5     18,20,22,24,26                905   200 600     # nothing
+NGC4261         5     28,30,32,34,36               2212   200 600     # bad baseline
+NGC4473         5     38,40,42,44,46               2244   200 600     # nothing
+IC3586          5     48,50,52,56,58               1595   200 600     # 54 short?
+NGC4593         5     60,62                        2498   200 600     # very bad baseline
+IC3652          5     64,66,68,70,72                501   200 600     # low vlsr; difficult, probably nothing
+NGC4676A        5     74,76,78,80,82               6600   400 600     # good    4.8 Jy.km/s
+NGC4816         5     84,86,88,90,92               7015   200 600     # RFI ?
+NGC4841A        5     94,96,98                     6766   200 600     # nothing?
+UGC08267        5     100,102,104,106,108          7204   200 600     #nothing?
+NGC5029         5     110,112,114,116,118          8646   200 600     # rfi   
+NGC5198         5     120,122,124,126              2551   200 600     # good     1.7 Jy.km/s
+NGC5475         5     128,130,132,134,136          1586   200 600    # nothing
+NGC5481         5     138,140,142,144              1863   250 600    # good   [1940]   6.8 Jy.km/s
+NGC5687         5     146,148,150,152,154          2113   200 600     # nothing
+NGC5794         5     156                          4140   200 600    # maybe
+NGC5971         5     158,160                      3390   200 600    # good (3265)    5.7 Jy.km/s
+
+
+# so far 6/26 good cases
+
+# session 6
+# Oct 26 12:30 | Oct 26 16:30 | 13:28 |  4.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
+# Oct 26 17:00 | Oct 26 21:00 | 17:59 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 04
