@@ -119,7 +119,27 @@ NGC3990         7       164,166,168,172              850    200 400   # maybe; b
 NGC4841A        7       174                         6766    200 600   # -repeat-    176 bad
 NGC4874         7       178                         7078    200 600   # RFI
 
+# session 8
+# Oct 30 11:30 | Oct 30 15:30 | 12:44 |  4.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
+
+NGC4593         8       8,10,12                     2498    200 600   # badseline
+MCG-01-33-007 	8	14,16,18,20,22 		    1199    200 600   # abs?
+IC3834 		8	24,26,28,30,32 		    4329    200 600   #  badseline
+NGC4825 	8	34,36,38,40,42 		    4452    200 600   # badseline
+NGC4874 	8	44,46,48,50 		    7078    200 600   # rfi
+UGC08322 	8	52,54,56,58,60 		    7648    200 600   # rfi
+NGC5044 	8	62,64,66 		    2715    200 600   # badseline
+IC4215 		8	68 			    3849    200 600   # unclear
+
+
+
+# session 9
+# Nov 02 21:30 | Nov 03 02:30 | 23:58 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
+# Nov 03 03:30 | Nov 03 08:30 | 05:59 |  4.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
+
+
 
 
 # tabcols gals26.pars 1 | sort | uniq -c|wc
 # 64 now; 14 good detections = 22%
+
