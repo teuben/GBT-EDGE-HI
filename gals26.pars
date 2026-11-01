@@ -141,5 +141,5 @@ IC4215 		8	68 			    3849    200 600   # unclear
 
 
 # tabcols gals26.pars 1 | sort | uniq -c|wc
-# 64 now; 14 good detections = 22%
+# 70 now; 14 good detections
 
