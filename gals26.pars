@@ -10,7 +10,8 @@
 # session 1:  Oct 19, 2026
 # impromptu because ARGUS was incommunicado
 
-NGC0155        1    8,10,12                        6080   200  600    #  nothing
+#NGC0155        1    8,10,12                        6080   200  600    #  nothing; very slight BL slop
+NGC0155        1    10,12                        6080   200  600    #  nothing ; but 10/11 and 12/13 different levels
 
 
 # session 2:  Oct 22, 2026
@@ -29,11 +30,12 @@ UGC11228        3      8,10                        5714  200 600      # nothing
 
 NGC6762         4     8,10,12,14,16                2863  200 600     # nothing
 NGC6945         4     18,20,22,24,26               3660  200 600     # nothing
-NGC6978         4     28,30,32,34,36               6000  200 800    # good one  [5915]; possible companion; 2.9 Jy.km/s
-#UGC11680NED02   4     38,40,42,44,46              7765  200 600    # RFI odd baseline, might be signal
-UGC11680NED02   4     38,42,44,46                  7765  200 600    # RFI in 41; nothing
+NGC6978         4     28,30,32,34,36               6000  200 800     # good one  [5915]; possible companion; 2.9 Jy.km/s
+#UGC11680NED02   4     38,40,42,44,46              7765  200 600     # RFI odd baseline, might be signal
+UGC11680NED02   4     38,42,44,46                  7765  200 600     # RFI in 41; nothing
 UGC11694        4     48,50,52,54,56               5100  450 1200    # good                              3.8 Jy.km/s
-NGC7236         4     58,60                        7786  250 600     # weak - could be bad baseline [figure]
+#NGC7236         4     58,60                        7786  250 600    # weak - could be bad baseline [figure]
+NGC7236         4     58                            7786  250 600    # bad baseline;   ON/OFF power
 
 
 # session 5:  Oct 24, 2026
@@ -42,10 +44,10 @@ NGC7236         4     58,60                        7786  250 600     # weak - co
 
 NGC4149         5     8,10,12,14,16                2959   200 600     # weak or nothing
 IC3065          5     18,20,22,24,26                905   200 600     # nothing
-NGC4261         5     28,30,32,34,36               2212   200 600     # bad baseline
+NGC4261         5     28,30,32,34,36               2212   200 600     # bad baseline   ON/OFF
 NGC4473         5     38,40,42,44,46               2244   200 600     # nothing
 IC3586          5     48,50,52,56,58               1595   200 600     # 54 short.
-NGC4593         5     60,62                        2498   200 600     # very bad baseline
+NGC4593         5     60,62                        2498   200 600     # very bad baseline ON/OFF
 IC3652          5     64,66,68,70,72                501   200 600     # low vlsr; difficult, probably nothing
 NGC4676A        5     74,76,78,80,82               6600   400 600     # good    4.8 Jy.km/s
 NGC4816         5     84,86,88,90,92               7015   200 600     # RFI ?
@@ -137,9 +139,25 @@ IC4215 		8	68 			    3849    200 600   # unclear
 # Nov 02 21:30 | Nov 03 02:30 | 23:58 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 # Nov 03 03:30 | Nov 03 08:30 | 05:59 |  4.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
 
+  
+NGC0155         9       8,10                        6080    200 600    # -repeat-
+NGC0193         9       12,14,16,18,20              4413    200 600    # ON/OFF bad baseline
+NGC0364         9       22,24,26,28,30              5066    200 600    # bad baseline, but not the on/off issue
+NGC0426         9       32,34,36,38,40              5450    200 600    # [5183] vlsr wrong?    0.9 Jy.km/s
+NGC0429         9       40,42,44,48,50              5597    200 600    # nothing
+IC1652          9       52,54,56,58,60              4956    200 600    # bad baseline, not not on/off issue
+NGC0448         9       62,64,66,68,70              1908    200 600    # nothing?
+NGC0472         9       72,74,76,78,80              5198    200 600    # maybe
+CGCG536-030     9       82,84,86,88,90              5882    220 600    # good [5837]  13.0 Jy.km/s
+IC1683          9       92,94,96,98,100             4731    200 600    # flat, but ripples with later scans?
+NGC0495         9       102,104                     6000    200 600    # good [4023] wrong vlsr ; 2.6 Jy.km/s
 
 
+# session 10
+# Nov 04 22:00 | Nov 05 03:00 | 00:36 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
+# Nov 05 03:30 | Nov 05 08:30 | 06:07 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
 
 # tabcols gals26.pars 1 | sort | uniq -c|wc
 # 70 now; 14 good detections
+
 
