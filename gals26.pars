@@ -167,6 +167,6 @@ NGC2615 	9 	178       		    4211    200 600    # nothing?
 # Nov 05 03:30 | Nov 05 08:30 | 06:07 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
 
 # tabcols gals26.pars 1 | sort | uniq -c|wc
-# 70 now; 14 good detections
+# 86 now; 21 good detections
 
 
