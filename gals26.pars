@@ -161,10 +161,9 @@ NGC1277 	9 	160,162,164,166,168	    5019    200 600    # very bad ON/OFF
 NGC1281 	9 	170,172,174,176		    4314    200 600    # very bad ON/oFF
 NGC2615 	9 	178       		    4211    250 600    # weak   2.8 Jy.km/s
 
-
 # session 10
-# Nov 04 22:00 | Nov 05 03:00 | 00:36 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
-# Nov 05 03:30 | Nov 05 08:30 | 06:07 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
+# Nov 04 03:30 | Nov 04 08:30 | 06:03 |  4.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
+
 
 NGC2272        10       8,10,12,14,16               2146    250 600    # good   2.1 Jy.km/s
 NGC2615        10       18,20 			    4211    300 600    # -repeat-
@@ -178,14 +177,43 @@ NGC5044        10  	70,72  			    2715    200 600    # -repeat-
 NGC5077        10       74                          2770    200 600    # bad baseline, but no on/off
 
 # session 11
-# Nov 05 10:00 | Nov 05 15:00 | 12:38 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
+# Nov 04 22:00 | Nov 05 03:00 | 00:36 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
+# Nov 05 03:30 | Nov 05 08:30 | 06:07 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
+
+
+NGC0548        11       8,10,12,14,16               5312    200 600    # bad baseline  ON/OFF
+UGC01062       11       18,20,22,24,26              5396    200 600    # nothing - but ripples
+NGC0584        11   	28,30,32,34		    1852    200 600    # just maybe  - 37 bad
+UGC01271       11 	38,40,42,44,46  	    4944    200 600    # bad baselines
+NGC0675        11 	48,50,52,54,56 		    5090    150 600    # [5159] weak   0.7 Jy.km/s
+SDSSJ015424    11 	58,60,62,64,66  	    6190    100 400    #  [6227] narrow weak   0.3 Jy.km/s
+NGC0731        11 	72,74,76  	    	    3858    200 600    #  nothing ; but 68,70 bad - 
+NGC0741        11  	78,80,82,84,86 		    5492    200 600    #  nothing ; ON/OFF but kind of ok baseline
+NGC0781        11 	88,90,92,94,96 		    3494    200 600    # nothing ; ON/OFF but kind of ok baseline
+NGC0810        11 	100,102,104,106             7705    200 600    #   -98; maybe at 7520 ?
+BKD2008WR346   11 	108			    1532    200 600    # nothing
+NGC1026        11 	110,112,114,116 	    4107    200 600    # nothing
+PGC11179       11  	118,120,122  		    6850    200 600    # ON/OFF bad baseline
+NGC1453        11 	124,126 		    3921    200 600    # nothing
+NGC1587        11  	128,130,132,134,136 	    3683    200 600    # very weak    0.3 Jy.km/s
+NGC1656        11 	138,140,142		    3618    200 600    # nothing 
+ARP180         11  	144 			    4250    250 600    #  [4098]  weak    3.8 Jy.km/s
+KUG1349+143    11  	146,150,152,154 	    7375    200 600    # -148 unclear
+UGC08984       11  	156,158,160,162,164         3723    200 600    # -repeat-
+NGC6125        11  	166,168,170,172,174 	    4707    200 600    # -repeat-   weird 2x ?
+
+
 
 # session 12
+# Nov 05 10:00 | Nov 05 15:00 | 12:38 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
+
+# session 13
 # Nov 05 22:00 | Nov 06 03:00 | 00:40 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
 
 # tabcols gals26.pars 1 | sort | uniq -c|wc    (subtract 1)
-# 85 now; 21 good detections
+# grep Jy.km/s gals26.pars | wc
+# 105 now; 25 good detections
 
 
 
