@@ -108,7 +108,7 @@ NGC2522         7       66,68,70,72,74              4560    200 600   # just may
 NGC2553         7       76,78,80,82,84              4560    200 600   # nothing?
 NGC2592         7       86,88,90,92,94              2400    150 600   # good   wrong vlsr? [1889]  1.2 Jy.km/s
 NGC2767         7       96,98,100,102,104           5100    200 600   # good  [4830]   1.9 Jy.km/s
-ARP321NED01     7       106                         6622    200 600   # nothing
+ARP321NED01     7       106                         6622    200 600   # maybe, some RFI
 PGC3086846      7       108,110,112,114             8890    200 600   # -repeat
 NGC3158         7       116,118,120,122,124         6889    200 600   # nothing
 NGC3160         7       128,130,132,134             6724    200 600   # nothing; RFI in 126
@@ -159,14 +159,34 @@ NGC1060 	9 	148       		    5081    200 600    # -repeat-
 NGC1271 	9 	150,152,154,156,158	    5987    200 600    # RFI  (still ripples with -152,156)
 NGC1277 	9 	160,162,164,166,168	    5019    200 600    # very bad ON/OFF
 NGC1281 	9 	170,172,174,176		    4314    200 600    # very bad ON/oFF
-NGC2615 	9 	178       		    4211    200 600    # nothing?
+NGC2615 	9 	178       		    4211    250 600    # weak   2.8 Jy.km/s
 
 
 # session 10
 # Nov 04 22:00 | Nov 05 03:00 | 00:36 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 # Nov 05 03:30 | Nov 05 08:30 | 06:07 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
 
-# tabcols gals26.pars 1 | sort | uniq -c|wc
-# 86 now; 21 good detections
+NGC2272        10       8,10,12,14,16               2146    250 600    # good   2.1 Jy.km/s
+NGC2615        10       18,20 			    4211    300 600    # -repeat-
+ARP321NED01    10  	22,24,26,28		    6622    200 600    # -repeat-
+NGC3615        10   	30,32,34,36,38		    6583    200 600    # nothing
+NGC4003        10    	40,42,44,46,48		    6508    200 600    # nothing 
+NGC1281        10  	50  			    4314    200 600    # -repeat-
+PGC12562       10   	54,56,58,60		    4605    200 600    #  RFI in 52, nothing
+IC4215         10  	62,64,66,68		    3849    200 600    # ?
+NGC5044        10  	70,72  			    2715    200 600    # -repeat-
+NGC5077        10       74                          2770    200 600    # bad baseline, but no on/off
+
+# session 11
+# Nov 05 10:00 | Nov 05 15:00 | 12:38 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
+
+# session 12
+# Nov 05 22:00 | Nov 06 03:00 | 00:40 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
+
+
+# tabcols gals26.pars 1 | sort | uniq -c|wc    (subtract 1)
+# 85 now; 21 good detections
+
+
 
 
