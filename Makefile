@@ -37,7 +37,7 @@ summary:
 
 ## sdfits:	 show sessions in /home/sdfits for this project
 sdfits:
-	@su -sh $(SDIR)/$(PID)_*
+	@du -sh $(SDIR)/$(PID)_*
 
 ## sdfits2:  show filesize in selected SEQ
 sdfits2:
