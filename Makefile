@@ -12,7 +12,8 @@ URL7  = https://gitlab.com/SoFiA-Admin/BusyFit
 
 PID  = AGBT26A_644
 WDIR = /users/rmaddale/Weather/ArchiveCoeffs
-SDIR = /home/sdfits
+SDFITS_DATA ?= /home/sdfits
+SDIR = $(SDFITS_DATA)
 
 
 .PHONY : help
