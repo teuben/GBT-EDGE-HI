@@ -236,7 +236,30 @@ NGC1332        13 	92,94,96                    1538    200 600    # nothing; bad
 
 # session 14
 # Nov 06 09:30 | Nov 06 14:30 | 12:11 |  5.75 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
-# WA 10.30pm 
+# WA 10.30pm
+
+NGC5611        14 	8,10,12,14,16       	    1960    150 600    # [1871]    0.7 Jy.km/s
+NGC5623        14 	18,20,22,24,26     	    3361    200 600    # nothing
+NGC5626        14 	28,30,32,34,36      	    6890    200 600    # ripples
+UGC09539       14 	38,40,42,44,46      	    6296    200 600    # baseline
+IC1079         14 	48,52,56      	     	    8628    200 600    # too much RFI
+NGC5846        14 	58,60,62,64,66      	    1857    200 600    # strong ripple
+IC4534         14 	68,70,72,74,76      	    4821    200 600    # nothing
+NGC5872        14 	78,80,82,84,86      	    7496    200 600    # strong ripple
+NGC5888        14 	92,94,96      	     	    8736    200 600    # nothing; RFI -88,90
+
+
+
+
+# session 15
+# Nov 07 09:15 | Nov 07 14:15 | 12:00 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
+# wa 10.15pm
+
+
+
+# session 16
+# Nov 07 21:15 | Nov 08 02:15 | 00:02 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
+# wa 10.15am
 
 
 
