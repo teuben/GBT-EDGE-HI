@@ -180,7 +180,6 @@ NGC5077        10       74                          2770    200 600    # bad bas
 # Nov 04 22:00 | Nov 05 03:00 | 00:36 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 # Nov 05 03:30 | Nov 05 08:30 | 06:07 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
 
-
 NGC0548        11       8,10,12,14,16               5312    200 600    # bad baseline  ON/OFF
 UGC01062       11       18,20,22,24,26              5396    200 600    # nothing - but ripples
 NGC0584        11   	28,30,32,34		    1852    200 600    # just maybe  - 37 bad
@@ -202,11 +201,8 @@ KUG1349+143    11  	146,150,152,154 	    7375    200 600    # -148 unclear
 UGC08984       11  	156,158,160,162,164         3723    200 600    # -repeat-
 NGC6125        11  	166,168,170,172,174 	    4707    200 600    # -repeat-   weird 2x ?
 
-
-
 # session 12
 # Nov 05 10:00 | Nov 05 15:00 | 12:38 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
-# WA 9pm nov5
 
 NGC5328        12 	8,10,12,14,16       	    4696    200 600    # modest on/off but terrible ripples
 IC4350         12 	18,20,22,24,26     	    6118    200 600    #  terrible ripples
@@ -223,6 +219,21 @@ NGC5598        12 	90,92               	    5375    200 600    # -repeat-
 # Nov 05 22:00 | Nov 06 03:00 | 00:40 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 # WA 11am nov 6
 
+NGC0842        13       8,10,12,14,16               3799    200 600    # good [3843]   2.2 Jy.km/s   asymmetric wing?
+BKD2008WR346   13 	18,20,22,24         	    1532    200 600    # -repeat-
+UGC02018       13 	26,28,30,32,34      	    6107    200 600    # nothing
+NGC1015        13 	36,38,40,42,44      	    2614    125 400    # good 10.7 Jy.km/s [2626]
+NGC1026        13 	46                  	    4107    200 600    # -repeat-
+NGC1041        13 	48,50,52,54,56        	    7012    200 600    # nothing
+MCG-02-08-014  13 	58,60,62,64,66      	    5010    250 600    # good [4929]   4.1 Jy.km/s
+NGC1132        13 	68,70,72,74,76      	    6860    250 600    # ODD  raw W shape 3.7 Jy.km/s
+NGC1142        13 	78,80,84,86      	    8613    200 600    # nothing  -82
+PGC11179       13 	88,90               	    6850    200 600    # -reoeat-
+NGC1332        13 	92,94,96                    1538    200 600    # nothing; bad baseline
+
+
+
+
 # session 14
 # Nov 06 09:30 | Nov 06 14:30 | 12:11 |  5.75 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
 # WA 10.30pm 
@@ -231,7 +242,7 @@ NGC5598        12 	90,92               	    5375    200 600    # -repeat-
 
 # tabcols gals26.pars 1 | sort | uniq -c|wc    (subtract 1)
 # grep Jy.km/s gals26.pars | wc
-# 116 now; 29 good detections
+# 124 now; 33 good detections
 
 
 
