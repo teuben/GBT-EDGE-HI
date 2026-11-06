@@ -37,11 +37,11 @@ summary:
 
 ## sdfits:	 show sessions in /home/sdfits for this project
 sdfits:
-	@ls -dl /home/sdfits/$(PID)_*
+	@su -sh $(SDIR)/$(PID)_*
 
 ## sdfits2:  show filesize in selected SEQ
 sdfits2:
-	@ls -l /home/sdfits/$(PID)_$(SEQ)
+	@ls -l $(SDIR)/$(PID)_$(SEQ)
 
 
 REM = teuben@lma.astro.umd.edu:/n/lma1/teuben/
