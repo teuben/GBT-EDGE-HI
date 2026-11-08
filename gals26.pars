@@ -267,11 +267,23 @@ NGC6338       15 90,92,94,96,98      8103 200 600    # nothing
 # Nov 07 21:15 | Nov 08 02:15 | 00:02 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 # wa 10.15am
 
+NGC0507       16 8,10,12,14      4794 200 600  # nothing
+NGC1332       16 16,18,20            1538 200 600  # nothing
+NGC1361       16 22,24,30      5207 200 600  # nothing?  RFI at 26,28
+NGC1400Group  16 32,34,36,38,40      1778 200 600 # nothing
+NGC1453       16 42,44,46            3921 200 600  # -repeat-   (odd negative profile at 4430 ?)
+NGC1656       16 48,50               3618 200 600  # -repeat-
+NGC1665       16 52,54,56,58,60      2668 200 600  # nothing
+NGC1666       16 62,64,66,68,70      2650 200 600  # nothing
+ARP180        16 72,74,76,78         4098 200 600  # -repeat-
+ESO552-G040   16 80,82,84,86,88      6727 250 600  # good  4.5 Jy.km/s
+UGC00029      16 90,92,94,96,98      8784 200 600  # nothing
+NGC0508       16 100,102,104         5429 200 600  # nothing
 
 
 # tabcols gals26.pars 1 | sort | uniq -c|wc    (subtract 1)
 # grep Jy.km/s gals26.pars | wc
-# 143 now; 36 good detections
+# 150 now; 37 good detections
 
 
 
