@@ -271,7 +271,7 @@ NGC6338       15 90,92,94,96,98      8103 200 600    # nothing
 
 # tabcols gals26.pars 1 | sort | uniq -c|wc    (subtract 1)
 # grep Jy.km/s gals26.pars | wc
-# 124 now; 33 good detections
+# 143 now; 36 good detections
 
 
 
