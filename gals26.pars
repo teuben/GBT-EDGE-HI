@@ -301,10 +301,10 @@ NGC6166NED01   17 	96,98,100      	   	    9347 200 600  # strong ON/OFF, too ma
 # Nov 09 09:15 | Nov 09 14:15 | 12:08 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
 # Nov 09 21:15 | Nov 10 02:15 | 00:10 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
-UGC11228      18 8,10,12             5714 200 600
-UGC12127      18 14,16,18,20,22      8223 200 600  # odd baseline
+UGC11228      18 8,10,12             5714 200 600  # -repeat-
+UGC12127      18 14,16,18,20,22      8223 200 600  # odd baseline, TBD
 NGC7436B      18 26,28,30,32         7366 200 600  # nothing?   RFI at 24 
-NGC7559B      18 34,36,38,40,42      4567 200 600  # bad OFF ?
+NGC7559B      18 34,36,38,40,42      4567 200 600  # bad OFF ? negative profile
 UGC12494NOTES01  18 44,46,48,50,52   4200 150 600  # good; but wrong vlsr [4776] 4.9 Jy.km/s
 NGC7611       18 54,56,58,60,62      2860  100 600  # [3364] maybe...   narrow, 0.6 Jy.km/s
 UGC12518      18 64,66               2810 100 600   # [3876] wrong vlsr  2.8 Jy.km/s
@@ -319,7 +319,7 @@ NGC7711       18 74,76               4057 200 600   # nothing
 # sort -k 1 gals26.pars | grep -v ^#
 # tabcols gals26.pars 1 | sort | uniq -c|wc    (subtract 1)
 # grep Jy.km/s gals26.pars | wc
-# 167 now; ??37 good detections
+# 167 now; 41 detections
 
 
 
