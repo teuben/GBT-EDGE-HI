@@ -1,27 +1,28 @@
-# table of galaxy parameters of AGBT26A_644
+# Project: AGBT26A_644
 
-# NOTE: this does not include masking of sub-integrations inside the bad scans
-
-[AGBT26A_644]
+# Issues:
+#  - ON/OFF       different power levels, continuum?
+#  - on/off 
+#  - bad vlsr     signal VLSR very diffrent from catalog
+#  - Jy.km/s      amount of signal seen; typical error 0.1
 
 # galaxy  session    scans           vlsr  dv   dw      # comments
 
 
-# session 1:  Oct 19, 2026
-# impromptu because ARGUS was incommunicado
+# session 1: 2026-10-19T03:21:38.50 2026-10-19T03:56:11.00
+# impromptu, lucky "us" because ARGUS was incommunicado
 
-#NGC0155        1    8,10,12                        6080   200  600    #  nothing; very slight BL slop
-NGC0155        1    10,12                        6080   200  600    #  nothing ; but 10/11 and 12/13 different levels
+NGC0155        1    8,10,12                        6080   200  600    #  nothing ; but 10/11 and 12/13 different levels (odd on/off)
 
 
-# session 2:  Oct 22, 2026
+# session 2:  2026-10-22T23:10:51.50 2026-10-22T23:18:15.00
 #  only 3c84....  astrid restart, so we continue with session 3
 
 
-# session 3:  Oct 22, 2026
+# session 3:  2026-10-23T00:01:44.50 2026-10-23T00:17:30.00
 #  more issues with DBC/rcp; astrid hanging
 
-UGC11228        3      8,10                        5714  200 600      # nothing
+UGC11228        3      8,10                        5714  200 600      # nothing, or maybe something narrow
 
 
 # session 4:  Oct 23, 2026
@@ -30,12 +31,10 @@ UGC11228        3      8,10                        5714  200 600      # nothing
 
 NGC6762         4     8,10,12,14,16                2863  200 600     # nothing
 NGC6945         4     18,20,22,24,26               3660  200 600     # nothing
-NGC6978         4     28,30,32,34,36               6000  200 800     # good one  [5915]; possible companion; 2.9 Jy.km/s
-#UGC11680NED02   4     38,40,42,44,46              7765  200 600     # RFI odd baseline, might be signal
-UGC11680NED02   4     38,42,44,46                  7765  200 600     # RFI in 41; nothing
+NGC6978         4     28,30,32,34,36               6000  200 800     # good one  [5915]; possible companion or asymmetry; 2.9 Jy.km/s
+UGC11680NED02   4     38,-40,42,44,46              7765  200 600     # RFI in 41; nothing
 UGC11694        4     48,50,52,54,56               5100  450 1200    # good                              3.8 Jy.km/s
-#NGC7236         4     58,60                        7786  250 600    # weak - could be bad baseline [figure]
-NGC7236         4     58                            7786  250 600    # bad baseline;   ON/OFF power
+NGC7236         4     58,60                        7786  250 600     # bad baseline [figure] - ON/OFF 
 
 
 # session 5:  Oct 24, 2026
@@ -177,7 +176,7 @@ IC4215         10  	62,64,66,68		    3849    200 600    # ?
 NGC5044        10  	70,72  			    2715    200 600    # -repeat-
 NGC5077        10       74                          2770    200 600    # bad baseline, but no on/off
 
-# session 11
+# session 11; 2026-11-05T03:22:44.50 2026-11-05T13:00:26.00
 # Nov 04 22:00 | Nov 05 03:00 | 00:36 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 # Nov 05 03:30 | Nov 05 08:30 | 06:07 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 02
 
@@ -247,7 +246,7 @@ NGC5888        14 	92,94,96      	     	    8736    200 600    # nothing; RFI -8
 
 
 
-# session 15; 2026-11-07T14:28:03.50
+# session 15; 2026-11-07T14:28:03.50 2026-11-07T20:14:52.50
 # Nov 07 09:15 | Nov 07 14:15 | 12:00 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
 
 NGC5642       15 8,10,12,14,16       4390  50 400    # weak    [4242]   0.3 Jy.km/s
@@ -263,7 +262,8 @@ NGC6338       15 90,92,94,96,98      8103 200 600    # nothing
  
 
 
-# session 16; 2026-11-08T02:26:03.50
+# session 16; 2026-11-08T02:26:03.50 2026-11-08T08:14:53.50
+
 # Nov 07 21:15 | Nov 08 02:15 | 00:02 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
 NGC0507       16 8,10,12,14      4794 200 600  # nothing
@@ -279,7 +279,7 @@ ESO552-G040   16 80,82,84,86,88      6727 250 600  # good  4.5 Jy.km/s
 UGC00029      16 90,92,94,96,98      8784 200 600  # nothing
 NGC0508       16 100,102,104         5429 200 600  # nothing
 
-# session 17; 2026-11-09T02:31:25.50
+# session 17; 2026-11-09T02:31:25.50 2026-11-09T20:14:56.50 
 # Nov 08 21:15 | Nov 09 02:15 | 00:06 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
 #    something wrong in the beginning of these data
@@ -303,9 +303,8 @@ NGC6515        17 	86,88,90,94      	    6763 200 600  # nothing; bad stuff in 9
 NGC6166NED01   17 	96,98,100      	   	    9347 200 600  # strong ON/OFF, too many ripples
 
 
-# session 18; Date: 2026-11-10T02:29:00.50
-
-# Nov 09 09:15 | Nov 09 14:15 | 12:08 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
+# session 18; Date: 2026-11-10T02:29:00.50 2026-11-10T06:50:55.00
+# Nov 09 09:15 | Nov 09 14:15 | 12:08 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03  --never executed--
 # Nov 09 21:15 | Nov 10 02:15 | 00:10 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
 UGC11228      18 8,10,12             5714 200 600  # -repeat-
@@ -323,7 +322,7 @@ NGC7711       18 74,76               4057 200 600   # nothing
 #                  'NGC4149', 'NGC5549', 'NGC5598', 'NGC5642', 'NGC5797', 'NGC6020', 'UGC10097']
 
 
-# session 19; 2026-11-11T14:11:03.50
+# session 19; 2026-11-11T14:11:03.50 2026-11-11T18:06:02.50
 # Nov 11 09:00 | Nov 11 14:00 | 12:01 |  4.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
 
 NGC6166NED01  19 8,10                   9347 200 600  #  -repeat- strong ON/OFF, too many ripples
@@ -336,15 +335,15 @@ NGC5549       19 54,56,58            7651 200 600 # maybe, but RFI
 NGC5642       19 60,62,64            4242 200 600 # -repeat-
 NGC5794       19 66,68               4140 200 600 # -repeat-
 
-
+# session 20
 # Nov 12 22:30 | Nov 13 03:30 | 01:37 |  2.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
 
 
 # sort -k 1 gals26.pars | grep -v ^#
-# tabcols gals26.pars 1 | sort | uniq -c|wc    (subtract 1)
+# tabcols gals26.pars 1 | sort | uniq -c|wc    
 # grep Jy.km/s gals26.pars | wc
-# 167 now; 44 detections
+# 164 now; 44 detections                       (more if session 17 recoverable)
 
 # check NVSS sources in GBT beam (beam ~ 9 arcmin)
 
