@@ -1,0 +1,303 @@
+#######################################################
+ SCRIPT NUMBER 1, project:AGBT26A_644_15
+#######################################################
+# Script name: 26A644_operator
+# Default operator-run script for AGBT26A_644
+# Y.-H. Eltha Teng, Sep 2026
+
+########## SETTINGS #############
+h = Horizon(18.0)  # minimum of 18 degrees elevation
+myOff = Offset("AzEl", 1.0, 0.0, cosv=True)  # Off position relative to source
+doFirstPointing = True  # Setting to False will skip the first pointing
+doFirstCal = True  # Setting to False will skip the first 3C calibrator OnOff scan
+scanTime = 180  # 180 seconds = 3 min for an on OR off scan 
+n_scans = 5  # do OnOff for 5 time on each science source (i.e. 15 min on + 15 min off per source)
+n_repeat = 1  # observe once per source
+keyhole = 76  # maximum elevation limit of GBT (in degree)
+#####################################
+
+ResetConfig()
+
+config_string = """
+receiver = 'Rcvr1_2'
+obstype = 'Spectroscopy'
+backend = 'VEGAS'
+restfreq = 1420.4058
+bandwidth = 187.5
+nchan = 32768
+swmode = "tp"
+swtype = "none"
+swper = 1.0
+tint = 5.0
+vframe = "bary"
+vdef = "Optical"
+noisecal = "lo"
+pol = "Linear"
+"""
+
+Configure(config_string)
+
+execfile("/home/astro-util/projects/26A644/26A644_functions.py")
+Catalog(fluxcal)
+Catalog(lband_pointing)
+
+tdelta = DateTime.TimeDelta(minutes=5)  
+obs_count = 0
+doCal = doFirstCal
+doPointing = doFirstPointing
+project_obs = 0
+old_catalog_name = 'dummy'
+fullcat = '/home/astro-util/projects/26A644/targets.cat'
+
+
+while project_obs < 100:
+    
+    mycat, altcal = select_my_catalog()
+    obs_per_source = n_repeat * n_scans
+    
+    if mycat == old_catalog_name:
+        print 'SAME CATALOG HAS BEEN SELECTED: Using FULL catalog'
+        mycat = fullcat
+        altcal = '3C309_1'    
+    old_catalog_name = mycat
+
+    c = Catalog(mycat)
+    sources = c.keys()
+
+    for source in sources:
+        
+        doBalance = True
+        
+        ## Pick an observable science source along with its nearby calibrator
+        calibrator = c[source]["calibrator"]
+        n_obs = int(float(c[source]["n_obs"]))
+        obs_left = obs_per_source - n_obs
+        obs_ok = obs_left > 0
+
+        t_now = Now()
+        alt_ok = True  # source altitute should be ok in most cases 
+        if t_now != None and obs_ok:
+            source_rise = h.GetRise(source)
+            source_set  = h.GetSet(source)
+            if source_rise != None:
+                if source_set != None:
+                    t_ok = ((t_now + tdelta) < source_set)
+                    t_ok = t_ok and (t_now >= source_rise)
+                else:
+                    t_ok = True
+            else:
+                t_ok = False
+            
+            if t_ok:
+                ## Skip source if it is near zenith
+                source_ra = c[source]["ra"]  # float in deg
+                source_dec = c[source]["dec"]  # float in deg
+                source_alt = get_altitude(source_ra, source_dec, t_now)
+                alt_ok = False if source_alt > keyhole else True
+        else:
+            t_ok = False
+
+        source_ok = t_ok and obs_ok and alt_ok
+
+        ## Source confirmed; calibrate (if first source) and do science scans
+        if source_ok:
+            if doPointing == True:
+                ## check the calibrator is above the horizon
+                if h.GetRise(calibrator) > t_now:
+                    myCal = altcal ##circumpolar alternative
+                    print 'Calibrator %s is too low: Using %s' %(calibrator,altcal)
+                else:
+                    myCal = calibrator
+                if obs_count == 0:
+                    AutoPeakFocus(myCal)
+                    #Break("Check Peak and Focus")
+                else:
+                    AutoPeak(myCal)
+
+                ResetConfig()
+                Configure(config_string)
+                doBalance = True
+                doPointing = False
+
+            if doCal:
+                Slew(myCal)
+                Balance()
+                print 'Calibration scans (OnOff) :%s ' %(myCal)
+                OnOff(myCal, myOff, scanTime)
+                doCal = False
+                doBalance = True
+
+            ## Starting science scans
+            for i in range(obs_left):
+                ## Checking time ok again
+                t_now = Now()   
+                t_ok = False
+                if t_now != None:
+                    if source_rise != None:
+                        if source_set != None:
+                            t_ok = ((t_now + tdelta) < source_set)
+                            t_ok = t_ok and (t_now >= source_rise)
+                        else:
+                            t_ok = True
+                    else:
+                        t_ok = False
+                else:
+                    t_ok = False
+
+                ## Starting science OnOff scans
+                if t_ok:
+                    ## Re-balance when source changes
+                    if doBalance:
+                        Slew(source)
+                        Balance()
+                        doBalance = False
+
+                    Comment("Starting on-off scan")
+                    OnOff(source, myOff, scanTime)
+
+                    obs_count = obs_count + 1
+                    obs_tot = obs_per_source + 1 - obs_left + i
+                    print '%s: OBS COMPLETE = %s/%s' %(source, obs_tot, obs_per_source)
+                    
+                    update_my_catalogs(source, obs_tot)
+
+        if source_ok and mycat == fullcat:
+            break
+    
+    project_obs = project_obs + 1
+
+#######################################################
+LOG SESSION NUMBER 1
+Manually filled by Daniel Bautista 
+#######################################################
+Session Info
+First Scan Start	2026-11-07 14:22 UTC (MJD 61351.59875)
+Last Scan Start	2026-11-07 20:13 UTC (MJD 61351.84262)
+Last Scan End	2026-11-07 20:15 UTC (MJD 61351.84377)
+Total Size	1.75 GiB
+# Files	602
+# Scans	200
+Observed Periods	1
+Total Obs. Time	9:41:12
+Total Obs. Span	5:52:50
+Min. Scan Duration	0:00:35
+Max. Scan Duration	0:03:03
+
+People
+Observer	Robert Taggart
+Operator	Robert Taggart
+
+Frequency & IF
+Sky Freq. (Achieved)	1.220 – 1.580 GHz
+Sidebands	L
+Max. Feeds	1
+IF Windows	190
+IF Windows Resolved	190
+IF Windows Dropped	0
+IF Paths	1,200
+IF Rollups	100/100
+
+Scans
+Start	End	Duration	#	Session	Frontends	Backends	Proc. Name	Proc. Type	Obs. Type	Rest Freq.	Sky Freq. (Req.)	Astrid Script	Object
+2026-11-07 14:22	2026-11-07 14:22	0:00:39	1	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	Peak	POINTING	CONTINUUM	1.4 GHz	1.4 GHz	26A644_operator	3C295
+2026-11-07 14:23	2026-11-07 14:23	0:00:39	2	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	Peak	POINTING	CONTINUUM	1.4 GHz	1.4 GHz	26A644_operator	3C295
+2026-11-07 14:24	2026-11-07 14:24	0:00:35	3	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	Peak	POINTING	CONTINUUM	1.4 GHz	1.4 GHz	26A644_operator	3C295
+2026-11-07 14:24	2026-11-07 14:25	0:00:35	4	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	Peak	POINTING	CONTINUUM	1.4 GHz	1.4 GHz	26A644_operator	3C295
+2026-11-07 14:26	2026-11-07 14:27	0:01:02	5	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	FocusSubreflector	CALIBRATION	CONTINUUM	1.4 GHz	1.4 GHz	26A644_operator	3C295
+2026-11-07 14:28	2026-11-07 14:31	0:03:02	6	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	3C295
+2026-11-07 14:31	2026-11-07 14:34	0:03:02	7	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	3C295
+2026-11-07 14:43	2026-11-07 14:46	0:03:02	8	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 14:47	2026-11-07 14:50	0:03:02	9	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 14:50	2026-11-07 14:53	0:03:02	10	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 14:54	2026-11-07 14:57	0:03:02	11	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 14:57	2026-11-07 15:00	0:03:02	12	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 15:00	2026-11-07 15:03	0:03:02	13	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 15:04	2026-11-07 15:07	0:03:02	14	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 15:07	2026-11-07 15:10	0:03:02	15	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 15:11	2026-11-07 15:14	0:03:02	16	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 15:14	2026-11-07 15:17	0:03:02	17	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5642
+2026-11-07 15:19	2026-11-07 15:22	0:03:02	18	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:22	2026-11-07 15:25	0:03:02	19	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:26	2026-11-07 15:29	0:03:02	20	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:29	2026-11-07 15:32	0:03:02	21	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:33	2026-11-07 15:36	0:03:02	22	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:36	2026-11-07 15:39	0:03:02	23	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:40	2026-11-07 15:43	0:03:02	24	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:43	2026-11-07 15:46	0:03:02	25	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:47	2026-11-07 15:50	0:03:02	26	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:50	2026-11-07 15:53	0:03:02	27	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5675
+2026-11-07 15:54	2026-11-07 15:57	0:03:02	28	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 15:58	2026-11-07 16:01	0:03:02	29	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:01	2026-11-07 16:04	0:03:02	30	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:05	2026-11-07 16:08	0:03:02	31	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:08	2026-11-07 16:11	0:03:02	32	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:12	2026-11-07 16:15	0:03:02	33	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:16	2026-11-07 16:19	0:03:02	34	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:19	2026-11-07 16:22	0:03:02	35	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:23	2026-11-07 16:26	0:03:02	36	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:26	2026-11-07 16:29	0:03:02	37	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09518
+2026-11-07 16:31	2026-11-07 16:34	0:03:02	38	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 16:34	2026-11-07 16:37	0:03:02	39	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 16:38	2026-11-07 16:41	0:03:02	40	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 16:41	2026-11-07 16:44	0:03:02	41	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 16:45	2026-11-07 16:48	0:03:02	42	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 16:48	2026-11-07 16:51	0:03:02	43	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 16:52	2026-11-07 16:55	0:03:02	44	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 16:55	2026-11-07 16:58	0:03:02	45	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 16:58	2026-11-07 17:01	0:03:02	46	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 17:02	2026-11-07 17:05	0:03:03	47	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC5928
+2026-11-07 17:06	2026-11-07 17:09	0:03:02	48	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:10	2026-11-07 17:13	0:03:02	49	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:13	2026-11-07 17:16	0:03:02	50	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:16	2026-11-07 17:20	0:03:03	51	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:20	2026-11-07 17:23	0:03:02	52	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:23	2026-11-07 17:26	0:03:03	53	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:27	2026-11-07 17:30	0:03:02	54	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:30	2026-11-07 17:33	0:03:03	55	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:34	2026-11-07 17:37	0:03:02	56	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:37	2026-11-07 17:40	0:03:03	57	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC09937
+2026-11-07 17:42	2026-11-07 17:45	0:03:02	58	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 17:45	2026-11-07 17:48	0:03:03	59	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 17:49	2026-11-07 17:52	0:03:02	60	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 17:52	2026-11-07 17:55	0:03:03	61	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 17:56	2026-11-07 17:59	0:03:02	62	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 17:59	2026-11-07 18:02	0:03:03	63	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 18:03	2026-11-07 18:06	0:03:02	64	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 18:06	2026-11-07 18:09	0:03:03	65	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 18:10	2026-11-07 18:13	0:03:02	66	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 18:13	2026-11-07 18:16	0:03:03	67	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6020
+2026-11-07 18:17	2026-11-07 18:20	0:03:02	68	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:21	2026-11-07 18:24	0:03:03	69	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:24	2026-11-07 18:27	0:03:02	70	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:28	2026-11-07 18:31	0:03:03	71	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:31	2026-11-07 18:34	0:03:02	72	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:34	2026-11-07 18:37	0:03:03	73	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:38	2026-11-07 18:41	0:03:02	74	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:41	2026-11-07 18:44	0:03:02	75	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:45	2026-11-07 18:48	0:03:02	76	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:48	2026-11-07 18:51	0:03:02	77	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6021
+2026-11-07 18:52	2026-11-07 18:55	0:03:02	78	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 18:56	2026-11-07 18:59	0:03:02	79	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 18:59	2026-11-07 19:02	0:03:02	80	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 19:02	2026-11-07 19:05	0:03:02	81	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 19:06	2026-11-07 19:09	0:03:02	82	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 19:09	2026-11-07 19:12	0:03:02	83	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 19:13	2026-11-07 19:16	0:03:02	84	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 19:16	2026-11-07 19:19	0:03:02	85	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 19:20	2026-11-07 19:23	0:03:02	86	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 19:23	2026-11-07 19:26	0:03:02	87	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10117
+2026-11-07 19:30	2026-11-07 19:33	0:03:02	88	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6125
+2026-11-07 19:33	2026-11-07 19:36	0:03:02	89	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6125
+2026-11-07 19:38	2026-11-07 19:41	0:03:02	90	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 19:41	2026-11-07 19:45	0:03:03	91	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 19:45	2026-11-07 19:48	0:03:02	92	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 19:48	2026-11-07 19:51	0:03:03	93	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 19:52	2026-11-07 19:55	0:03:02	94	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 19:55	2026-11-07 19:58	0:03:03	95	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 19:59	2026-11-07 20:02	0:03:02	96	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 20:02	2026-11-07 20:05	0:03:03	97	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 20:06	2026-11-07 20:09	0:03:02	98	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 20:09	2026-11-07 20:12	0:03:03	99	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	NGC6338
+2026-11-07 20:13	2026-11-07 20:15	0:01:40	100	AGBT26A_644_15	Rcvr1_2	DCR, VEGAS	OnOff	SIMPLE	LINE	1.4 GHz	1.4 GHz	26A644_operator	UGC10811
+#######################################################
+End of log
