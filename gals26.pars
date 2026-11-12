@@ -1,10 +1,16 @@
 # Project: AGBT26A_644
 
+# Example how to run ($n is galaxy name)
+#
+#    ./edge_hi.py --mode 26  --flux --frame lsrk --water $n
+# 
 # Issues:
-#  - ON/OFF       different power levels, continuum?
-#  - on/off 
-#  - bad vlsr     signal VLSR very diffrent from catalog
-#  - Jy.km/s      amount of signal seen; typical error 0.1
+#  - ON/OFF       different power levels, continuum?           n=NGC6166NED01
+#  - on/off       ripples but no on/off                        n=NGC5546
+#  - RFI                                                       n=NGC4676A
+#  - bad vlsr     signal VLSR very diffrent from catalog       n=NGC1060       catalogue value: 5081
+#  - Jy.km/s      amount of signal seen; typical error 0.1     n=UGC06616
+#  ? NGC5549   counting 8,but i see 4
 
 # galaxy  session    scans           vlsr  dv   dw      # comments
 
@@ -12,7 +18,7 @@
 # session 1: 2026-10-19T03:21:38.50 2026-10-19T03:56:11.00
 # impromptu, lucky "us" because ARGUS was incommunicado
 
-NGC0155        1    8,10,12                        6080   200  600    #  nothing ; but 10/11 and 12/13 different levels (odd on/off)
+NGC0155         1     8,10,12                       6080  200 600    #  nothing ; but 10/11 and 12/13 different levels (odd on/off)
 
 
 # session 2:  2026-10-22T23:10:51.50 2026-10-22T23:18:15.00
@@ -22,7 +28,7 @@ NGC0155        1    8,10,12                        6080   200  600    #  nothing
 # session 3:  2026-10-23T00:01:44.50 2026-10-23T00:17:30.00
 #  more issues with DBC/rcp; astrid hanging
 
-UGC11228        3      8,10                        5714  200 600      # nothing, or maybe something narrow
+UGC11228        3     8,10                         5714  200 600      # nothing, or maybe something narrow
 
 
 # session 4:  Oct 23, 2026
@@ -72,7 +78,7 @@ NGC2639         6      26,28,30,32,34              3058   200 600     # nothing
 UGC04546        6      36,38,40,42,44              5183   200 600     # nothing
 UGC04730        6      46,48,50,52,54              3300   300 600     # good; interaction? [3253]  8.2 Jy.km/s
 NGC2880         6      56,58,60,62,64              1511   200 600     # nothing
-UGC05113        6      68,70,72,74                 6898   200 600     # nothing (66 = RFI)
+UGC05113        6      -66,68,70,72,74             6898   200 600     # nothing (66 = RFI)
 PGC3086846      6      76                          8890   200 600     # weak   1,8 Jy.km/s
 NGC3406NED01    6      78,80                       7357   200 600     # nothing
 UGC06256        6      82,84,86,88,90              3400   200 600     # good   [3334]   2.6 Jy.km/s
@@ -82,7 +88,7 @@ NGC5198         6      110                         2551   200 600     # -repeat-
 UGC08984        6      112,114,116,118             3723   200 600     # nothing
 NGC5481         6      120                         1940   200 600     # -repeat-
 NGC5557         6      122                         3268   200 600     # nothing, very strong waves
-NGC5598         6      124,128                     5540   200 600     #  weak wrong vlsr 126/127 bad [5375]  0.8 Jy.km/s
+NGC5598         6      124,-126,128                5540   200 600     #  weak wrong vlsr 126/127 bad [5375]  0.8 Jy.km/s
 NGC5739         6      130,132,134,136             5534   200 600     # nothing
 NGC5794         6      138,140,142,144             4140   150 600     # -repeat-
 NGC5797         6      146,148,150                 3909   200 600     # weak at best
@@ -110,14 +116,13 @@ NGC2767         7       96,98,100,102,104           5100    200 600   # good  [4
 ARP321NED01     7       106                         6622    200 600   # maybe, some RFI
 PGC3086846      7       108,110,112,114             8890    200 600   # -repeat
 NGC3158         7       116,118,120,122,124         6889    200 600   # nothing
-NGC3160         7       128,130,132,134             6724    200 600   # nothing; RFI in 126
+NGC3160         7       -126,128,130,132,134        6724    200 600   # nothing; RFI in 126
 MCG+08-19-17    7       136,138,140,142,144         9120    250 600   # good    wrong vlsr [8859] 5.1 Jy.km/s
 NGC3406NED01    7       146,148,150                 7357    200 600   # - repeat -
 PGC32873        7       152,154,156,158,160         7444    200 600   # nothing
 UGC06616        7       162                         1013    200 600   # -repeat-
-#NGC3990         7       164,166,168,172              705    200 600   # 170 bad
-NGC3990         7       164,166,168,172              850    200 400   # maybe; bad suspicious baseline; 170 bad; 2.5 Jy.km/s
-NGC4841A        7       174                         6766    200 600   # -repeat-    176 bad
+NGC3990         7       164,166,168,-170,172         850    200 400   # maybe; bad suspicious baseline; 170 bad; 2.5 Jy.km/s  [705?]
+NGC4841A        7       174,-176                    6766    200 600   # -repeat-    176 bad
 NGC4874         7       178                         7078    200 600   # RFI
 
 # session 8
@@ -130,7 +135,7 @@ NGC4825 	8	34,36,38,40,42 		    4452    200 600   # badseline
 NGC4874 	8	44,46,48,50 		    7078    200 600   # rfi
 UGC08322 	8	52,54,56,58,60 		    7648    200 600   # rfi
 NGC5044 	8	62,64,66 		    2715    200 600   # badseline
-#IC4215 		8	68 			     945    100 400   # unclear [3849] wrong vlsr? 4.0 Jy.km/s - this is UGC 08333
+#IC4215 	8	68 			     945    100 400   # unclear [3849] wrong vlsr? 4.0 Jy.km/s - this is UGC 08333
 IC4215 		8	68 			    4000    200 400   # maybe weak signal near 4040 about 0.35 Jy*km/s
 
 
@@ -171,7 +176,7 @@ ARP321NED01    10  	22,24,26,28		    6622    200 600    # -repeat-
 NGC3615        10   	30,32,34,36,38		    6583    200 600    # nothing
 NGC4003        10    	40,42,44,46,48		    6508    200 600    # nothing 
 NGC1281        10  	50  			    4314    200 600    # -repeat-
-PGC12562       10   	54,56,58,60		    4605    200 600    #  RFI in 52, nothing
+PGC12562       10   	-52,54,56,58,60		    4605    200 600    #  RFI in 52, nothing
 IC4215         10  	62,64,66,68		    3849    200 600    # ?
 NGC5044        10  	70,72  			    2715    200 600    # -repeat-
 NGC5077        10       74                          2770    200 600    # bad baseline, but no on/off
@@ -182,14 +187,14 @@ NGC5077        10       74                          2770    200 600    # bad bas
 
 NGC0548        11       8,10,12,14,16               5312    200 600    # bad baseline  ON/OFF
 UGC01062       11       18,20,22,24,26              5396    200 600    # nothing - but ripples
-NGC0584        11   	28,30,32,34		    1852    200 600    # just maybe  - 37 bad
+NGC0584        11   	28,30,32,34,-36		    1852    200 600    # just maybe  - 37 bad
 UGC01271       11 	38,40,42,44,46  	    4944    200 600    # bad baselines
 NGC0675        11 	48,50,52,54,56 		    5090    150 600    # [5159] weak   0.7 Jy.km/s
 SDSSJ015424    11 	58,60,62,64,66  	    6190    100 400    #  [6227] narrow weak   0.3 Jy.km/s
-NGC0731        11 	72,74,76  	    	    3858    200 600    #  nothing ; but 68,70 bad - 
+NGC0731        11 	-68,-70,72,74,76     	    3858    200 600    #  nothing ; but 68,70 bad - 
 NGC0741        11  	78,80,82,84,86 		    5492    200 600    #  nothing ; ON/OFF but kind of ok baseline
 NGC0781        11 	88,90,92,94,96 		    3494    200 600    # nothing ; ON/OFF but kind of ok baseline
-NGC0810        11 	100,102,104,106             7705    200 600    #   -98; maybe at 7520 ?
+NGC0810        11 	-98,100,102,104,106         7705    200 600    # maybe at 7520 ?
 BKD2008WR346   11 	108			    1532    200 600    # nothing
 NGC1026        11 	110,112,114,116 	    4107    200 600    # nothing
 PGC11179       11  	118,120,122  		    6850    200 600    # ON/OFF bad baseline
@@ -197,9 +202,9 @@ NGC1453        11 	124,126 		    3921    200 600    # nothing
 NGC1587        11  	128,130,132,134,136 	    3683    200 600    # very weak    0.3 Jy.km/s
 NGC1656        11 	138,140,142		    3618    200 600    # nothing 
 ARP180         11  	144 			    4250    250 600    #  [4098]  weak    3.8 Jy.km/s
-KUG1349+143    11  	146,150,152,154 	    7375    200 600    # -148 unclear
+KUG1349+143    11  	146,-148,150,152,154 	    7375    200 600    # -148 unclear
 UGC08984       11  	156,158,160,162,164         3723    200 600    # -repeat-
-NGC6125        11  	166,168,170,172,174 	    4707    200 600    # -repeat-   weird 2x ?
+NGC6125        11  	166,168,170,172,174 	    4707    200 600    # -repeat-   weird 2x observed ?
 
 # session 12
 # Nov 05 10:00 | Nov 05 15:00 | 12:38 |  5.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
@@ -207,11 +212,11 @@ NGC6125        11  	166,168,170,172,174 	    4707    200 600    # -repeat-   wei
 NGC5328        12 	8,10,12,14,16       	    4696    200 600    # modest on/off but terrible ripples
 IC4350         12 	18,20,22,24,26     	    6118    200 600    #  terrible ripples
 NGC5513        12 	28,30               	    4938    200 600    # nothing, but modest ripples
-NGC5507        12 	34,36,40      	    	    1710    150 600    # [1860] wrong vlsr? 4.0 J.km/s ; pretty lousy BL
-NGC5546        12 	44,46,48,50      	    7441    200 600    # nothing  42=RFI  strong ripples, no obvious on/off
-IC0994         12 	52,54,58,60      	    7255    200 600    # nothing   56=RFI
+NGC5507        12 	-32,34,36,-38,40   	    1710    150 600    # [1860] wrong vlsr? 4.0 J.km/s ; pretty lousy BL
+NGC5546        12 	-42,44,46,48,50      	    7441    200 600    # nothing  42=RFI  strong ripples, no obvious on/off
+IC0994         12 	52,54,-56,58,60      	    7255    200 600    # nothing   56=RFI
 NGC5557        12 	62,64,66,68         	    3268    200 600    # -repeat-
-NGC5549        12 	76      	    	    7651    200 600    # maybe, but RFI (GPS) !! bit in 74; still ripples left
+NGC5549        12 	-70,-72,-74,76,-78    	    7651    200 600    # maybe, but RFI (GPS) !! bit in 74; still ripples left
 NGC5580        12 	80,82,84,86,88      	    3061    200 600    # nothing
 NGC5598        12 	90,92               	    5375    200 600    # -repeat-
 
@@ -226,7 +231,7 @@ NGC1026        13 	46                  	    4107    200 600    # -repeat-
 NGC1041        13 	48,50,52,54,56        	    7012    200 600    # nothing
 MCG-02-08-014  13 	58,60,62,64,66      	    5010    250 600    # good [4929]   4.1 Jy.km/s
 NGC1132        13 	68,70,72,74,76      	    6860    250 600    # ODD  raw W shape 3.7 Jy.km/s
-NGC1142        13 	78,80,84,86      	    8613    200 600    # nothing  -82
+NGC1142        13 	78,80,-82,84,86      	    8613    200 600    # nothing  -82
 PGC11179       13 	88,90               	    6850    200 600    # -reoeat-
 NGC1332        13 	92,94,96                    1538    200 600    # nothing; bad baseline
 
@@ -237,7 +242,7 @@ NGC5611        14 	8,10,12,14,16       	    1960    150 600    # [1871]    0.7 J
 NGC5623        14 	18,20,22,24,26     	    3361    200 600    # nothing
 NGC5626        14 	28,30,32,34,36      	    6890    200 600    # ripples
 UGC09539       14 	38,40,42,44,46      	    6296    200 600    # baseline
-IC1079         14 	48,52,56      	     	    8628    200 600    # too much RFI
+IC1079         14 	48,-50,52,-54,56    	    8628    200 600    # too much RFI
 NGC5846        14 	58,60,62,64,66      	    1857    200 600    # strong ripple
 IC4534         14 	68,70,72,74,76      	    4821    200 600    # nothing
 NGC5872        14 	78,80,82,84,86      	    7496    200 600    # strong ripple
@@ -263,12 +268,11 @@ NGC6338       15 90,92,94,96,98      8103 200 600    # nothing
 
 
 # session 16; 2026-11-08T02:26:03.50 2026-11-08T08:14:53.50
-
 # Nov 07 21:15 | Nov 08 02:15 | 00:02 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
-NGC0507       16 8,10,12,14      4794 200 600  # nothing
+NGC0507       16 8,10,12,14          4794 200 600  # nothing
 NGC1332       16 16,18,20            1538 200 600  # nothing
-NGC1361       16 22,24,30      5207 200 600  # nothing?  RFI at 26,28
+NGC1361       16 22,24,30            5207 200 600  # nothing?  RFI at 26,28
 NGC1400Group  16 32,34,36,38,40      1778 200 600 # nothing
 NGC1453       16 42,44,46            3921 200 600  # -repeat-   (odd negative profile at 4430 ?)
 NGC1656       16 48,50               3618 200 600  # -repeat-
@@ -297,25 +301,37 @@ NGC0508       16 100,102,104         5429 200 600  # nothing
 #    ValueError: More than one value for TCAL: [1.5982498 1.6004368]
 
 #   before this something crashing pipeline
-#   these are ok
+#   these are ok, but are not in a shadow session 17 :-(
 NGC6497        17 	80,82,84            	    6080 275 600  # good  [5993] bad vlsr   3.8 Jy.km/s
 NGC6515        17 	86,88,90,94      	    6763 200 600  # nothing; bad stuff in 92/93
 NGC6166NED01   17 	96,98,100      	   	    9347 200 600  # strong ON/OFF, too many ripples
+
+
+NGC0508       17 8,10,12             5429 200 600  # -repeat-
+UGC10811      17 14,16,18,20         8750 300 600  # good [8679]   4.1 Jy.km/s
+NGC6411       17 22,24,26,28,30      3681 200 600  # weak ?
+NGC6497       17 32                  6080 300 600  # good [5993] 3.6 Jy.km/s
+NGC7236       17 34,36,38,40         7786 200 600  # ON/OFF
+NGC0515       17 42,44,46,48         5001 200 600  # nothing
+NGC0517       17 50,52,54,56,58      4047 200 600  # nothing
+NGC0528       17 60,62,64,66,68      4683 200 600  # nothing
+NGC0529       17 70,72,74,76,78      4665 200 600  # maybe, just maybe
+
 
 
 # session 18; Date: 2026-11-10T02:29:00.50 2026-11-10T06:50:55.00
 # Nov 09 09:15 | Nov 09 14:15 | 12:08 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03  --never executed--
 # Nov 09 21:15 | Nov 10 02:15 | 00:10 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
-UGC11228      18 8,10,12             5714 200 600  # -repeat-
-UGC12127      18 14,16,18,20,22      8223 200 600  # odd baseline, TBD
-NGC7436B      18 26,28,30,32         7366 200 600  # nothing?   RFI at 24 
-NGC7559B      18 34,36,38,40,42      4567 200 600  # bad OFF ? negative profile
-UGC12494NOTES01  18 44,46,48,50,52   4200 150 600  # good; but wrong vlsr [4776] 4.9 Jy.km/s
-NGC7611       18 54,56,58,60,62      2860  100 600  # [3364] maybe...   narrow, 0.6 Jy.km/s
-UGC12518      18 64,66               2810 100 600   # [3876] wrong vlsr  2.8 Jy.km/s
-NGC7671       18 68,70,72            3792 200 600   # very weak
-NGC7711       18 74,76               4057 200 600   # nothing
+UGC11228         18 8,10,12             5714 200 600  # -repeat-
+UGC12127         18 14,16,18,20,22      8223 200 600  # odd baseline, TBD
+NGC7436B         18 26,28,30,32         7366 200 600  # nothing?   RFI at 24 
+NGC7559B         18 34,36,38,40,42      4567 200 600  # bad OFF ? negative profile
+UGC12494NOTES01  18 44,46,48,50,52      4200 150 600  # good; but wrong vlsr [4776] 4.9 Jy.km/s
+NGC7611       	 18 54,56,58,60,62      2860 100 600  # [3364] maybe...   narrow, 0.6 Jy.km/s
+UGC12518         18 64,66               2810 100 600   # [3876] wrong vlsr  2.8 Jy.km/s
+NGC7671          18 68,70,72            3792 200 600   # very weak
+NGC7711          18 74,76               4057 200 600   # nothing
 
 # list_moretime = ['NGC0472', 'NGC0584', 'NGC0675', 'NGC0810', 'NGC1587', 'UGC01918', 'ARP180',
 #                  'SDSSJ015424', 'NGC0584', 'NGC2476', 'NGC2522', 'NGC2615', 'NGC3990', 'UGC04468',
@@ -328,23 +344,32 @@ NGC7711       18 74,76               4057 200 600   # nothing
 NGC6166NED01  19 8,10                   9347 200 600  #  -repeat- strong ON/OFF, too many ripples
 NGC6173       19 12,14,16,18,20      	8703 200 600  # lots RFI
 UGC10693      19 22,24,26,28,30     	8358 200 600  # lots RFI
-UGC10799      19 32,34,36,38,40      8427 200 600 # some RFI
-NGC4149       19 42,44,46            2959 200 600 # -repeat-
-IC4215        19 48,50,52            3849 200 600 # signal at 920 km/s  !!! - weak at 4030?
-NGC5549       19 54,56,58            7651 200 600 # maybe, but RFI
-NGC5642       19 60,62,64            4242 200 600 # -repeat-
-NGC5794       19 66,68               4140 200 600 # -repeat-
+UGC10799      19 32,34,36,38,40      	8427 200 600  # some RFI
+NGC4149       19 42,44,46            	2959 200 600  # -repeat-
+IC4215        19 48,50,52            	3849 200 600  # signal at 920 km/s  !!! - weak at 4030?
+NGC5549       19 54,56,58            	7651 200 600  # maybe, but RFI
+NGC5642       19 60,62,64            	4242 200 600  # -repeat-
+NGC5794       19 66,68               	4140 200 600  # -repeat-
+
+
+# list_moretime = ['NGC0472', 'NGC0584', 'NGC0675', 'NGC0810', 'NGC1587', 'UGC01918', 'ARP180', 'SDSSJ015424',
+#                  'NGC0584', 'NGC2476', 'NGC2522', 'NGC2615', 'NGC3990', 'UGC04468', 'PGC3086846', 'NGC4149',
+#                  'NGC5549', 'NGC5598', 'NGC5642', 'NGC5794', 'NGC5797', 'NGC6020', 'NGC6021', 'UGC10097', 'IC4215']
 
 # session 20
 # Nov 12 22:30 | Nov 13 03:30 | 01:37 |  2.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
+
+
+# session 21 (last?) - 3.5 hours
 
 
 
 # sort -k 1 gals26.pars | grep -v ^#
 # tabcols gals26.pars 1 | sort | uniq -c|wc    
 # grep Jy.km/s gals26.pars | wc
-# 164 now; 44 detections                       (more if session 17 recoverable)
+# 170 now; 47 detections
 
 # check NVSS sources in GBT beam (beam ~ 9 arcmin)
 
-
+# tabcols 26A/targets.cat 1,7 | sort > junk1a
+# ./count_scans.py gals26.pars | sort  | tabcols - 1,2 > junk1b
