@@ -18,7 +18,7 @@
 # session 1: 2026-10-19T03:21:38.50 2026-10-19T03:56:11.00
 # impromptu, lucky "us" because ARGUS was incommunicado
 
-NGC0155         1     8,10,12                       6080  200 600    #  nothing ; but 10/11 and 12/13 different levels (odd on/off)
+NGC0155        1     8,10,12                       6080  200 600    #  nothing ; but 10/11 and 12/13 different levels (odd on/off)
 
 
 # session 2:  2026-10-22T23:10:51.50 2026-10-22T23:18:15.00
@@ -28,19 +28,19 @@ NGC0155         1     8,10,12                       6080  200 600    #  nothing 
 # session 3:  2026-10-23T00:01:44.50 2026-10-23T00:17:30.00
 #  more issues with DBC/rcp; astrid hanging
 
-UGC11228        3     8,10                         5714  200 600      # nothing, or maybe something narrow
+UGC11228       3     8,10                         5714  200 600      # nothing, or maybe something narrow
 
 
 # session 4:  Oct 23, 2026
 # Oct 23 17:30 | Oct 23 21:30 | 18:17 |  3.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 04
 #   everything fine now
 
-NGC6762         4     8,10,12,14,16                2863  200 600     # nothing
-NGC6945         4     18,20,22,24,26               3660  200 600     # nothing
-NGC6978         4     28,30,32,34,36               6000  200 800     # good one  [5915]; possible companion or asymmetry; 2.9 Jy.km/s
-UGC11680NED02   4     38,-40,42,44,46              7765  200 600     # RFI in 41; nothing
-UGC11694        4     48,50,52,54,56               5100  450 1200    # good                              3.8 Jy.km/s
-NGC7236         4     58,60                        7786  250 600     # bad baseline [figure] - ON/OFF 
+NGC6762        4     8,10,12,14,16                2863  200 600     # nothing
+NGC6945        4     18,20,22,24,26               3660  200 600     # nothing
+NGC6978        4     28,30,32,34,36               6000  200 800     # good one  [5915]; possible companion or asymmetry; 2.9 Jy.km/s
+UGC11680NED02  4     38,-40,42,44,46              7765  200 600     # RFI in 41; nothing
+UGC11694       4     48,50,52,54,56               5100  450 1200    # good                              3.8 Jy.km/s
+NGC7236        4     58,60                        7786  250 600     # bad baseline [figure] - ON/OFF 
 
 
 # session 5:  Oct 24, 2026
@@ -49,16 +49,16 @@ NGC7236         4     58,60                        7786  250 600     # bad basel
 
 NGC4149         5     8,10,12,14,16                2959   200 600     # weak or nothing
 IC3065          5     18,20,22,24,26                905   200 600     # nothing
-NGC4261         5     28,30,32,34,36               2212   200 600     # bad baseline   ON/OFF
+NGC4261         5     28,30,32,34,36               2212   200 600     # bad baseline   ON/OFF   VLASS
 NGC4473         5     38,40,42,44,46               2244   200 600     # nothing
 IC3586          5     48,50,52,56,58               1595   200 600     # 54 short.
-NGC4593         5     60,62                        2498   200 600     # very bad baseline ON/OFF
+NGC4593         5     60,62                        2498   200 600     # very bad baseline ON/OFF   weak VLASS
 IC3652          5     64,66,68,70,72                501   200 600     # low vlsr; difficult, probably nothing
 NGC4676A        5     74,76,78,80,82               6600   400 600     # good    4.8 Jy.km/s
 NGC4816         5     84,86,88,90,92               7015   200 600     # RFI ?
 NGC4841A        5     94,96,98                     6766   200 600     # nothing?
 UGC08267        5     100,102,104,106,108          7204   200 600     # nothing?
-NGC5029         5     110,112,114,116,118          8646   200 600     # rfi   
+NGC5029         5     110,-112,114,116,-118        8646   200 600     # RFI   
 NGC5198         5     120,122,124,126              2551   200 600     # good     1.7 Jy.km/s
 NGC5475         5     128,130,132,134,136          1586   200 600     # nothing
 NGC5481         5     138,140,142,144              1863   250 600     # good   [1940]   6.8 Jy.km/s
@@ -91,9 +91,9 @@ NGC5557         6      122                         3268   200 600     # nothing,
 NGC5598         6      124,-126,128                5540   200 600     #  weak wrong vlsr 126/127 bad [5375]  0.8 Jy.km/s
 NGC5739         6      130,132,134,136             5534   200 600     # nothing
 NGC5794         6      138,140,142,144             4140   150 600     # -repeat-
-NGC5797         6      146,148,150                 3909   200 600     # weak at best
+NGC5797         6      146,148,150 		   4100   150 400     # weak  ; wrong vlsr  [3909]  0.8 Jy.km/s
 NGC5971         6      152,154,156                 3265   200 600     # - repeat -
-UGC10097        6      158,160,162,164             5909   200 600     # weak at best
+UGC10097        6      158,160,162,164             5909   200 600     # weak at best; 0.4 Jy.km/s
 NGC6125         6      166,168,170,172,174         4707   200 600     # nothing
 
 # session 7
@@ -273,54 +273,50 @@ NGC6338       15 90,92,94,96,98      8103 200 600    # nothing
 NGC0507       16 8,10,12,14          4794 200 600  # nothing
 NGC1332       16 16,18,20            1538 200 600  # nothing
 NGC1361       16 22,24,30            5207 200 600  # nothing?  RFI at 26,28
-NGC1400Group  16 32,34,36,38,40      1778 200 600 # nothing
+NGC1400Group  16 32,34,36,38,40      1778 200 600  # nothing
 NGC1453       16 42,44,46            3921 200 600  # -repeat-   (odd negative profile at 4430 ?)
 NGC1656       16 48,50               3618 200 600  # -repeat-
 NGC1665       16 52,54,56,58,60      2668 200 600  # nothing
 NGC1666       16 62,64,66,68,70      2650 200 600  # nothing
 ARP180        16 72,74,76,78         4098 200 600  # -repeat-
-ESO552-G040   16 80,82,84,86,88      6727 250 600  # good  4.5 Jy.km/s
+ESO552-G040   16 80,82,84,86,88      6750 400 600  # good  7.4 Jy.km/s  --order 1
 UGC00029      16 90,92,94,96,98      8784 200 600  # nothing
 NGC0508       16 100,102,104         5429 200 600  # nothing
 
-# session 17; 2026-11-09T02:31:25.50 2026-11-09T20:14:56.50 
+# session 17 was done in two sections both labeled as session 17 - we hack by naming it 17a and 17b
+#         17a   2026-11-09T02:31:25.50 2026-11-09T07:02:24.00
+#         17b   2026-11-09T14:24:36.50 2026-11-09T20:14:56.50 
 # Nov 08 21:15 | Nov 09 02:15 | 00:06 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
-
-#    something wrong in the beginning of these data
-
-#    ValueError: More than one value for TCAL: [1.5982498 1.6004368]
-#NGC0508        17 	8,10,12             	    4954 200 600  # -repeat-
-#UGC10811       17	14,16,18,20         	    7121 200 600
-#NGC6411        17 	22,24,26,28,30      	    3757 200 600  # bad?
-#NGC6497       17 	32                  	    5767 200 600  # bad  data, see below for correct
-#NGC7236        17 	34,36,38,40         	    7160 200 600
-#NGC0515        17 	42,44,46,48         	    6236 200 600
-#NGC0517        17 	50,52,54,56,58      	    5835 200 600
-#NGC0528        17 	60,62,64,66,68      	    4854 200 600
-#NGC0529        17 	70,72,74,76,78      	    5864 200 600
-#    ValueError: More than one value for TCAL: [1.5982498 1.6004368]
-
-#   before this something crashing pipeline
-#   these are ok, but are not in a shadow session 17 :-(
-NGC6497        17 	80,82,84            	    6080 275 600  # good  [5993] bad vlsr   3.8 Jy.km/s
-NGC6515        17 	86,88,90,94      	    6763 200 600  # nothing; bad stuff in 92/93
-NGC6166NED01   17 	96,98,100      	   	    9347 200 600  # strong ON/OFF, too many ripples
+# Nov 09 09:15 | Nov 09 14:15 | 12:08 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03 
 
 
-NGC0508       17 8,10,12             5429 200 600  # -repeat-
-UGC10811      17 14,16,18,20         8750 300 600  # good [8679]   4.1 Jy.km/s
-NGC6411       17 22,24,26,28,30      3681 200 600  # weak ?
-NGC6497       17 32                  6080 300 600  # good [5993] 3.6 Jy.km/s
-NGC7236       17 34,36,38,40         7786 200 600  # ON/OFF
-NGC0515       17 42,44,46,48         5001 200 600  # nothing
-NGC0517       17 50,52,54,56,58      4047 200 600  # nothing
-NGC0528       17 60,62,64,66,68      4683 200 600  # nothing
-NGC0529       17 70,72,74,76,78      4665 200 600  # maybe, just maybe
+NGC0508       17a 8,10,12             5429 200 600  # -repeat-
+UGC10811      17a 14,16,18,20         8750 300 600  # good [8679]   4.1 Jy.km/s
+NGC6411       17a 22,24,26,28,30      3681 200 600  # weak 0.9 Jy.km/s
+NGC6497       17a 32                  6080 300 600  # good [5993] bad vlsr   3.9 Jy.km/s
+NGC7236       17a 34,36,38,40         7786 200 600  # ON/OFF
+NGC0515       17a 42,44,46,48         5001 200 600  # nothing
+NGC0517       17a 50,52,54,56,58      4047 200 600  # nothing
+NGC0528       17a 60,62,64,66,68      4683 200 600  # nothing
+NGC0529       17a 70,72,74,76,78      4665 200 600  # maybe, just maybe
 
 
+NGC5684       17b 8,10,12,14,16       4005 200 600  # bad ripple
+NGC5739       17b 18                  5534 200 600  # nothing
+NGC5797       17b 20,22               3909 200 600  # narrow  0.8 Jy.km/s
+NGC5935       17b 24,26,28,30,32      5440 400 600  # [5315] 5.1 Jy.km/s     very asymmetric
+UGC10097      17b 34                  5909 200 600  # maybe (something narrow at 0.4)
+NGC6146       17b 36,-38,40,42,44     8706 200 600  # 38 RFI; also some ON/OFF    1.8 Jy.km/s
+NGC6150B      17b 46,48,50,52,54      9410 200 600  # nothing, ripples
+CGCG251-041   17b -56,58,60,62,64     5195 200 600  # maybe maybe
+UGC10695      17b 66,68,70,72,-74     8262 200 600  # weak    0.5 Jy.km/s
+#UGC10811     17b -76                 8679 200 600  # RFI
+NGC6497       17b 78,80,82,84         6080 275 600  # -repeat- 
+NGC6515       17b 86,88,90,-92,94     6763 200 600  # nothing; bad stuff in 92/93
+NGC6166NED01  17b 96,98,100           9347 200 600  # strong ON/OFF, too many ripples (102 only ON)
+# NGC6166 has strong VLASS 1.2 source
 
 # session 18; Date: 2026-11-10T02:29:00.50 2026-11-10T06:50:55.00
-# Nov 09 09:15 | Nov 09 14:15 | 12:08 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03  --never executed--
 # Nov 09 21:15 | Nov 10 02:15 | 00:10 |  6.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 
 UGC11228         18 8,10,12             5714 200 600  # -repeat-
@@ -330,7 +326,7 @@ NGC7559B         18 34,36,38,40,42      4567 200 600  # bad OFF ? negative profi
 UGC12494NOTES01  18 44,46,48,50,52      4200 150 600  # good; but wrong vlsr [4776] 4.9 Jy.km/s
 NGC7611       	 18 54,56,58,60,62      2860 100 600  # [3364] maybe...   narrow, 0.6 Jy.km/s
 UGC12518         18 64,66               2810 100 600   # [3876] wrong vlsr  2.8 Jy.km/s
-NGC7671          18 68,70,72            3792 200 600   # very weak
+NGC7671          18 68,70,72            3792 200 600   # nothing
 NGC7711          18 74,76               4057 200 600   # nothing
 
 # list_moretime = ['NGC0472', 'NGC0584', 'NGC0675', 'NGC0810', 'NGC1587', 'UGC01918', 'ARP180',
@@ -358,16 +354,32 @@ NGC5794       19 66,68               	4140 200 600  # -repeat-
 
 # session 20
 # Nov 12 22:30 | Nov 13 03:30 | 01:37 |  2.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
+#  note no 3C calibration source, since they were in the keyhole
+
+UGC12518      20 1,3,5               2810 200 600  # -repeat-
+NGC7619       20 7,9,11,13,15        3744 200 600  # ON/OFF ripples, waterfall is messy too
+NGC7623       20 17,19,21,23,25      3678 200 600  # nothing, but negative profile at 2440 (from an OFF?)
+NGC7671       20 27                  3792 200 600  # -repeat-
 
 
 # session 21 (last?) - 3.5 hours
+# Nov 13 10:30 | Nov 13 15:30 | 13:39 |  3.50 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
 
+NGC5794       21 8,10          4140 200 600   # -repeat-
+UGC10097      21 12,14,16      5909 200 600   # -repeat-
+NGC6020       21 18,20,22      4251 200 600   # -repeat-   still nothing
+NGC6021       21 24,26,28      4710 200 600   # -repeat-   baseline issues, not sure if flux
+PGC3086846    21 30,32,34      8890 200 600   # -repeat-
+NGC5598       21 36,38,40      5375 200 600   # -repeat-
+NGC5797       21 42,44,46      3909 200 600   # -repeat-
+NGC3990       21 48,50,52       705 200 600   # -repeat-
 
+# summing all the hours in the listed sessions gives 120 hours, though one 6 hour session was never executed?
 
 # sort -k 1 gals26.pars | grep -v ^#
 # tabcols gals26.pars 1 | sort | uniq -c|wc    
 # grep Jy.km/s gals26.pars | wc
-# 170 now; 47 detections
+# 178 now; 53 detections  (30%)
 
 # check NVSS sources in GBT beam (beam ~ 9 arcmin)
 
