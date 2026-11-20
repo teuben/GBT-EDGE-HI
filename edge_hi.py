@@ -58,7 +58,7 @@ from IPython import embed
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT26A_644', 'AGBT04A_008', '-']  # mode is the index into this array
 refcodes    = ['edge2015',    'edge2025',    'edge2026',    'survey2004',  '-']  # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                             # default, override with $SDFITS_DATA
-version     = "22-oct-2026"                                       # version ID
+version     = "20-nov-2026"                                       # version ID
 
 # CLI defaults
 smooth    = 3
@@ -80,6 +80,7 @@ my_help = f"""
       ./edge_hi.py --mode  4 U8503
       ./edge_hi.py --mode 15 NGC3815
       ./edge_hi.py --mode 25 UGC10972
+      ./edge_hi.py --mode 26 UGC11694
       ./edge_hi.py --mode 2  <TBD>
 
    """
@@ -189,7 +190,7 @@ def get_gals(filename = "gals15.pars", debug=True):
     """ reads galaxy parameters. Currently:
     gal       name
     session   1,2,...
-    scans     comma separated list of the ON's
+    scans     comma separated list of the ON's (negative will skip)
     vlsr      center of emission (km/s)              [optional after 1st pass]
     dv        half the width (km/s)                  [optional after 1st pass]
     dw        width of each baseline section (km/s)  [optional after 1st pass]
@@ -202,8 +203,12 @@ def get_gals(filename = "gals15.pars", debug=True):
         if len(w) < 3: continue        
         gal = w[0]
         if gal not in gals and len(w) < 6: continue
-        session = int(w[1])
+        if len(w[1]) < 2:
+            session = int(w[1])    # single char are assumed an integer
+        else:
+            session = w[1]         # double or more can be integer, or string (16,17b)
         scans = [int(x) for x in w[2].split(',')]
+        scans = [x for x in scans if x > 0]
         if gal in gals:
             vlsr = dv = dw = None
         else:
