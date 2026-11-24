@@ -158,7 +158,9 @@ observed with 0.005 < z < 0.03.  DR3 has 667 entries.
    
 ## GBT links
 
-DSS project page: https://dss.gb.nrao.edu/project/GBT25A-474
+DSS project pages:
+* https://dss.gb.nrao.edu/project/GBT25A-474
+* https://dss.gb.nrao.edu/project/GBT26A-644
 
 Explanation of Grades: https://greenbankobservatory.org/portal/gbt/proposing/#panel-scores-and-groups
 
