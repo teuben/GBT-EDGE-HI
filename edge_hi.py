@@ -58,7 +58,7 @@ from IPython import embed
 projects    = ['AGBT15B_287', 'AGBT25A_474', 'AGBT26A_644', 'AGBT04A_008', '-']  # mode is the index into this array
 refcodes    = ['edge2015',    'edge2025',    'edge2026',    'survey2004',  '-']  # for CSV output
 sdfits_data = "/data2/teuben/sdfits/"                             # default, override with $SDFITS_DATA
-version     = "20-nov-2026"                                       # version ID
+version     = "23-nov-2026"                                       # version ID
 
 # CLI defaults
 smooth    = 3
@@ -66,6 +66,7 @@ smoothref = 1
 mode      = 25
 blorder   = 5
 nsigma    = 5
+efactor   = 2.0
 ptype     = 'png'
 frame     = 'icrs'
 frame     = None
@@ -97,6 +98,7 @@ p.add_argument('--nsigma',  type = float, default = nsigma,    help=f'nsigma [{n
 p.add_argument('--v0',      type = float, default = None,      help=f'Override vlsr as center of galaxy [pars table entry]')
 p.add_argument('--dv',      type = float, default = None,      help=f'Override dv for half signal portion  [pars table entry]')
 p.add_argument('--dw',      type = float, default = None,      help=f'Override dw for each half baseline [pars table entry]')
+p.add_argument('--efactor', type = float, default = 2.0,       help=f'Broading the plotting of the DW portion [{efactor}]')
 p.add_argument('--table',   type = str,   default = None,      help=f'Optionally read in spectrum to overlay')
 p.add_argument('--flags',   type = str,   default = None,      help=f'Flagging file with session,channel pairs')
 p.add_argument('--frame',   type = str,   default = frame,     help=f'Velocity frame: itrs, gcrs, hcrs, icrs, lsrk, lsrd [{frame}]')
@@ -131,6 +133,7 @@ nsigma  = args.nsigma
 vlsr    = args.v0
 dv      = args.dv
 dw      = args.dw
+efactor = args.efactor
 table   = args.table
 flags   = args.flags
 frame   = args.frame
@@ -475,7 +478,7 @@ def busyfit(sp, gal, rms):
     print("BUSYFIT:  ",cmd)
     os.system(cmd)
 
-def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
+def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, efactor=2.0, mode=1):
     """  pipeline for a galaxies; here sessions and scans are both lists
     
     mode=0 or 15    2015 ON-OFF-ON getsigref style  (final ON is sometimes missing)
@@ -654,8 +657,8 @@ def edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode=1):
     if Qgps:
         print("GPS flagging not implemented yet")
 
-    vmin = vlsr-dv-dw
-    vmax = vlsr+dv+dw
+    vmin = vlsr-dv-dw*efactor
+    vmax = vlsr+dv+dw*efactor
     gmin = vlsr-dv
     gmax = vlsr+dv
     gmin6 = vlsr-600
@@ -1086,7 +1089,7 @@ if __name__ == "__main__":
         if ss is not None and not ss in sessions:
             continue
         # edge2() will do optional waterfall
-        sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw, mode)
+        sp,sps,pars = edge2(sdf, gal, sessions, scans, vlsr, dv, dw, efactor, mode)
         #sss = sps.plot(xaxis_unit="km/s", doppler_convention='optical')  # vel_frame=
         sss = sps.plot(xaxis_unit="km/s")  # doppler_convention='optical')  # vel_frame=
         dysh_plots.append(sss)
