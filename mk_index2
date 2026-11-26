@@ -1,0 +1,59 @@
+#!/bin/bash
+file="gals.all"
+
+n=0
+while IFS= read -r line; do
+  ((n++))
+  gal=$line
+
+  #  0      1     2     3      4          5      6      7     8       9       10      11
+  # Name,Refcode,Vsys,Deltav,Robust_rms,RefInt,RefUnc,SigInt,SigUnc,SigVmin,SigVmax,BadFlag
+  # UGC10972,edge2025,4652.0,6.14,2.13,7.70,0.12,7.90,0.12,4402.0,4902.0,False 
+  pars=`grep $gal edge_hi.log | tail -1 | awk '{print $1}'`
+  IFS=',' read -ra p <<< "$pars"
+  # now ${p[0]} is the first parameter
+
+
+  comment=`grep $gal comments.txt | cut -d' ' -f2-`
+
+  
+
+  echo '  <tr class="item">'
+  echo '     <td>'
+  echo "       $n"
+  echo '     </td>'
+  echo '     <td>'
+  echo "      $gal"
+  echo '     </td>'
+  echo '     <td>'
+  echo "      ${p[1]}"   # survey
+  echo '     </td>'
+  echo '     <td>'
+  echo "      ${p[2]}"   # vlsr
+  echo '     </td>'
+  echo '     <td>'
+  echo "      ${p[7]}"     # flux
+  echo '     </td>'
+  echo '     <td>'
+  echo "       ${p[8]}"      # flux error
+  echo '     </td>'
+  echo '     <td>'
+  echo "      ${p[4]}"      # rms
+  echo '     </td>'
+  echo '     <td>'
+  echo '         '         # w95
+  echo '     </td>'
+  echo '     <td>'
+  echo "        <A HREF=${gal}_smooth.png> <IMG SRC=${gal}_smooth.png height=100></A>"
+  echo '     </td>'
+  echo '     <td>'
+  echo "        <A HREF=${gal}_sdss.png> <IMG SRC=${gal}_sdss.png height=100></A>"
+  echo '     </td>'
+  echo '     <td>'
+  echo "         $comment"
+  echo '     </td>'
+  echo '  </tr>'
+
+  done < "$file"
+
+echo "Table created `date`"
