@@ -348,7 +348,7 @@ NGC7711          18 74,76               4057 200 600   # nothing
 # Nov 11 09:00 | Nov 11 14:00 | 12:01 |  4.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 03
 
 NGC6166NED01  19 8,10                   9347 200 600  #  -repeat- strong ON/OFF, too many ripples
-NGC6173       19 12,14,16,18,20      	8703 200 600  # lots RFI
+NGC6173       19 -12,14,-16,-18,-20     8703 200 600  # lots RFI
 UGC10693      19 22,24,26,28,30     	8358 200 600  # lots RFI
 UGC10799      19 32,34,36,38,40      	8427 200 600  # some RFI
 NGC4149       19 42,44,46            	2959 200 600  # -repeat-
