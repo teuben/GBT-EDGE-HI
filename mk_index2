@@ -1,10 +1,11 @@
 #!/bin/bash
-file="gals.all"
+file="comments.txt"
 
 n=0
 while IFS= read -r line; do
   ((n++))
-  gal=$line
+  gal=`echo $line | awk '{print $1}'`
+
 
   #  0      1     2     3      4          5      6      7     8       9       10      11
   # Name,Refcode,Vsys,Deltav,Robust_rms,RefInt,RefUnc,SigInt,SigUnc,SigVmin,SigVmax,BadFlag
@@ -14,7 +15,7 @@ while IFS= read -r line; do
   # now ${p[0]} is the first parameter
 
 
-  comment=`grep $gal comments.txt | cut -d' ' -f2-`
+  comment=`grep $gal $file | cut -d' ' -f2-`
 
   
 
