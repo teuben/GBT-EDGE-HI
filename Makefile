@@ -33,7 +33,7 @@ new2:
 	tabrows gals.pars | sort > gals.pars2
 
 ## summary:     make summarylogs file, needs SEQ=
-summary:
+summary2:
 	./mk_summary.py $(SEQ) > summarylogs/$(PID)_$(SEQ).summary
 
 ## sdfits:	 show sessions in /home/sdfits for this project
@@ -89,3 +89,8 @@ bench1:
 ## bench2:      benchmark U11578 from 2004 data (dysh test)
 bench2:
 	$(ONT) $(TIME) ./edge_hi.py --mode 2 --flux U11578 --batch
+
+## summary:     make summarylogs file, needs SEQ=
+summary:
+	./mk_index2 > body.html 
+	cat header.html body.html footer.html > summary.html
