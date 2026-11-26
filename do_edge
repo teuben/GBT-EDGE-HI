@@ -1,0 +1,27 @@
+#! /usr/bin/env bash
+
+
+export OMP_NUM_THREADS=1
+
+gal=$1
+
+yy=0
+for y in 15 25 26; do
+    grep -sq $gal gals${y}.pars
+    if [ $? -eq 0 ]; then
+	echo Matching $gal in $y
+	yy=$y
+	break
+    fi
+done
+
+if [ $yy -gt 0 ]; then
+    echo Doing $gal for $yy
+    ./edge_hi.py --mode $yy  --flux --frame lsrk --water --smooth 5 --efactor 2 --batch $gal
+    echo ./edge_hi.py --mode $yy  --flux --frame lsrk --water --smooth 5 --efactor 2 $gal    
+else
+    echo Skipping $gal
+fi
+
+# 53.46user 8.82system 0:56.66elapsed 109%CPU 
+# 47.21user 6.44system 0:53.93elapsed 99%CPU 
