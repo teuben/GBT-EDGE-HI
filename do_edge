@@ -1,4 +1,9 @@
 #! /usr/bin/env bash
+#
+#  to do all:
+#
+#  for g in `awk '{print $1}' comments.txt`; do ./do_edge $g; done
+
 
 
 export OMP_NUM_THREADS=1
