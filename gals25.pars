@@ -23,6 +23,7 @@ UGC08733      1   55,57,59            2321  135  500    # 61 last "ON", has no "
 # session 2:
 
 VV488NED02    2   8,10,12,14,16       5070 400 1500    # companion    15.5 Jy.km/s
+#VV488NED02    2   -8,-10,-12,-14,16       5070 400 1500    # companion    15.5 Jy.km/s
 
 NGC7047       2  18,20,22,24,26       5787 250 1200     # weak   1.7 Jy.km/s
 

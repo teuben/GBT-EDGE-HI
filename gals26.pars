@@ -60,7 +60,9 @@ NGC7236        4     58,60                        7786  250 600     # bad baseli
 # Oct 24 17:15 | Oct 24 21:15 | 18:06 |  4.25 | Bolatto   | L         | VEGAS   | GBT26A-644 - 04
 
 NGC4149         5     8,10,12,14,16                2959   200 600     # weak or nothing
-IC3065          5     18,20,22,24,26                905   200 600     # nothing
+
+IC3065          5     18,20,22,24,26                905   200 300     # nothing
+
 NGC4261         5     28,30,32,34,36               2212   200 600     # bad baseline   ON/OFF   VLASS
 NGC4473         5     38,40,42,44,46               2244   200 600     # nothing
 IC3586          5     48,50,52,56,58               1595   200 600     # 54 short.
@@ -205,7 +207,7 @@ SDSSJ015424    11 	58,60,62,64,66  	    6190    100 400    #  [6227] narrow weak
 NGC0731        11 	-68,-70,72,74,76     	    3858    200 600    #  nothing ; but 68,70 bad - 
 NGC0741        11  	78,80,82,84,86 		    5492    200 600    #  nothing ; ON/OFF but kind of ok baseline
 NGC0781        11 	88,90,92,94,96 		    3494    200 600    # nothing ; ON/OFF but kind of ok baseline
-NGC0810        11 	-98,100,102,104,106         7705    200 600    # maybe at 7520 ?
+NGC0810        11 	-98,100,102,104,106         7495    220 600    # maybe at 7520 ? [7705]
 BKD2008WR346   11 	108			    1532    200 600    # nothing
 NGC1026        11 	110,112,114,116 	    4107    200 600    # nothing
 PGC11179       11  	118,120,122  		    6850    200 600    # ON/OFF bad baseline
@@ -225,7 +227,7 @@ IC4350         12 	18,20,22,24,26     	    6118    200 600    #  terrible ripple
 NGC5513        12 	28,30               	    4938    200 600    # nothing, but modest ripples
 NGC5507        12 	-32,34,36,-38,40   	    1710    150 600    # [1860] wrong vlsr? 4.0 J.km/s ; pretty lousy BL
 NGC5546        12 	-42,44,46,48,50      	    7441    200 600    # nothing  42=RFI  strong ripples, no obvious on/off
-IC0994         12 	52,54,-56,58,60      	    7255    200 600    # nothing   56=RFI
+IC0994         12 	52,-54,-56,-58,60      	    7255    200 600    # nothing   56=RFI
 NGC5557        12 	62,64,66,68         	    3268    200 600    # -repeat-
 NGC5549        12 	-70,-72,-74,76,-78    	    7651    200 600    # maybe, but RFI (GPS) !! bit in 74; still ripples left
 NGC5580        12 	80,82,84,86,88      	    3061    200 600    # nothing
@@ -335,7 +337,10 @@ NGC7436B         18 26,28,30,32         7366 200 600  # nothing?   RFI at 24
 NGC7559B         18 34,36,38,40,42      4567 200 600  # bad OFF ? negative profile
 UGC12494NOTES01  18 44,46,48,50,52      4200 150 600  # good; but wrong vlsr [4776] 4.9 Jy.km/s
 NGC7611       	 18 54,56,58,60,62      2860 100 600  # [3364] maybe...   narrow, 0.6 Jy.km/s
-UGC12518         18 64,66               2810 100 600   # [3876] wrong vlsr  2.8 Jy.km/s
+
+UGC12518         18 64,66               2810 100 300   # [3876] wrong vlsr  2.8 Jy.km/s
+UGC12518         20 1,3,5               2810 200 600  # -repeat-
+
 NGC7671          18 68,70,72            3792 200 600   # nothing
 NGC7711          18 74,76               4057 200 600   # nothing
 
@@ -366,7 +371,6 @@ NGC5794       19 66,68               	4140 200 600  # -repeat-
 # Nov 12 22:30 | Nov 13 03:30 | 01:37 |  2.00 | Bolatto   | L         | VEGAS   | GBT26A-644 - 01
 #  note no 3C calibration source, since they were in the keyhole
 
-UGC12518      20 1,3,5               2810 200 600  # -repeat-
 NGC7619       20 7,9,11,13,15        3744 200 600  # ON/OFF ripples, waterfall is messy too
 NGC7623       20 17,19,21,23,25      3678 200 600  # nothing, but negative profile at 2440 (from an OFF?)
 NGC7671       20 27                  3792 200 600  # -repeat-
